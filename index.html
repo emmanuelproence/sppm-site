@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPPM | Tecnologia em Infraestrutura</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        /* Variáveis Globais - Padrão Big Tech */
+        :root {
+            --bg-dark: #070b14;
+            --bg-card: rgba(15, 23, 42, 0.6);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #1e3a8a;
+            --accent-orange: #f58220;
+            --glass-border: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* Scrollbar customizada */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        /* Navegação Glassmorphism */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(7, 11, 20, 0.7);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .nav-logo img {
+            height: 40px;
+            object-fit: contain;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover { color: var(--accent-orange); }
+
+        /* Animações CSS base para o JS */
+        .reveal {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+            background: radial-gradient(circle at center, #111827 0%, var(--bg-dark) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 150vw;
+            height: 150vh;
+            background: radial-gradient(circle, rgba(245, 130, 32, 0.05) 0%, transparent 60%);
+            top: -25%;
+            left: -25%;
+            z-index: 0;
+            animation: pulseGlow 8s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        .hero-content {
+            z-index: 1;
+            max-width: 900px;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 5vw, 5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -2px;
+            margin-bottom: 20px;
+            background: linear-gradient(to right, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            font-weight: 300;
+        }
+
+        /* Sobre Nós */
+        .sobre-nos {
+            padding: 120px 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .sobre-texto h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+
+        .sobre-texto p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+
+        .sobre-image {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .sobre-image img {
+            max-width: 80%;
+            filter: drop-shadow(0 0 20px rgba(245, 130, 32, 0.2));
+        }
+
+        /* A Solução (Showcase) */
+        .showcase {
+            padding: 120px 5%;
+            background: #0b1120;
+        }
+
+        .showcase-header {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 80px auto;
+        }
+
+        .showcase-header h2 {
+            font-size: 3rem;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+        }
+
+        .grid-tech {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tech-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            padding: 40px;
+            border-radius: 12px;
+            transition: transform 0.4s ease, background 0.4s ease;
+        }
+
+        .tech-card:hover {
+            transform: translateY(-10px);
+            background: rgba(30, 58, 138, 0.2);
+            border-color: rgba(245, 130, 32, 0.3);
+        }
+
+        .tech-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-orange), #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tech-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .tech-card p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            padding: 60px 5%;
+            text-align: center;
+            border-top: 1px solid var(--glass-border);
+            background: var(--bg-dark);
+        }
+
+        footer p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px; }
+
+        @media (max-width: 900px) {
+            .sobre-nos { grid-template-columns: 1fr; text-align: center; }
+            .sobre-texto p { text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav id="navbar">
+        <div class="nav-logo">
+            <img src="1000131152.png" alt="SPPM Logo">
+        </div>
+        <div class="nav-links">
+            <a href="#sobre">A Empresa</a>
+            <a href="#tecnologia">A Solução</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content reveal">
+            <h1>Engenharia Autônoma para Infraestrutura.</h1>
+            <p>O Sistema de Proteção em Passagens Molhadas redefine a segurança rodoviária combinando telemetria ultrassônica, IoT e automação off-grid.</p>
+        </div>
+    </section>
+
+    <section id="sobre" class="sobre-nos">
+        <div class="sobre-texto reveal">
+            <h2>Engenharia de Vanguarda. Nascida na Universidade.</h2>
+            <p>O SPPM foi idealizado no ecossistema de inovação do Parque Tecnológico da Universidade Federal do Ceará (Partec/UFC). Nossa missão é aplicar o mais alto rigor da engenharia de hardware e software para sanar o histórico problema de isolamento e risco hídrico no semiárido.</p>
+            <p>Não construímos apenas bloqueios físicos; desenvolvemos ativos de <strong>Smart Infrastructure</strong>. O SPPM coleta dados precisos, analisa variáveis ambientais e age de forma autônoma, protegendo vidas e gerando governança de dados para a administração viária.</p>
+        </div>
+        <div class="sobre-image reveal" style="transition-delay: 0.2s;">
+            <img src="Logo.png" alt="SPPM Estrutura">
+        </div>
+    </section>
+
+    <section id="tecnologia" class="showcase">
+        <div class="showcase-header reveal">
+            <h2>Arquitetura do Sistema</h2>
+            <p style="color: var(--text-muted); font-size: 1.2rem;">Componentes de nível industrial projetados para operação ininterrupta em cenários climáticos severos.</p>
+        </div>
+
+        <div class="grid-tech">
+            <div class="tech-card reveal">
+                <div class="tech-icon">⚡</div>
+                <h3>Autonomia Off-Grid</h3>
+                <p>Matriz fotovoltaica integrada com banco de baterias de alta densidade. O sistema garante 100% de operacionalidade mesmo mediante o colapso da rede elétrica local durante fortes tempestades.</p>
+            </div>
+            
+            <div class="tech-card reveal" style="transition-delay: 0.1s;">
+                <div class="tech-icon">📡</div>
+                <h3>Telemetria Ultrassônica</h3>
+                <p>Sensores de alta precisão realizam a leitura milimétrica da lâmina d'água em tempo real. A comunicação via IoT transmite pacotes de dados estruturados direto para a nuvem da Defesa Civil.</p>
+            </div>
+            
+            <div class="tech-card reveal" style="transition-delay: 0.2s;">
+                <div class="tech-icon">🚧</div>
+                <h3>Bloqueio Mecânico Ativo</h3>
+                <p>Acionamento instantâneo de barreiras físicas robustas atrelado a painéis estroboscópicos de LED. Elimina falhas de julgamento humano e impede fisicamente a travessia no nível crítico.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p><strong>SPPM</strong> — Sistema de Proteção em Passagens Molhadas.</p>
+        <p>Chancelado por Partec / UFC</p>
+    </footer>
+
+    <script>
+        // Lógica de interseção para revelar elementos ao rolar a página
+        const revealElements = document.querySelectorAll('.reveal');
+
+        const revealOptions = {
+            threshold: 0.15, // Dispara quando 15% do elemento estiver visível
+            rootMargin: "0px 0px -50px 0px"
+        };
+
+        const revealOnScroll = new IntersectionObserver(function(entries, observer) {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                
+                // Adiciona a classe 'active' que ativa a animação CSS
+                entry.target.classList.add('active');
+                
+                // Para de observar o elemento após ele aparecer a primeira vez (performance)
+                observer.unobserve(entry.target);
+            });
+        }, revealOptions);
+
+        revealElements.forEach(el => {
+            revealOnScroll.observe(el);
+        });
+
+        // Efeito extra no Navbar ao rolar
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.style.background = 'rgba(7, 11, 20, 0.95)';
+                nav.style.boxShadow = '0 4px 30px rgba(0, 0, 0, 0.5)';
+            } else {
+                nav.style.background = 'rgba(7, 11, 20, 0.7)';
+                nav.style.boxShadow = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
