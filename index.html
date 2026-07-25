@@ -49,7 +49,7 @@
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 9999; opacity: 0; transition: opacity 0.3s; }
         .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-content { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 30px; width: 100%; max-width: 500px; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);}
+        .modal-content { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 30px; width: 100%; max-width: 500px; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto;}
         .modal-overlay.active .modal-content { transform: translateY(0); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .modal-title { font-size: 1.2rem; font-weight: 700; color: var(--text-white); }
@@ -62,14 +62,17 @@
         tr:hover td { background: rgba(255,255,255,0.02); }
 
         /* =========================================
-           3. LAYOUT PRINCIPAL (SIDEBAR, TOPBAR, VIEWS)
+           3. LAYOUT PRINCIPAL E LOGIN (ATUALIZADO)
         ========================================= */
         #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at top left, #111a29 0%, var(--bg-main) 100%); display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .login-panel { background: rgba(17, 26, 41, 0.9); backdrop-filter: blur(10px); border: 1px solid var(--border-color); padding: 40px; border-radius: 16px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
         #app-layout { display: none; width: 100%; height: 100%; }
 
         .sidebar { width: var(--sidebar-width); height: 100vh; background-color: var(--bg-panel); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 1000; }
+        
+        /* Modificação: Adicionado o Logo.jpeg na Sidebar */
         .logo-container { display: flex; align-items: center; padding: 0 20px 20px 20px; gap: 15px; border-bottom: 1px solid var(--border-color); margin-bottom: 10px; }
+        .logo-img-sidebar { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .brand-text h1 { font-size: 1.4rem; font-weight: 800; margin: 0; line-height: 1;}
         .brand-text span { font-size: 0.5rem; color: var(--text-muted); font-weight: 700; line-height: 1.2; text-transform: uppercase;}
         
@@ -119,11 +122,32 @@
         .card-regiao { grid-column: 3; grid-row: 3; }
         .chart-wrapper { position: relative; flex: 1; width: 100%; min-height: 180px; }
         
-        /* O.S. Cards */
         .os-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
         .os-card { background: var(--bg-main); border: 1px solid var(--border-color); border-left: 4px solid var(--color-blue-gray); border-radius: 8px; padding: 16px; }
         .os-card.critical { border-left-color: var(--color-red); }
         .os-card.warning { border-left-color: var(--color-yellow); }
+
+        /* =========================================
+           5. RESPONSIVIDADE B2G (MOBILE)
+        ========================================= */
+        .mobile-menu-btn { display: none; font-size: 1.5rem; color: var(--text-white); cursor: pointer; margin-right: 15px; }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn { display: block; }
+            .sidebar { position: fixed; left: -100%; top: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.8); transition: var(--transition-smooth); }
+            .sidebar.open { left: 0; }
+            .grid-layout { display: flex; flex-direction: column; }
+            .card-map { min-height: 400px; }
+            .topbar { padding: 0 15px; justify-content: flex-start; }
+            .topbar > div:last-child { margin-left: auto; }
+            #active-user-name, #active-user-role { display: none; }
+            .resumo-grid { grid-template-columns: 1fr 1fr; }
+            .card-regiao > div { flex-direction: column !important; }
+            #regiao-legend, .donut-chart { width: 100% !important; margin-top: 15px; }
+            .view-section { padding: 15px; }
+            .table-panel { margin: 10px 0; padding: 15px; overflow-x: auto; }
+            .login-panel { margin: 20px; padding: 30px 20px; }
+        }
     </style>
 </head>
 <body>
@@ -139,12 +163,12 @@
         </div>
     </div>
 
-    <!-- TELA LOGIN -->
+    <!-- TELA LOGIN (Atualizada) -->
     <div id="login-screen">
         <div class="login-panel">
-            <i class="ph-fill ph-shield-check" style="font-size: 3rem; color: var(--color-green); margin-bottom: 10px;"></i>
+            <img src="Logo.jpeg" alt="SPPM Logo" style="width: 85px; height: 85px; object-fit: cover; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
             <h1 style="color: var(--text-white);">SPPM OS</h1>
-            <p>Governo do Estado do Ceará</p>
+            <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.85rem;">Autenticação Restrita</p>
             <form id="form-login">
                 <div class="form-group"><input type="text" id="login-user" class="form-control" placeholder="E-mail / Usuário" required autocomplete="off"></div>
                 <div class="form-group"><input type="password" id="login-pass" class="form-control" placeholder="Senha" required></div>
@@ -158,7 +182,7 @@
     <div id="app-layout">
         <aside class="sidebar">
             <div class="logo-container">
-                <i class="ph ph-list menu-icon"></i>
+                <img src="Logo.jpeg" alt="SPPM" class="logo-img-sidebar">
                 <div class="brand-text"><h1 style="color: var(--text-white);">SPPM</h1><span>SISTEMA INTELIGENTE PARA<br>PASSAGENS MOLHADAS</span></div>
             </div>
 
@@ -177,7 +201,7 @@
             </ul>
 
             <div class="sidebar-status">
-                <h3 style="color: var(--text-muted);">MALHA ESTADUAL</h3>
+                <h3 style="color: var(--text-muted); font-size: 0.7rem; font-weight: 700; margin-bottom: 15px;">MALHA ESTADUAL</h3>
                 <div class="chart-container-sm"><canvas id="sidebarChart"></canvas><div class="chart-center-text"><h2 id="perc-op" style="color: var(--text-white);">0%</h2><span>Operando</span></div></div>
                 <div class="status-row"><span><span class="dot green"></span>Seguro</span> <strong id="sb-op">0</strong></div>
                 <div class="status-row"><span><span class="dot yellow"></span>Alerta</span> <strong id="sb-al">0</strong></div>
@@ -187,7 +211,14 @@
 
         <main class="main-content">
             <header class="topbar">
-                <div><h2 id="topbar-title" style="font-size: 1.1rem; color: var(--text-white);">Visão Geral</h2><p style="font-size: 0.75rem; color: var(--text-muted);">Defesa Civil - CCO</p></div>
+                <div style="display: flex; align-items: center;">
+                    <i class="ph ph-list mobile-menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')"></i>
+                    <div>
+                        <h2 id="topbar-title" style="font-size: 1.1rem; color: var(--text-white);">Visão Geral</h2>
+                        <p style="font-size: 0.75rem; color: var(--text-muted);">Defesa Civil - CCO</p>
+                    </div>
+                </div>
+                
                 <div style="display: flex; align-items: center; gap: 20px;">
                     <div style="display: flex; align-items: center; gap: 10px; border-left: 1px solid var(--border-color); padding-left: 20px;">
                         <i class="ph-fill ph-user-circle" style="font-size: 2rem; color: var(--text-muted);"></i>
@@ -247,7 +278,7 @@
                         <button class="btn btn-primary" onclick="openModalStation()"><i class="ph ph-plus"></i> Nova Estação</button>
                     </div>
                     <div style="overflow-x:auto; background:var(--bg-main); border-radius:8px; border: 1px solid var(--border-color);">
-                        <table id="table-stations">
+                        <table id="table-stations" style="min-width: 600px;">
                             <thead><tr><th>ID</th><th>Localidade / Nome</th><th>Região</th><th>Coordenadas GPS</th><th>Cota Crítica (mm)</th><th>Ações</th></tr></thead>
                             <tbody></tbody>
                         </table>
@@ -258,14 +289,14 @@
             <!-- VIEW: ALERTAS E HISTÓRICO -->
             <section id="view-alertas" class="view-section">
                 <div class="panel" style="margin-bottom:20px; padding: 15px;">
-                    <div style="display: flex; gap: 15px;">
-                        <div class="form-group" style="margin:0"><input type="date" id="filtro-data" class="form-control" onchange="renderAlertsTable()"></div>
-                        <div class="form-group" style="margin:0"><select id="filtro-estacao" class="form-control" onchange="renderAlertsTable()"><option value="">Todas as Estações</option></select></div>
-                        <div class="form-group" style="margin:0"><select id="filtro-status" class="form-control" onchange="renderAlertsTable()"><option value="">Todos os Status</option><option value="Normal">Operando Normal</option><option value="Alerta">Alerta Emitido</option><option value="Interditado">Interdição Crítica</option></select></div>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <div class="form-group" style="margin:0; flex: 1; min-width: 150px;"><input type="date" id="filtro-data" class="form-control" onchange="renderAlertsTable()"></div>
+                        <div class="form-group" style="margin:0; flex: 1; min-width: 150px;"><select id="filtro-estacao" class="form-control" onchange="renderAlertsTable()"><option value="">Todas as Estações</option></select></div>
+                        <div class="form-group" style="margin:0; flex: 1; min-width: 150px;"><select id="filtro-status" class="form-control" onchange="renderAlertsTable()"><option value="">Todos os Status</option><option value="Normal">Operando Normal</option><option value="Alerta">Alerta Emitido</option><option value="Interditado">Interdição Crítica</option></select></div>
                     </div>
                 </div>
                 <div style="overflow-x:auto; background:var(--bg-panel); border-radius:8px; border: 1px solid var(--border-color); flex:1;">
-                    <table id="table-logs">
+                    <table id="table-logs" style="min-width: 600px;">
                         <thead><tr><th>Data / Hora</th><th>Estação Acionada</th><th>Severidade</th><th>Precipitação Lida</th><th>Leitura Concluída</th></tr></thead>
                         <tbody></tbody>
                     </table>
@@ -295,10 +326,12 @@
             <section id="view-usuarios" class="view-section">
                 <div class="panel">
                     <div class="panel-header"><span class="panel-title">Controle de Acesso de Servidores</span><button class="btn btn-primary" onclick="openModalUser()"><i class="ph ph-user-plus"></i> Novo Acesso</button></div>
-                    <table id="table-users">
-                        <thead><tr><th>Servidor / Nome</th><th>E-mail Corporativo</th><th>Perfil de Segurança</th><th>Ações</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
+                    <div style="overflow-x: auto;">
+                        <table id="table-users" style="min-width: 600px;">
+                            <thead><tr><th>Servidor / Nome</th><th>E-mail Corporativo</th><th>Perfil de Segurança</th><th>Ações</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
@@ -418,6 +451,10 @@
                 document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); item.classList.add('active');
                 const target = item.getAttribute('data-target'); document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active')); document.getElementById(target).classList.add('active');
                 document.getElementById('topbar-title').innerText = item.innerText.trim();
+                
+                // Fecha o menu no mobile após clique
+                document.querySelector('.sidebar').classList.remove('open');
+                
                 if(target==='view-dashboard' && mapDash) setTimeout(()=>mapDash.invalidateSize(), 100);
                 if(target==='view-mapa' && mapFull) setTimeout(()=>mapFull.invalidateSize(), 100);
                 
@@ -460,7 +497,7 @@
             });
         }
         function renderStations() {
-            document.querySelector('#table-stations tbody').innerHTML = getDB(DB.STAS).map(s => `<tr><td><span style="color:var(--text-muted)">#${s.id.toString().slice(-4)}</span></td><td><b style="color:var(--text-white)">${s.name}</b></td><td>${s.region}</td><td><span style="font-family:monospace">${s.lat}, ${s.lon}</span></td><td><span style="color:var(--color-yellow)">${s.quota} mm</span></td><td><button class="btn btn-outline" style="padding:4px 8px; font-size:0.7rem" onclick="openModalStation(${s.id})">Editar</button> <button class="btn btn-danger" style="padding:4px 8px; font-size:0.7rem; display:inline-block; margin-left:5px;" onclick="delStation(${s.id})">Excluir</button></td></tr>`).join('');
+            document.querySelector('#table-stations tbody').innerHTML = getDB(DB.STAS).map(s => `<tr><td><span style="color:var(--text-muted)">#${s.id.toString().slice(-4)}</span></td><td><b style="color:var(--text-white)">${s.name}</b></td><td>${s.region}</td><td><span style="font-family:monospace">${s.lat}, ${s.lon}</span></td><td><span style="color:var(--color-yellow)">${s.quota} mm</span></td><td><button class="btn btn-outline" style="padding:4px 8px; font-size:0.7rem; display:inline-block;" onclick="openModalStation(${s.id})">Editar</button> <button class="btn btn-danger" style="padding:4px 8px; font-size:0.7rem; display:inline-block; margin-left:5px;" onclick="delStation(${s.id})">Excluir</button></td></tr>`).join('');
         }
         function delStation(id) { if(confirm('Desativar permanentemente?')) { setDB(DB.STAS, getDB(DB.STAS).filter(x=>x.id!==id)); renderStations(); syncAPI(); } }
 
@@ -513,7 +550,7 @@
                         htmlAlerts.push(`<div class="alert-item"><i class="ph-fill ${status==='Interditado'?'ph-minus-circle':'ph-warning'}" style="color:var(--color-${color}); font-size:1.4rem;"></i><div><h4 style="font-size:0.8rem; color:var(--text-white); margin-bottom:2px;">${st.name}</h4><p style="font-size:0.7rem; color:var(--text-muted);">${status} - ${data.precipitation}mm captados.</p></div></div>`);
                     }
 
-                    // Motor de Manutenção (Se vento > 40km/h ou aleatório 5% chance, gera O.S de falha física)
+                    // Motor de Manutenção
                     if(data.wind_speed_10m > 40 || Math.random() < 0.05) {
                         if(!os.find(x=>x.station === st.name && x.status === 'Open')) os.push({ id: Date.now(), station: st.name, issue: 'Sensor de ultrassom descalibrado', status: 'Open', date: new Date().toLocaleDateString(), severity: 'warning' });
                     }
@@ -617,7 +654,7 @@
         }
 
         function bootSystem() { initDB(); initMaps(); initCharts(); syncAPI(); const cfg = getDB(DB.CONF); syncTimer = setInterval(syncAPI, (cfg.syncInterval||5) * 60000); }
-        initDB(); document.querySelectorAll('.nav-item').forEach(i => i.addEventListener('click', initNav)); // Binding Event Navigation Initializer
+        initDB(); document.querySelectorAll('.nav-item').forEach(i => i.addEventListener('click', initNav));
     </script>
 </body>
 </html>
