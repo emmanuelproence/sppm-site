@@ -4,21 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SPPM | Sistema Inteligente para Passagens Molhadas</title>
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- FIREBASE SDK (NUVEM) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
-
     <style>
         /* =========================================
-           1. CORE & DESIGN SYSTEM
+           1. CORE & DESIGN SYSTEM  (inalterado)
         ========================================= */
         :root {
             --bg-main: #060b13; --bg-panel: #111a29; --border-color: #1e293b;
@@ -35,11 +33,14 @@
         ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
 
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes scanline { 0% { top: 0%; } 100% { top: 100%; } }
 
         /* =========================================
            2. COMPONENTES (MODAIS, BOTÕES E FORMS)
         ========================================= */
         .btn { padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; border: none; display: flex; align-items: center; gap: 8px; transition: var(--transition-smooth); justify-content: center;}
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
         .btn-primary { background: var(--color-green); color: #000; }
         .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
         .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--color-red); border: 1px solid rgba(239, 68, 68, 0.3); }
@@ -51,6 +52,7 @@
         .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;}
         .form-control { width: 100%; padding: 12px 16px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); color: white; border-radius: 8px; outline: none; transition: var(--transition-smooth); font-size: 0.9rem; }
         .form-control:focus { border-color: var(--color-green); background: rgba(0,0,0,0.6);}
+        .form-error { color: var(--color-red); font-size: 0.75rem; margin-top: -12px; margin-bottom: 16px; display: none; }
         select.form-control { appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%238b9bb4%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto; }
         textarea.form-control { resize: vertical; min-height: 80px; }
 
@@ -85,7 +87,7 @@
         .nav-item i { font-size: 1.2rem; }
         .nav-item:hover { color: var(--text-white); background: rgba(255,255,255,0.03); }
         .nav-item.active { background-color: rgba(16, 185, 129, 0.1); color: var(--color-green); border-left: 3px solid var(--color-green); border-radius: 0 8px 8px 0; font-weight: 600;}
-        
+
         .sidebar-status { padding: 20px; border-top: 1px solid var(--border-color); margin-top: auto; }
         .chart-container-sm { position: relative; height: 110px; width: 100%; display: flex; justify-content: center; align-items: center; margin-bottom: 15px;}
         .chart-center-text { position: absolute; text-align: center; }
@@ -95,7 +97,7 @@
 
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         .topbar { height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; background: var(--bg-main); border-bottom: 1px solid var(--border-color); z-index: 100;}
-        
+
         .view-section { display: none; flex-direction: column; flex: 1; overflow-y: auto; padding: 20px 30px; }
         .view-section.active { display: flex; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -108,25 +110,25 @@
         .panel { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; position: relative; }
         .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .panel-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-white);}
-        
+
         .card-map { grid-column: 1 / 3; grid-row: 1 / 3; padding: 0; overflow: hidden; border-radius: 12px;}
         #map-container { width: 100%; height: 100%; z-index: 1; }
         .map-overlay-title { position: absolute; top: 15px; left: 15px; z-index: 400; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.8);}
-        
+
         .card-resumo { grid-column: 3; grid-row: 1; }
         .resumo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 100%; }
         .stat-box { background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 15px 0; transition: transform 0.2s, filter 0.2s; cursor: pointer; }
         .stat-box:hover { transform: translateY(-3px); filter: brightness(1.2); border-color: rgba(255,255,255,0.2); }
         .stat-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-bottom: 8px; border: 1px solid currentColor;}
-        
+
         .card-alertas { grid-column: 3; grid-row: 2; }
         .alert-item { display: flex; gap: 12px; align-items: flex-start; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        
+
         .card-evolucao { grid-column: 1; grid-row: 3; }
         .card-historico { grid-column: 2; grid-row: 3; }
         .card-regiao { grid-column: 3; grid-row: 3; }
         .chart-wrapper { position: relative; flex: 1; width: 100%; min-height: 180px; }
-        
+
         .os-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
         .os-card { background: var(--bg-main); border: 1px solid var(--border-color); border-left: 4px solid var(--color-blue-gray); border-radius: 8px; padding: 16px; }
         .os-card.critical { border-left-color: var(--color-red); }
@@ -152,9 +154,17 @@
             .table-panel { margin: 10px 0; padding: 15px; overflow-x: auto; }
             .login-panel { margin: 20px; padding: 30px 20px; }
         }
-        .admin-only { display: none; } 
+        .admin-only { display: none; }
 
         #loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg-main); z-index: 10000; display:flex; flex-direction:column; justify-content:center; align-items:center; color: var(--color-green); transition: opacity 0.5s;}
+
+        /* =========================================
+           6. MODAL EDGE AI (novo: estados de análise)
+        ========================================= */
+        #ai-scan-overlay { position: absolute; inset: 0; background: rgba(6,11,19,0.88); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; z-index: 10; transition: opacity 0.4s ease; }
+        #ai-scan-icon { font-size: 2.4rem; color: var(--color-green); animation: spin 1s linear infinite; }
+        #ai-scan-text { font-family: monospace; font-size: 0.72rem; color: var(--color-green); letter-spacing: 1px; text-transform: uppercase; }
+        #ai-scanline { position: absolute; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--color-green), transparent); box-shadow: 0 0 8px var(--color-green); animation: scanline 1.8s linear infinite; opacity: 0.8; }
     </style>
 </head>
 <body>
@@ -170,7 +180,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title" id="modal-title">Título</h3>
-                <i class="ph ph-x close-modal" onclick="closeModal()"></i>
+                <i class="ph ph-x close-modal" onclick="SPPM.closeModal()"></i>
             </div>
             <div id="modal-body"></div>
         </div>
@@ -181,11 +191,18 @@
         <div class="modal-content" style="max-width: 700px; padding: 20px;">
             <div class="modal-header" style="margin-bottom: 10px;">
                 <h3 class="modal-title" id="ai-title">Monitoramento IA (Edge)</h3>
-                <i class="ph ph-x close-modal" onclick="document.getElementById('ai-modal').classList.remove('active')"></i>
+                <i class="ph ph-x close-modal" onclick="SPPM.closeAIModal()"></i>
             </div>
             <div style="display:flex; flex-direction:column; gap:15px;">
                 <div style="position:relative; width:100%; height:320px; background: #000 url('https://images.unsplash.com/photo-1444312645910-fea9736d71f9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80') center/cover; border-radius:12px; overflow:hidden; border: 1px solid var(--border-color);">
-                    <div style="position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.8); padding:4px 8px; border-radius:4px; font-size:0.7rem; color:var(--color-green); font-family:monospace; display:flex; align-items:center; gap:5px;"><span class="dot green" style="width:6px; height:6px; margin:0; animation: blink 1.5s infinite;"></span> LIVE RTSP STREAM</div>
+                    <div style="position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.8); padding:4px 8px; border-radius:4px; font-size:0.7rem; color:var(--color-green); font-family:monospace; display:flex; align-items:center; gap:5px; z-index:20;"><span class="dot green" style="width:6px; height:6px; margin:0; animation: blink 1.5s infinite;"></span> LIVE RTSP STREAM</div>
+
+                    <div id="ai-scan-overlay">
+                        <div id="ai-scanline"></div>
+                        <i class="ph ph-circle-notch" id="ai-scan-icon"></i>
+                        <span id="ai-scan-text">Conectando ao stream RTSP...</span>
+                    </div>
+
                     <div id="ai-box" style="position:absolute; bottom:15%; left:15%; width:70%; height:35%; border: 2px dashed var(--color-green); background: rgba(16, 185, 129, 0.15); transition: all 0.3s ease;">
                         <span id="ai-badge" style="position:absolute; top:-22px; left:-2px; background:var(--color-green); color:#000; font-size:0.65rem; padding:4px 6px; font-weight:bold; text-transform: uppercase;">Área de Tráfego: Desobstruída</span>
                     </div>
@@ -193,7 +210,7 @@
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     <div style="background:var(--bg-main); padding:15px; border-radius:8px; border:1px solid var(--border-color);">
                         <p style="font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">Status da Passagem (IA)</p>
-                        <strong style="color:var(--color-green); font-size:1rem;" id="ai-status">Sem Obstruções</strong>
+                        <strong style="color:var(--color-green); font-size:1rem;" id="ai-status">Analisando...</strong>
                     </div>
                     <div style="background:var(--bg-main); padding:15px; border-radius:8px; border:1px solid var(--border-color);">
                         <p style="font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">Confiança do Modelo</p>
@@ -213,7 +230,7 @@
             <form id="form-login">
                 <div class="form-group"><input type="text" id="login-user" class="form-control" placeholder="E-mail / Usuário" required autocomplete="off"></div>
                 <div class="form-group"><input type="password" id="login-pass" class="form-control" placeholder="Senha" required></div>
-                <button type="submit" class="btn btn-primary" style="width:100%">Acessar Sistema</button>
+                <button type="submit" class="btn btn-primary" id="login-submit-btn" style="width:100%">Acessar Sistema</button>
             </form>
             <div id="login-error" style="color: var(--color-red); margin-top: 15px; font-size: 0.8rem; display: none;">Credenciais inválidas.</div>
         </div>
@@ -225,16 +242,16 @@
             <ul class="nav-menu" style="margin-top: 20px;">
                 <li class="nav-item active" data-target="view-dashboard"><i class="ph ph-squares-four"></i> Visão Geral</li>
                 <li class="nav-item" data-target="view-mapa"><i class="ph ph-map-pin"></i> Mapa Fullscreen</li>
-                
+
                 <li class="nav-item admin-only" data-target="view-sistemas"><i class="ph ph-desktop"></i> Gestão de Sistemas</li>
-                
+
                 <li class="nav-item" data-target="view-alertas" style="justify-content: space-between;">
                     <div style="display:flex; align-items:center; gap:12px;"><i class="ph ph-bell"></i> Histórico/Alertas</div>
                     <span style="background:var(--color-red); color:white; padding:2px 6px; border-radius:12px; font-size:0.6rem; font-weight:700;" id="badge-alertas">0</span>
                 </li>
                 <li class="nav-item" data-target="view-relatorios"><i class="ph ph-file-csv"></i> Data Lake & Export</li>
                 <li class="nav-item" data-target="view-manutencao"><i class="ph ph-wrench"></i> Manutenção (O.S.)</li>
-                
+
                 <li class="nav-item admin-only" data-target="view-usuarios"><i class="ph ph-users"></i> Controle RBAC</li>
                 <li class="nav-item admin-only" data-target="view-config"><i class="ph ph-gear"></i> Configurações Globais</li>
             </ul>
@@ -252,7 +269,7 @@
             <header class="topbar">
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <i class="ph ph-list mobile-menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')"></i>
-                    <div style="display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.2s;" onclick="navigateTo('view-dashboard')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                    <div style="display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.2s;" onclick="SPPM.navigateTo('view-dashboard')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
                         <img src="Logo.jpeg" alt="SPPM" onerror="this.style.display='none'" style="width: 38px; height: 38px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
                         <div style="display: flex; flex-direction: column;">
                             <h2 style="font-size: 1.2rem; font-weight: 800; color: var(--text-white); margin: 0; line-height: 1;">SPPM</h2>
@@ -260,7 +277,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div style="display: flex; align-items: center; gap: 20px;">
                     <div style="display: flex; align-items: center; gap: 10px; border-left: 1px solid var(--border-color); padding-left: 20px;">
                         <i class="ph-fill ph-user-circle" style="font-size: 2rem; color: var(--text-muted);"></i>
@@ -269,7 +286,7 @@
                             <small id="active-user-role" style="font-size: 0.7rem; color: var(--color-green);">Cargo</small>
                         </div>
                     </div>
-                    <button class="btn btn-outline" onclick="logout()" style="padding: 6px 12px; font-size:0.75rem;"><i class="ph ph-sign-out"></i> Sair</button>
+                    <button class="btn btn-outline" onclick="SPPM.logout()" style="padding: 6px 12px; font-size:0.75rem;"><i class="ph ph-sign-out"></i> Sair</button>
                 </div>
             </header>
 
@@ -277,9 +294,9 @@
             <section id="view-dashboard" class="view-section active">
                 <div class="toolbar">
                     <div style="display: flex; gap: 10px;"><button class="btn btn-outline"><i class="ph ph-funnel"></i> Hoje</button></div>
-                    <button class="btn btn-primary" onclick="syncAPI()"><i class="ph ph-arrows-clockwise"></i> Forçar Sincronização API</button>
+                    <button class="btn btn-primary" id="btn-sync" onclick="SPPM.syncAPI()"><i class="ph ph-arrows-clockwise"></i> Forçar Sincronização API</button>
                 </div>
-                
+
                 <div class="grid-layout">
                     <div class="panel card-map">
                         <div class="map-overlay-title">Monitoramento Espacial</div>
@@ -291,14 +308,14 @@
                     <div class="panel card-resumo">
                         <div class="panel-header"><span class="panel-title">Resumo Operacional</span></div>
                         <div class="resumo-grid">
-                            <div class="stat-box stat-green" onclick="navigateTo('view-sistemas')" title="Gerenciar Sistemas"><div class="stat-icon" style="color:var(--color-green)"><i class="ph ph-check"></i></div><h3 id="card-op" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Operando</span></div>
-                            <div class="stat-box stat-yellow" onclick="navigateTo('view-alertas', 'Alerta')" title="Ver Alertas"><div class="stat-icon" style="color:var(--color-yellow)"><i class="ph ph-warning"></i></div><h3 id="card-al" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Alerta</span></div>
-                            <div class="stat-box stat-red" onclick="navigateTo('view-alertas', 'Interditado')" title="Ver Interdições"><div class="stat-icon" style="color:var(--color-red)"><i class="ph ph-minus-circle"></i></div><h3 id="card-in" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Interditado</span></div>
-                            <div class="stat-box" onclick="navigateTo('view-manutencao')" title="Ver Painel de Manutenções"><div class="stat-icon" style="color:var(--color-blue-gray)"><i class="ph ph-broadcast"></i></div><h3 style="color: var(--text-white);" id="card-off">0</h3><span style="color: var(--text-muted);">Offline</span></div>
+                            <div class="stat-box stat-green" onclick="SPPM.navigateTo('view-sistemas')" title="Gerenciar Sistemas"><div class="stat-icon" style="color:var(--color-green)"><i class="ph ph-check"></i></div><h3 id="card-op" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Operando</span></div>
+                            <div class="stat-box stat-yellow" onclick="SPPM.navigateTo('view-alertas', 'Alerta')" title="Ver Alertas"><div class="stat-icon" style="color:var(--color-yellow)"><i class="ph ph-warning"></i></div><h3 id="card-al" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Alerta</span></div>
+                            <div class="stat-box stat-red" onclick="SPPM.navigateTo('view-alertas', 'Interditado')" title="Ver Interdições"><div class="stat-icon" style="color:var(--color-red)"><i class="ph ph-minus-circle"></i></div><h3 id="card-in" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Interditado</span></div>
+                            <div class="stat-box" onclick="SPPM.navigateTo('view-manutencao')" title="Ver Painel de Manutenções"><div class="stat-icon" style="color:var(--color-blue-gray)"><i class="ph ph-broadcast"></i></div><h3 style="color: var(--text-white);" id="card-off">0</h3><span style="color: var(--text-muted);">Offline</span></div>
                         </div>
                     </div>
                     <div class="panel card-alertas">
-                        <div class="panel-header"><span class="panel-title">Logs Recentes</span><a class="btn btn-outline" style="padding:4px 8px; font-size:0.7rem;" onclick="navigateTo('view-alertas')">Ver tudo</a></div>
+                        <div class="panel-header"><span class="panel-title">Logs Recentes</span><a class="btn btn-outline" style="padding:4px 8px; font-size:0.7rem;" onclick="SPPM.navigateTo('view-alertas')">Ver tudo</a></div>
                         <div class="alert-list" id="dashboard-alerts"></div>
                     </div>
                     <div class="panel card-evolucao"><div class="panel-header"><span class="panel-title">Telemetria (Lâmina d'água)</span></div><div class="chart-wrapper"><canvas id="evolucaoChart"></canvas></div></div>
@@ -315,7 +332,7 @@
                 <div class="panel" style="margin-bottom: 20px;">
                     <div class="panel-header">
                         <span class="panel-title">Malha de Sensores Edge IoT</span>
-                        <button class="btn btn-primary admin-only" onclick="openModalStation()"><i class="ph ph-plus"></i> Nova Estação</button>
+                        <button class="btn btn-primary admin-only" onclick="SPPM.openModalStation()"><i class="ph ph-plus"></i> Nova Estação</button>
                     </div>
                     <div style="overflow-x:auto; background:var(--bg-main); border-radius:8px; border: 1px solid var(--border-color);">
                         <table id="table-stations" style="min-width: 800px;">
@@ -330,9 +347,9 @@
             <section id="view-alertas" class="view-section">
                 <div class="panel" style="margin-bottom:20px; padding: 15px;">
                     <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                        <div class="form-group" style="margin:0; flex: 1; min-width: 150px;"><input type="date" id="filtro-data" class="form-control" onchange="renderAlertsTable()"></div>
-                        <div class="form-group" style="margin:0; flex: 1; min-width: 150px;"><select id="filtro-estacao" class="form-control" onchange="renderAlertsTable()"><option value="">Todas as Estações do Escopo</option></select></div>
-                        <div class="form-group" style="margin:0; flex: 1; min-width: 150px;"><select id="filtro-status" class="form-control" onchange="renderAlertsTable()"><option value="">Todos os Status</option><option value="Normal">Operando Normal</option><option value="Alerta">Alerta Emitido</option><option value="Interditado">Interdição Crítica</option></select></div>
+                        <div class="form-group" style="margin:0; flex: 1; min-width: 150px;"><input type="date" id="filtro-data" class="form-control" onchange="SPPM.renderAlertsTable()"></div>
+                        <div class="form-group" style="margin:0; flex: 1; min-width: 150px;"><select id="filtro-estacao" class="form-control" onchange="SPPM.renderAlertsTable()"><option value="">Todas as Estações do Escopo</option></select></div>
+                        <div class="form-group" style="margin:0; flex: 1; min-width: 150px;"><select id="filtro-status" class="form-control" onchange="SPPM.renderAlertsTable()"><option value="">Todos os Status</option><option value="Normal">Operando Normal</option><option value="Alerta">Alerta Emitido</option><option value="Interditado">Interdição Crítica</option></select></div>
                     </div>
                 </div>
                 <div style="overflow-x:auto; background:var(--bg-panel); border-radius:8px; border: 1px solid var(--border-color); flex:1;">
@@ -348,8 +365,8 @@
                 <div class="panel" style="max-width: 600px; text-align: center; padding: 50px 30px;">
                     <i class="ph-fill ph-database" style="font-size: 4rem; color: var(--color-green); margin-bottom: 20px;"></i>
                     <h2 style="color: var(--text-white); margin-bottom: 10px;">Extração de Data Lake</h2>
-                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px; line-height: 1.5;">O sistema arquiva continuamente as variáveis de telemetria. Exporte a matriz CSV para auditoria e análises preditivas. O arquivo exportado conterá **apenas as estações autorizadas para o seu perfil**.</p>
-                    <button class="btn btn-primary" style="margin: 0 auto; font-size: 1rem; padding: 12px 24px;" onclick="exportCSV()"><i class="ph ph-download-simple"></i> Download Dataset (.csv)</button>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px; line-height: 1.5;">O sistema arquiva continuamente as variáveis de telemetria. Exporte a matriz CSV para auditoria e análises preditivas. O arquivo exportado conterá <strong>apenas as estações autorizadas para o seu perfil</strong>.</p>
+                    <button class="btn btn-primary" style="margin: 0 auto; font-size: 1rem; padding: 12px 24px;" onclick="SPPM.exportCSV()"><i class="ph ph-download-simple"></i> Download Dataset (.csv)</button>
                 </div>
             </section>
 
@@ -357,7 +374,7 @@
             <section id="view-manutencao" class="view-section">
                 <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
                     <h2 style="font-size:1.1rem; color:var(--text-white)">Painel de Ordens de Serviço</h2>
-                    <button class="btn btn-primary" onclick="openModalCreateOS()"><i class="ph ph-plus"></i> Abrir Nova O.S.</button>
+                    <button class="btn btn-primary" onclick="SPPM.openModalCreateOS()"><i class="ph ph-plus"></i> Abrir Nova O.S.</button>
                 </div>
                 <div class="os-grid" id="os-container"></div>
             </section>
@@ -365,7 +382,7 @@
             <!-- VIEW: USUÁRIOS (RBAC) -->
             <section id="view-usuarios" class="view-section">
                 <div class="panel">
-                    <div class="panel-header"><span class="panel-title">Controle de Acesso de Servidores (RBAC)</span><button class="btn btn-primary" onclick="openModalUser()"><i class="ph ph-user-plus"></i> Novo Acesso</button></div>
+                    <div class="panel-header"><span class="panel-title">Controle de Acesso de Servidores (RBAC)</span><button class="btn btn-primary" onclick="SPPM.openModalUser()"><i class="ph ph-user-plus"></i> Novo Acesso</button></div>
                     <div style="overflow-x: auto;">
                         <table id="table-users" style="min-width: 600px;">
                             <thead><tr><th>Servidor / Nome</th><th>E-mail Corporativo</th><th>Perfil</th><th>Visualização (Passagens Permitidas)</th><th>Ações</th></tr></thead>
@@ -390,7 +407,7 @@
     </div>
 
     <!-- TEMPLATES DE MODAIS -->
-    
+
     <!-- 1. Form de Estação -->
     <template id="tpl-station-form">
         <form id="form-station-submit">
@@ -415,11 +432,12 @@
                 <div class="form-group"><label>Distância Leito Seco (cm)</label><input type="number" id="st-calib" class="form-control" placeholder="Ex: 400"></div>
             </div>
             <div class="form-group"><label>IP / RTSP da Câmera</label><input type="text" id="st-cam" class="form-control" placeholder="rtsp://admin:pass@ip:554/stream"></div>
-            <button type="submit" class="btn btn-primary" style="width:100%; margin-top:10px;">Salvar & Provisionar Hardware</button>
+            <div class="form-error" id="station-form-error"></div>
+            <button type="submit" class="btn btn-primary" id="station-submit-btn" style="width:100%; margin-top:10px;">Salvar & Provisionar Hardware</button>
         </form>
     </template>
 
-    <!-- 2. Form de Usuário (Modificado: SELEÇÃO EXPLÍCITA DE PASSAGENS via CHECKBOX) -->
+    <!-- 2. Form de Usuário -->
     <template id="tpl-user-form">
         <form id="form-user-submit">
             <div style="display:flex; gap:15px;">
@@ -429,7 +447,7 @@
             <div style="display:flex; gap:15px;">
                 <div class="form-group" style="flex:1"><label>Senha Temporária</label><input type="password" id="usr-pass" class="form-control" required></div>
                 <div class="form-group" style="flex:1"><label>Privilégio de Acesso</label>
-                    <select id="usr-role" class="form-control" onchange="toggleUserStationSelection(this.value)">
+                    <select id="usr-role" class="form-control" onchange="SPPM.toggleUserStationSelection(this.value)">
                         <option value="Operador">Operador (Restrito)</option><option value="Admin">Administrador (Total)</option>
                     </select>
                 </div>
@@ -438,7 +456,8 @@
                 <label>Permissões de Visualização (Selecione as Passagens Autorizadas)</label>
                 <div class="checkbox-grid" id="usr-stations-container"></div>
             </div>
-            <button type="submit" class="btn btn-primary" style="width:100%">Provisionar Servidor</button>
+            <div class="form-error" id="user-form-error"></div>
+            <button type="submit" class="btn btn-primary" id="user-submit-btn" style="width:100%">Provisionar Servidor</button>
         </form>
     </template>
 
@@ -454,276 +473,1027 @@
         </form>
     </template>
 
-    <!-- FIREBASE SDK -->
+    <!-- SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
-    <script>
-        /* =====================================================================
-           INTEGRAÇÃO FIREBASE (CLOUD DATABASE)
-        ===================================================================== */
-        const firebaseConfig = {
-            apiKey: "AIzaSyBPwg63RIXP6xgasmQEPEemyBLS4eiPe48",
-            authDomain: "sppm-6a369.firebaseapp.com",
-            databaseURL: "https://sppm-6a369-default-rtdb.firebaseio.com",
-            projectId: "sppm-6a369",
-            storageBucket: "sppm-6a369.firebasestorage.app",
-            messagingSenderId: "790068123319",
-            appId: "1:790068123319:web:0607fba6b316a24cad5f32",
-            measurementId: "G-9N8LY8N9G7"
-        };
-        
-        let database = null;
-        try { firebase.initializeApp(firebaseConfig); database = firebase.database(); } catch(e) { console.warn("Firebase não configurado."); }
+    <script type="module">
+    'use strict';
 
-        /* =====================================================================
-           CORE ARCHITECTURE E ESTADO
-        ===================================================================== */
-        const DB = { USRS: 'sppm_v7_users', STAS: 'sppm_v7_stations', LOGS: 'sppm_v7_logs', CONF: 'sppm_v7_config', OS: 'sppm_v7_os' };
+    /* =====================================================================
+       1. CONFIGURAÇÃO & CONSTANTES GLOBAIS
+    ===================================================================== */
+    const FIREBASE_CONFIG = Object.freeze({
+        apiKey: "AIzaSyBPwg63RIXP6xgasmQEPEemyBLS4eiPe48",
+        authDomain: "sppm-6a369.firebaseapp.com",
+        databaseURL: "https://sppm-6a369-default-rtdb.firebaseio.com",
+        projectId: "sppm-6a369",
+        storageBucket: "sppm-6a369.firebasestorage.app",
+        messagingSenderId: "790068123319",
+        appId: "1:790068123319:web:0607fba6b316a24cad5f32",
+        measurementId: "G-9N8LY8N9G7"
+    });
 
-        const defaultStations = [
-            { id: 1, name: 'Morrinhos 1 (Piloto)', region: 'Litoral Norte', lat: -3.2261, lon: -40.1222, quota: 15, mac: '', calib: 400, cam: '' },
-            { id: 2, name: 'Santana do Acaraú 2', region: 'Sertão Sobral', lat: -3.4589, lon: -40.1167, quota: 12, mac: '', calib: 400, cam: '' },
-            { id: 3, name: 'Caridade 1', region: 'Sertão Central', lat: -4.2188, lon: -39.2086, quota: 10, mac: '', calib: 400, cam: '' },
-            { id: 4, name: 'Russas 1', region: 'Vale do Jaguaribe', lat: -4.9405, lon: -37.9755, quota: 15, mac: '', calib: 400, cam: '' },
-            { id: 5, name: 'Russas 2', region: 'Vale do Jaguaribe', lat: -4.9500, lon: -37.9800, quota: 15, mac: '', calib: 400, cam: '' },
-            { id: 6, name: 'Russas 3', region: 'Vale do Jaguaribe', lat: -4.9300, lon: -37.9600, quota: 15, mac: '', calib: 400, cam: '' },
-            { id: 7, name: 'Russas 4', region: 'Vale do Jaguaribe', lat: -4.9600, lon: -37.9900, quota: 15, mac: '', calib: 400, cam: '' },
-            { id: 8, name: 'Pentecoste 1', region: 'Litoral Norte', lat: -3.7913, lon: -39.2725, quota: 10, mac: '', calib: 400, cam: '' },
-            { id: 9, name: 'Paraipaba 1', region: 'Litoral Norte', lat: -3.4388, lon: -39.1480, quota: 10, mac: '', calib: 400, cam: '' },
-            { id: 10, name: 'S. Gonçalo do Amarante 1', region: 'Litoral Norte', lat: -3.6063, lon: -38.9705, quota: 12, mac: '', calib: 400, cam: '' }
-        ];
+    const DB_KEYS = Object.freeze({
+        USERS: 'sppm_v7_users',
+        STATIONS: 'sppm_v7_stations',
+        LOGS: 'sppm_v7_logs',
+        CONFIG: 'sppm_v7_config',
+        OS: 'sppm_v7_os'
+    });
 
-        function initLocalFallback() {
-            if(!localStorage.getItem(DB.USRS)) localStorage.setItem(DB.USRS, JSON.stringify([{ id:1, email: 'admin', pass: '1234', role: 'Admin', name: 'Comando Central', allowedStations: 'all' }]));
-            if(!localStorage.getItem(DB.STAS)) localStorage.setItem(DB.STAS, JSON.stringify(defaultStations));
-            if(!localStorage.getItem(DB.LOGS)) localStorage.setItem(DB.LOGS, JSON.stringify([]));
-            if(!localStorage.getItem(DB.CONF)) localStorage.setItem(DB.CONF, JSON.stringify({ syncInterval: 5 }));
-            if(!localStorage.getItem(DB.OS)) localStorage.setItem(DB.OS, JSON.stringify([]));
+    const CLOUD_PATHS = Object.freeze({
+        [DB_KEYS.USERS]: 'users',
+        [DB_KEYS.STATIONS]: 'stations',
+        [DB_KEYS.LOGS]: 'logs',
+        [DB_KEYS.CONFIG]: 'config',
+        [DB_KEYS.OS]: 'os'
+    });
+
+    const SESSION_KEY = 'sppm_active_user';
+    const MAX_LOG_ENTRIES = 3000;
+
+    const DEFAULT_STATIONS = [
+        { id: 1, name: 'Morrinhos 1 (Piloto)', region: 'Litoral Norte', lat: -3.2261, lon: -40.1222, quota: 15, mac: '', calib: 400, cam: '' },
+        { id: 2, name: 'Santana do Acaraú 2', region: 'Sertão Sobral', lat: -3.4589, lon: -40.1167, quota: 12, mac: '', calib: 400, cam: '' },
+        { id: 3, name: 'Caridade 1', region: 'Sertão Central', lat: -4.2188, lon: -39.2086, quota: 10, mac: '', calib: 400, cam: '' },
+        { id: 4, name: 'Russas 1', region: 'Vale do Jaguaribe', lat: -4.9405, lon: -37.9755, quota: 15, mac: '', calib: 400, cam: '' },
+        { id: 5, name: 'Russas 2', region: 'Vale do Jaguaribe', lat: -4.9500, lon: -37.9800, quota: 15, mac: '', calib: 400, cam: '' },
+        { id: 6, name: 'Russas 3', region: 'Vale do Jaguaribe', lat: -4.9300, lon: -37.9600, quota: 15, mac: '', calib: 400, cam: '' },
+        { id: 7, name: 'Russas 4', region: 'Vale do Jaguaribe', lat: -4.9600, lon: -37.9900, quota: 15, mac: '', calib: 400, cam: '' },
+        { id: 8, name: 'Pentecoste 1', region: 'Litoral Norte', lat: -3.7913, lon: -39.2725, quota: 10, mac: '', calib: 400, cam: '' },
+        { id: 9, name: 'Paraipaba 1', region: 'Litoral Norte', lat: -3.4388, lon: -39.1480, quota: 10, mac: '', calib: 400, cam: '' },
+        { id: 10, name: 'S. Gonçalo do Amarante 1', region: 'Litoral Norte', lat: -3.6063, lon: -38.9705, quota: 12, mac: '', calib: 400, cam: '' }
+    ];
+
+    /* =====================================================================
+       2. UTILITÁRIOS
+    ===================================================================== */
+    const Logger = {
+        info: (...a) => console.info('[SPPM]', ...a),
+        warn: (...a) => console.warn('[SPPM]', ...a),
+        error: (...a) => console.error('[SPPM]', ...a)
+    };
+
+    function safeParseArray(raw) {
+        if (!raw) return [];
+        try {
+            const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            if (!parsed) return [];
+            return Array.isArray(parsed) ? parsed : Object.values(parsed);
+        } catch (e) {
+            Logger.error('Falha ao interpretar dados locais (array). Retornando vazio.', e);
+            return [];
+        }
+    }
+
+    function safeParseObject(raw, fallback) {
+        if (!raw) return fallback;
+        try {
+            const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            return parsed || fallback;
+        } catch (e) {
+            Logger.error('Falha ao interpretar dados locais (objeto). Usando padrão.', e);
+            return fallback;
+        }
+    }
+
+    function getLocalTime() {
+        const now = new Date();
+        return new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 19).replace('T', ' ');
+    }
+
+    function debounce(fn, wait = 150) {
+        let timer;
+        return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), wait); };
+    }
+
+    function escapeCsvField(value) {
+        if (value === null || value === undefined || value === '') return 'N/D';
+        const str = String(value);
+        if (/[",\n;]/.test(str)) return `"${str.replace(/"/g, '""')}"`;
+        return str;
+    }
+
+    /* =====================================================================
+       3. STORAGE SERVICE — persistência local + nuvem, com fila serializada
+          para evitar condições de corrida entre escritas concorrentes.
+    ===================================================================== */
+    class StorageService {
+        constructor(firebaseConfig) {
+            this.cloudEnabled = false;
+            this.db = null;
+            this._writeChain = Promise.resolve();
+            this._initFirebase(firebaseConfig);
         }
 
-        // Função melhorada que garante que os dados retornem sempre em formato Array, blindando o erro de conversão de listas no Firebase!
-        const getDB = (key) => {
-            const data = JSON.parse(localStorage.getItem(key));
-            if(!data) return [];
-            return Array.isArray(data) ? data : Object.values(data);
-        };
-
-        const setDB = (key, val) => {
-            localStorage.setItem(key, JSON.stringify(val));
-            if(database) {
-                let cKey = "";
-                if(key===DB.USRS) cKey="users"; if(key===DB.STAS) cKey="stations"; if(key===DB.LOGS) cKey="logs"; if(key===DB.CONF) cKey="config"; if(key===DB.OS) cKey="os";
-                database.ref('sppm/' + cKey).set(val);
-            }
-        };
-
-        async function syncCloudToLocal() {
-            if(!database) return initLocalFallback();
+        _initFirebase(config) {
             try {
-                const snap = await database.ref('sppm').once('value');
-                const d = snap.val();
-                if(d) {
-                    if(d.users) localStorage.setItem(DB.USRS, JSON.stringify(Array.isArray(d.users) ? d.users : Object.values(d.users)));
-                    if(d.stations) localStorage.setItem(DB.STAS, JSON.stringify(Array.isArray(d.stations) ? d.stations : Object.values(d.stations)));
-                    if(d.logs) localStorage.setItem(DB.LOGS, JSON.stringify(Array.isArray(d.logs) ? d.logs : Object.values(d.logs)));
-                    if(d.config) localStorage.setItem(DB.CONF, JSON.stringify(d.config));
-                    if(d.os) localStorage.setItem(DB.OS, JSON.stringify(Array.isArray(d.os) ? d.os : Object.values(d.os)));
-                } else { initLocalFallback(); }
-            } catch(e) { initLocalFallback(); }
+                if (typeof firebase === 'undefined') throw new Error('SDK do Firebase não carregado.');
+                firebase.initializeApp(config);
+                this.db = firebase.database();
+                this.cloudEnabled = true;
+                Logger.info('Conexão com Firebase estabelecida.');
+            } catch (e) {
+                this.cloudEnabled = false;
+                Logger.warn('Firebase indisponível — operando em modo local (offline-first).', e);
+            }
         }
 
-        let currentUser = null; let syncTimer = null;
-        let mapDash, mapFull; let markersDash = []; let chartSidebar, chartEvol, chartHist, chartReg;
+        ensureDefaults() {
+            if (!localStorage.getItem(DB_KEYS.USERS)) {
+                localStorage.setItem(DB_KEYS.USERS, JSON.stringify([
+                    { id: 1, email: 'admin', pass: '1234', role: 'Admin', name: 'Comando Central', allowedStations: 'all' }
+                ]));
+            }
+            if (!localStorage.getItem(DB_KEYS.STATIONS)) localStorage.setItem(DB_KEYS.STATIONS, JSON.stringify(DEFAULT_STATIONS));
+            if (!localStorage.getItem(DB_KEYS.LOGS)) localStorage.setItem(DB_KEYS.LOGS, JSON.stringify([]));
+            if (!localStorage.getItem(DB_KEYS.CONFIG)) localStorage.setItem(DB_KEYS.CONFIG, JSON.stringify({ syncInterval: 5 }));
+            if (!localStorage.getItem(DB_KEYS.OS)) localStorage.setItem(DB_KEYS.OS, JSON.stringify([]));
+        }
 
-        /* =====================================================================
-           LOGIN, SESSÃO E RBAC GRANULAR
-        ===================================================================== */
-        document.getElementById('form-login').addEventListener('submit', (e) => {
-            e.preventDefault();
-            // Evita quebra por conta de letras maiúsculas e espaços automáticos do celular
-            const u = document.getElementById('login-user').value.trim().toLowerCase();
-            const p = document.getElementById('login-pass').value.trim();
-            
-            const user = getDB(DB.USRS).find(x => x.email.toLowerCase() === u && x.pass === p);
-            
-            if(user) {
-                currentUser = user; sessionStorage.setItem('sppm_active_user', JSON.stringify(user)); 
-                applyLoginUI(user); bootSystem();
-            } else { document.getElementById('login-error').style.display = 'block'; }
-        });
+        get(key) {
+            if (key === DB_KEYS.CONFIG) return safeParseObject(localStorage.getItem(key), { syncInterval: 5 });
+            return safeParseArray(localStorage.getItem(key));
+        }
 
-        function logout() { sessionStorage.removeItem('sppm_active_user'); clearInterval(syncTimer); document.getElementById('app-layout').style.display = 'none'; document.getElementById('login-screen').style.display = 'flex'; document.getElementById('login-pass').value = ''; }
+        // Grava localmente de forma síncrona (fonte de verdade imediata) e enfileira
+        // a réplica na nuvem. A fila garante ordem e evita que escritas paralelas
+        // pisem uma na outra (condição de corrida).
+        set(key, value) {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+            } catch (e) {
+                Logger.error('Falha ao gravar no localStorage.', e);
+            }
+            return this._queueCloudWrite(key, value);
+        }
 
-        async function checkSession() {
+        _queueCloudWrite(key, value) {
+            if (!this.cloudEnabled) return Promise.resolve();
+            const path = CLOUD_PATHS[key];
+            this._writeChain = this._writeChain
+                .then(() => this.db.ref(`sppm/${path}`).set(value))
+                .catch(e => Logger.error(`Falha ao sincronizar '${path}' com a nuvem.`, e));
+            return this._writeChain;
+        }
+
+        async pullFromCloud() {
+            this.ensureDefaults();
+            if (!this.cloudEnabled) return;
+            try {
+                const snap = await this.db.ref('sppm').once('value');
+                const remote = snap.val();
+                if (!remote) return;
+                if (remote.users) localStorage.setItem(DB_KEYS.USERS, JSON.stringify(safeParseArray(remote.users)));
+                if (remote.stations) localStorage.setItem(DB_KEYS.STATIONS, JSON.stringify(safeParseArray(remote.stations)));
+                if (remote.logs) localStorage.setItem(DB_KEYS.LOGS, JSON.stringify(safeParseArray(remote.logs)));
+                if (remote.config) localStorage.setItem(DB_KEYS.CONFIG, JSON.stringify(remote.config));
+                if (remote.os) localStorage.setItem(DB_KEYS.OS, JSON.stringify(safeParseArray(remote.os)));
+            } catch (e) {
+                Logger.error('Falha ao sincronizar com a nuvem. Utilizando cache local.', e);
+            }
+        }
+    }
+
+    /* =====================================================================
+       4. AUTH SERVICE
+    ===================================================================== */
+    class AuthService {
+        constructor(storage) {
+            this.storage = storage;
+            this.currentUser = null;
+        }
+
+        login(emailRaw, passRaw) {
+            const email = (emailRaw || '').trim().toLowerCase();
+            const pass = (passRaw || '').trim();
+            const user = this.storage.get(DB_KEYS.USERS).find(u => (u.email || '').toLowerCase() === email && u.pass === pass);
+            if (!user) return null;
+            this.currentUser = user;
+            try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(user)); } catch (e) { Logger.error('Falha ao persistir sessão.', e); }
+            return user;
+        }
+
+        logout() {
+            this.currentUser = null;
+            sessionStorage.removeItem(SESSION_KEY);
+        }
+
+        restoreSession() {
+            try {
+                const raw = sessionStorage.getItem(SESSION_KEY);
+                if (!raw) return null;
+                const saved = JSON.parse(raw);
+                const stillValid = this.storage.get(DB_KEYS.USERS).find(u => u.email.toLowerCase() === saved.email.toLowerCase());
+                if (!stillValid) { this.logout(); return null; }
+                this.currentUser = saved;
+                return saved;
+            } catch (e) {
+                Logger.error('Sessão corrompida — encerrando por segurança.', e);
+                this.logout();
+                return null;
+            }
+        }
+
+        isAdmin() { return !!this.currentUser && this.currentUser.role === 'Admin'; }
+    }
+
+    /* =====================================================================
+       5. STATION SERVICE
+    ===================================================================== */
+    class StationService {
+        constructor(storage) { this.storage = storage; }
+        getAll() { return this.storage.get(DB_KEYS.STATIONS); }
+        getById(id) { return this.getAll().find(s => s.id === id); }
+
+        upsert(payload) {
+            const stations = this.getAll();
+            const idx = stations.findIndex(s => s.id === payload.id);
+            if (idx > -1) stations[idx] = payload; else stations.push(payload);
+            return this.storage.set(DB_KEYS.STATIONS, stations);
+        }
+
+        remove(id) {
+            return this.storage.set(DB_KEYS.STATIONS, this.getAll().filter(s => s.id !== id));
+        }
+
+        // RBAC: nunca retorna estações fora do escopo do usuário — usado por TODAS
+        // as views (dashboard, mapa, alertas, O.S., export) para impedir vazamento de dados.
+        getScopedFor(user) {
+            const all = this.getAll();
+            if (!user || user.role === 'Admin' || user.allowedStations === 'all') return all;
+            const allowed = new Set(user.allowedStations || []);
+            return all.filter(s => allowed.has(s.id));
+        }
+    }
+
+    /* =====================================================================
+       6. USER SERVICE
+    ===================================================================== */
+    class UserService {
+        constructor(storage) { this.storage = storage; }
+        getAll() { return this.storage.get(DB_KEYS.USERS); }
+
+        async create({ name, email, pass, role, allowedStations }) {
+            const users = this.getAll();
+            const normalizedEmail = (email || '').trim().toLowerCase();
+            if (!normalizedEmail || !pass || !name) throw new Error('Preencha todos os campos obrigatórios.');
+            if (users.some(u => u.email.toLowerCase() === normalizedEmail)) throw new Error('Este e-mail já está cadastrado.');
+            if (role !== 'Admin' && (!allowedStations || allowedStations.length === 0)) throw new Error('Selecione pelo menos uma passagem para o Operador.');
+
+            const record = {
+                id: Date.now(),
+                name: name.trim(),
+                email: normalizedEmail,
+                pass: pass.trim(),
+                role,
+                allowedStations: role === 'Admin' ? 'all' : allowedStations
+            };
+            users.push(record);
+            await this.storage.set(DB_KEYS.USERS, users);
+            return record;
+        }
+
+        remove(id) {
+            return this.storage.set(DB_KEYS.USERS, this.getAll().filter(u => u.id !== id));
+        }
+    }
+
+    /* =====================================================================
+       7. TELEMETRY SERVICE (Open-Meteo) — com timeout, abort e normalização
+    ===================================================================== */
+    class TelemetryService {
+        static async fetchCurrent(lat, lon, timeoutMs = 9000) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=precipitation,temperature_2m,relative_humidity_2m,wind_speed_10m`;
+                const res = await fetch(url, { signal: controller.signal });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const json = await res.json();
+                const current = json && json.current;
+                if (!current) throw new Error('Resposta da API sem dados de telemetria.');
+                return {
+                    ok: true,
+                    precipitation: typeof current.precipitation === 'number' ? current.precipitation : 0,
+                    temperature: current.temperature_2m ?? null,
+                    humidity: current.relative_humidity_2m ?? null,
+                    wind: current.wind_speed_10m ?? null
+                };
+            } catch (e) {
+                return { ok: false, error: e.name === 'AbortError' ? 'Timeout na requisição de telemetria.' : e.message };
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
+        static classify(precip, quota) {
+            if (precip >= quota) return 'Interditado';
+            if (precip > 0) return 'Alerta';
+            return 'Normal';
+        }
+    }
+
+    /* =====================================================================
+       8. MAINTENANCE (O.S.) SERVICE
+    ===================================================================== */
+    class MaintenanceService {
+        constructor(storage) { this.storage = storage; }
+        getAll() { return this.storage.get(DB_KEYS.OS); }
+        hasOpenFor(stationName) { return this.getAll().some(o => o.station === stationName && o.status === 'Open'); }
+
+        autoFlag(stationName, issue, severity) {
+            if (this.hasOpenFor(stationName)) return Promise.resolve();
+            const list = this.getAll();
+            list.push({ id: Date.now() + Math.random(), station: stationName, issue, status: 'Open', date: getLocalTime(), severity });
+            return this.storage.set(DB_KEYS.OS, list);
+        }
+
+        create({ station, issue, severity }) {
+            const list = this.getAll();
+            list.push({ id: Date.now(), station, issue, status: 'Open', date: getLocalTime(), severity });
+            return this.storage.set(DB_KEYS.OS, list);
+        }
+
+        close(id) {
+            const list = this.getAll();
+            const idx = list.findIndex(o => o.id === id);
+            if (idx === -1) return Promise.resolve();
+            list[idx].status = 'Closed';
+            return this.storage.set(DB_KEYS.OS, list);
+        }
+
+        getOpenScoped(stationNames) {
+            return this.getAll().filter(o => o.status === 'Open' && stationNames.includes(o.station));
+        }
+    }
+
+    /* =====================================================================
+       9. CSV EXPORT SERVICE — robusto contra nulos, aspas e vírgulas
+    ===================================================================== */
+    class CsvExportService {
+        static export(logs, filenamePrefix = 'SPPM_Dataset') {
+            if (!logs || !logs.length) throw new Error('Dataset vazio para o escopo atual.');
+            const header = ['DataHora', 'Ponto_Monitoramento', 'Status_Cancela', 'Chuva_mm', 'Temperatura_C', 'Umidade_Relativa', 'Vento_kmh'];
+            const lines = [header.join(',')];
+            logs.forEach(l => {
+                lines.push([
+                    escapeCsvField(l.date),
+                    escapeCsvField(l.station),
+                    escapeCsvField(l.status),
+                    escapeCsvField(l.precip),
+                    escapeCsvField(l.temp),
+                    escapeCsvField(l.hum),
+                    escapeCsvField(l.wind)
+                ].join(','));
+            });
+            // BOM UTF-8 garante acentuação correta ao abrir no Excel
+            const csvContent = '\uFEFF' + lines.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${filenamePrefix}_${Date.now()}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+    }
+
+    /* =====================================================================
+       10. MAP MANAGER — ciclo de vida limpo, clustering e correção de resize
+    ===================================================================== */
+    class MapManager {
+        constructor(containerId, { center = [-5.3, -39.3], zoom = 6.5, zoomControl = true } = {}) {
+            this.containerId = containerId;
+            this.map = null;
+            this.clusterGroup = null;
+            this.center = center;
+            this.zoom = zoom;
+            this.zoomControl = zoomControl;
+            this._resizeObserver = null;
+        }
+
+        init() {
+            const el = document.getElementById(this.containerId);
+            if (!el) return;
+            this.map = L.map(this.containerId, { zoomControl: this.zoomControl, attributionControl: false }).setView(this.center, this.zoom);
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 }).addTo(this.map);
+
+            // Clustering evita poluição visual e melhora performance de renderização
+            // à medida que a malha de sensores cresce para centenas de pontos.
+            this.clusterGroup = (typeof L.markerClusterGroup === 'function')
+                ? L.markerClusterGroup({ maxClusterRadius: 45, spiderfyOnMaxZoom: true, disableClusteringAtZoom: 11 })
+                : L.layerGroup();
+            this.clusterGroup.addTo(this.map);
+
+            // Corrige definitivamente o bug clássico do Leaflet dentro de SPAs:
+            // tiles cinzas/cortados ao alternar entre abas com display:none.
+            this._resizeObserver = new ResizeObserver(debounce(() => this.invalidateSize(), 120));
+            this._resizeObserver.observe(el);
+        }
+
+        clearMarkers() { if (this.clusterGroup) this.clusterGroup.clearLayers(); }
+
+        addMarker(lat, lon, options = {}) {
+            if (!this.clusterGroup) return null;
+            const marker = L.marker([lat, lon], options);
+            this.clusterGroup.addLayer(marker);
+            return marker;
+        }
+
+        invalidateSize() { if (this.map) this.map.invalidateSize(); }
+
+        destroy() {
+            if (this._resizeObserver) this._resizeObserver.disconnect();
+            if (this.map) this.map.remove();
+        }
+    }
+
+    /* =====================================================================
+       11. CHART MANAGER — cria uma vez, atualiza dados (evita memory leak
+           de recriar instâncias de Chart.js a cada refresh)
+    ===================================================================== */
+    class ChartManager {
+        constructor() {
+            this.charts = {};
+            Chart.defaults.color = '#8b9bb4';
+            Chart.defaults.font.family = "'Inter', sans-serif";
+        }
+
+        get _commonOpts() {
+            return { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#111a29', titleColor: '#f8fafc', bodyColor: '#8b9bb4', borderColor: '#1e293b', borderWidth: 1 } } };
+        }
+
+        initAll() {
+            this.charts.sidebar = new Chart(document.getElementById('sidebarChart'), {
+                type: 'doughnut',
+                data: { labels: ['Op', 'Al', 'In'], datasets: [{ data: [1, 0, 0], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0, cutout: '82%' }] },
+                options: this._commonOpts
+            });
+
+            const ctxEv = document.getElementById('evolucaoChart').getContext('2d');
+            const gradGr = ctxEv.createLinearGradient(0, 0, 0, 300); gradGr.addColorStop(0, 'rgba(16, 185, 129, 0.4)'); gradGr.addColorStop(1, 'rgba(16, 185, 129, 0)');
+            const gradYe = ctxEv.createLinearGradient(0, 0, 0, 300); gradYe.addColorStop(0, 'rgba(245, 158, 11, 0.4)'); gradYe.addColorStop(1, 'rgba(245, 158, 11, 0)');
+            const gradRe = ctxEv.createLinearGradient(0, 0, 0, 300); gradRe.addColorStop(0, 'rgba(239, 68, 68, 0.4)'); gradRe.addColorStop(1, 'rgba(239, 68, 68, 0)');
+
+            this.charts.evolucao = new Chart(document.getElementById('evolucaoChart'), {
+                type: 'line',
+                data: {
+                    labels: ['D-4', 'D-3', 'D-2', 'Ontem', 'Hoje'],
+                    datasets: [
+                        { data: [], borderColor: '#10b981', backgroundColor: gradGr, fill: true, tension: 0.4, borderWidth: 2, pointRadius: 3 },
+                        { data: [], borderColor: '#f59e0b', backgroundColor: gradYe, fill: true, tension: 0.4, borderWidth: 2, pointRadius: 3 },
+                        { data: [], borderColor: '#ef4444', backgroundColor: gradRe, fill: true, tension: 0.4, borderWidth: 2, pointRadius: 3 }
+                    ]
+                },
+                options: { ...this._commonOpts, scales: { x: { grid: { display: false } }, y: { min: 0, max: 15, grid: { color: '#1e293b' } } } }
+            });
+
+            this.charts.historico = new Chart(document.getElementById('historicoChart'), {
+                type: 'bar',
+                data: { labels: ['D-4', 'D-3', 'D-2', 'Ontem', 'Hoje'], datasets: [{ data: [], backgroundColor: '#ef4444', borderRadius: 4 }] },
+                options: { ...this._commonOpts, scales: { x: { grid: { display: false } }, y: { min: 0, max: 10, grid: { color: '#1e293b' } } } }
+            });
+
+            this.charts.regiao = new Chart(document.getElementById('regiaoChart'), {
+                type: 'doughnut',
+                data: { labels: ['Sobral', 'Central', 'Litoral', 'Jaguaribe', 'Cariri'], datasets: [{ data: [0, 0, 0, 0, 0], backgroundColor: ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'], borderWidth: 0, cutout: '70%' }] },
+                options: this._commonOpts
+            });
+        }
+
+        updateSidebar(op, al, inn) { const c = this.charts.sidebar; c.data.datasets[0].data = [op, al, inn]; c.update(); }
+        updateEvolucao(op, al, inn) {
+            const c = this.charts.evolucao;
+            c.data.datasets[0].data = [Math.max(0, op - 2), op + 1, op, Math.max(0, op - 1), op];
+            c.data.datasets[1].data = [Math.max(0, al - 1), al + 1, al, al, al];
+            c.data.datasets[2].data = [inn, inn, inn, inn, inn];
+            c.update();
+        }
+        updateHistorico(inn) { const c = this.charts.historico; c.data.datasets[0].data = [inn, inn, inn, inn, inn]; c.update(); }
+        updateRegiao(values) { const c = this.charts.regiao; c.data.datasets[0].data = values; c.update(); }
+    }
+
+    /* =====================================================================
+       12. AI MODAL CONTROLLER — máquina de estados (conectando > analisando > resultado)
+    ===================================================================== */
+    class AIModalController {
+        constructor(stationService, latestLogResolver) {
+            this.stationService = stationService;
+            this.latestLogResolver = latestLogResolver; // (stationName) => log | undefined
+            this._timers = [];
+        }
+
+        open(stationId) {
+            const station = this.stationService.getById(stationId);
+            if (!station) return;
+            document.getElementById('ai-title').innerText = 'Edge AI IoT — ' + station.name;
+            document.getElementById('ai-modal').classList.add('active');
+            this._resetToScanning();
+            this._runSequence(station);
+        }
+
+        _resetToScanning() {
+            const overlay = document.getElementById('ai-scan-overlay');
+            overlay.style.display = 'flex';
+            overlay.style.opacity = '1';
+            document.getElementById('ai-scan-text').innerText = 'Conectando ao stream RTSP...';
+            document.getElementById('ai-status').innerText = 'Analisando...';
+            document.getElementById('ai-status').style.color = 'var(--text-white)';
+        }
+
+        _runSequence(station) {
+            this._clearTimers();
+            const overlay = document.getElementById('ai-scan-overlay');
+            const scanText = document.getElementById('ai-scan-text');
+
+            this._timers.push(setTimeout(() => { scanText.innerText = 'Executando inferência YOLOv8...'; }, 900));
+            this._timers.push(setTimeout(() => {
+                overlay.style.opacity = '0';
+                this._timers.push(setTimeout(() => { overlay.style.display = 'none'; }, 400));
+                const latestLog = this.latestLogResolver(station.name);
+                this._renderResult(latestLog);
+            }, 2100));
+        }
+
+        _renderResult(latestLog) {
+            let statusIA = 'Sem Obstruções', color = 'var(--color-green)', bg = 'rgba(16, 185, 129, 0.15)';
+            if (latestLog && latestLog.status === 'Interditado') { statusIA = 'Risco Iminente / Transbordo'; color = 'var(--color-red)'; bg = 'rgba(239, 68, 68, 0.25)'; }
+            else if (latestLog && latestLog.status === 'Alerta') { statusIA = 'Atenção: Lâmina Elevada'; color = 'var(--color-yellow)'; bg = 'rgba(245, 158, 11, 0.25)'; }
+
+            document.getElementById('ai-status').innerText = statusIA;
+            document.getElementById('ai-status').style.color = color;
+            document.getElementById('ai-box').style.borderColor = color;
+            document.getElementById('ai-box').style.background = bg;
+            document.getElementById('ai-badge').style.background = color;
+            document.getElementById('ai-badge').innerText = 'Área Delimitada: ' + statusIA;
+        }
+
+        close() {
+            this._clearTimers();
+            document.getElementById('ai-modal').classList.remove('active');
+        }
+
+        _clearTimers() { this._timers.forEach(clearTimeout); this._timers = []; }
+    }
+
+    /* =====================================================================
+       13. APLICAÇÃO PRINCIPAL — orquestra serviços, views e navegação
+    ===================================================================== */
+    class SPPMApp {
+        constructor() {
+            this.storage = new StorageService(FIREBASE_CONFIG);
+            this.auth = new AuthService(this.storage);
+            this.stations = new StationService(this.storage);
+            this.users = new UserService(this.storage);
+            this.maintenance = new MaintenanceService(this.storage);
+            this.mapDash = new MapManager('map-container', { zoomControl: false });
+            this.mapFull = new MapManager('map-full', { zoomControl: true, zoom: 7 });
+            this.ai = new AIModalController(this.stations, (name) => this._latestLogFor(name));
+            this.chartManager = null;
+            this.syncTimer = null;
+            this._syncInFlight = false;
+        }
+
+        /* ---------- BOOT ---------- */
+        async start() {
             document.getElementById('loading-overlay').style.display = 'flex';
-            await syncCloudToLocal();
+            await this.storage.pullFromCloud();
             document.getElementById('loading-overlay').style.opacity = '0';
-            setTimeout(()=> document.getElementById('loading-overlay').style.display = 'none', 500);
+            setTimeout(() => { document.getElementById('loading-overlay').style.display = 'none'; }, 500);
 
-            setupNavigation(); 
-            const savedSession = sessionStorage.getItem('sppm_active_user');
-            if(savedSession) {
-                currentUser = JSON.parse(savedSession);
-                if(getDB(DB.USRS).find(u => u.email.toLowerCase() === currentUser.email.toLowerCase())){ applyLoginUI(currentUser); bootSystem(); } else { logout(); }
-            } else { document.getElementById('login-screen').style.display = 'flex'; }
+            this._setupLoginForm();
+            this._setupNavigation();
+
+            const restored = this.auth.restoreSession();
+            if (restored) {
+                this._applyLoginUI(restored);
+                await this._bootAuthenticated();
+            } else {
+                document.getElementById('login-screen').style.display = 'flex';
+            }
         }
 
-        function applyLoginUI(user) {
-            document.getElementById('login-screen').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex';
-            document.getElementById('active-user-name').innerText = user.name; document.getElementById('active-user-role').innerText = user.role;
-            
-            document.querySelectorAll('th.admin-only, td.admin-only').forEach(el => el.style.display = user.role === 'Admin' ? 'table-cell' : 'none');
-            document.querySelectorAll('li.admin-only, button.admin-only, .admin-only').forEach(el => { if(el.tagName !== 'TH' && el.tagName !== 'TD') el.style.display = user.role === 'Admin' ? 'flex' : 'none'; });
+        _setupLoginForm() {
+            document.getElementById('form-login').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('login-submit-btn');
+                const errorEl = document.getElementById('login-error');
+                errorEl.style.display = 'none';
+                btn.disabled = true;
+                try {
+                    const user = this.auth.login(document.getElementById('login-user').value, document.getElementById('login-pass').value);
+                    if (!user) { errorEl.innerText = 'Credenciais inválidas.'; errorEl.style.display = 'block'; return; }
+                    this._applyLoginUI(user);
+                    await this._bootAuthenticated();
+                } catch (err) {
+                    Logger.error('Falha no login', err);
+                    errorEl.innerText = 'Erro inesperado ao autenticar. Tente novamente.';
+                    errorEl.style.display = 'block';
+                } finally {
+                    btn.disabled = false;
+                }
+            });
         }
 
-        function getScopedStations() {
-            const allStas = getDB(DB.STAS);
-            if(!currentUser || currentUser.role === 'Admin' || currentUser.allowedStations === 'all') return allStas;
-            return allStas.filter(s => currentUser.allowedStations.includes(s.id));
+        logout() {
+            this.auth.logout();
+            clearInterval(this.syncTimer);
+            document.getElementById('app-layout').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('login-pass').value = '';
         }
 
-        function getLocalTime() { const now = new Date(); return new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0,19).replace('T',' '); }
+        _applyLoginUI(user) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-layout').style.display = 'flex';
+            document.getElementById('active-user-name').innerText = user.name;
+            document.getElementById('active-user-role').innerText = user.role;
 
-        function navigateTo(targetId, filterStatus = null) {
-            const navItem = document.querySelector(`[data-target='${targetId}']`); if(navItem) navItem.click(); 
-            if(filterStatus) { setTimeout(() => { const fEl = document.getElementById('filtro-status'); if(fEl){ fEl.value = filterStatus; renderAlertsTable(); } }, 150); } else if (targetId === 'view-alertas') { setTimeout(() => { const fEl = document.getElementById('filtro-status'); if(fEl){ fEl.value = ""; renderAlertsTable(); } }, 150); }
+            const isAdmin = user.role === 'Admin';
+            document.querySelectorAll('th.admin-only, td.admin-only').forEach(el => el.style.display = isAdmin ? 'table-cell' : 'none');
+            document.querySelectorAll('li.admin-only, button.admin-only').forEach(el => el.style.display = isAdmin ? 'flex' : 'none');
         }
 
-        function setupNavigation() {
+        async _bootAuthenticated() {
+            this.mapDash.init();
+            this.mapFull.init();
+            this.chartManager = new ChartManager();
+            this.chartManager.initAll();
+            await this.syncAPI();
+            const cfg = this.storage.get(DB_KEYS.CONFIG);
+            clearInterval(this.syncTimer);
+            this.syncTimer = setInterval(() => this.syncAPI(), (cfg.syncInterval || 5) * 60000);
+        }
+
+        /* ---------- NAVEGAÇÃO ---------- */
+        _setupNavigation() {
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.addEventListener('click', () => {
-                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); item.classList.add('active');
-                    const target = item.getAttribute('data-target'); document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active')); document.getElementById(target).classList.add('active');
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    const target = item.getAttribute('data-target');
+                    document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+                    document.getElementById(target).classList.add('active');
                     document.getElementById('topbar-title').innerText = item.innerText.trim();
-                    document.querySelector('.sidebar').classList.remove('open'); 
-                    if(target==='view-dashboard' && mapDash) setTimeout(()=>mapDash.invalidateSize(), 100);
-                    if(target==='view-mapa' && mapFull) setTimeout(()=>mapFull.invalidateSize(), 100);
-                    if(target==='view-sistemas') renderStations();
-                    if(target==='view-usuarios') renderUsers();
-                    if(target==='view-alertas') { populateFilters(); renderAlertsTable(); }
-                    if(target==='view-manutencao') renderOS();
-                    if(target==='view-config') loadConfig();
+                    document.querySelector('.sidebar').classList.remove('open');
+
+                    if (target === 'view-dashboard') this.mapDash.invalidateSize();
+                    if (target === 'view-mapa') this.mapFull.invalidateSize();
+                    if (target === 'view-sistemas') this.renderStations();
+                    if (target === 'view-usuarios') this.renderUsers();
+                    if (target === 'view-alertas') { this._populateFilters(); this.renderAlertsTable(); }
+                    if (target === 'view-manutencao') this.renderOS();
+                    if (target === 'view-config') this._loadConfig();
                 });
             });
         }
 
-        function openModal(title, templateId) { document.getElementById('modal-title').innerText = title; document.getElementById('modal-body').innerHTML = document.getElementById(templateId).innerHTML; document.getElementById('global-modal').classList.add('active'); }
-        function closeModal() { document.getElementById('global-modal').classList.remove('active'); }
-
-        function openAIModal(id) {
-            const st = getDB(DB.STAS).find(x => x.id === id); const latestLog = getDB(DB.LOGS).find(l => l.station === st.name);
-            let statusIA = "Sem Obstruções"; let colorIA = "var(--color-green)"; let bgIA = "rgba(16, 185, 129, 0.15)";
-            if(latestLog && latestLog.status === 'Interditado') { statusIA = "Risco Iminente / Transbordo"; colorIA = "var(--color-red)"; bgIA = "rgba(239, 68, 68, 0.25)"; } else if (latestLog && latestLog.status === 'Alerta') { statusIA = "Atenção: Lâmina Elevada"; colorIA = "var(--color-yellow)"; bgIA = "rgba(245, 158, 11, 0.25)"; }
-            document.getElementById('ai-title').innerText = "Edge AI IoT - " + st.name; document.getElementById('ai-status').innerText = statusIA; document.getElementById('ai-status').style.color = colorIA; document.getElementById('ai-box').style.borderColor = colorIA; document.getElementById('ai-box').style.background = bgIA; document.getElementById('ai-badge').style.background = colorIA; document.getElementById('ai-badge').innerText = "Área Delimitada: " + statusIA; document.getElementById('ai-modal').classList.add('active');
-        }
-
-        /* =====================================================================
-           CRUD DE ESTAÇÕES E USUÁRIOS
-        ===================================================================== */
-        function openModalStation(id = null) {
-            openModal(id ? 'Editar Ponto Edge IoT' : 'Novo Provisionamento de Hardware', 'tpl-station-form');
-            if(id) {
-                const st = getDB(DB.STAS).find(x => x.id === id);
-                document.getElementById('st-id').value = st.id; document.getElementById('st-name').value = st.name; document.getElementById('st-region').value = st.region; document.getElementById('st-lat').value = st.lat; document.getElementById('st-lon').value = st.lon; document.getElementById('st-quota').value = st.quota; document.getElementById('st-mac').value = st.mac || ''; document.getElementById('st-calib').value = st.calib || ''; document.getElementById('st-cam').value = st.cam || '';
+        navigateTo(targetId, filterStatus = null) {
+            const navItem = document.querySelector(`[data-target='${targetId}']`);
+            if (navItem) navItem.click();
+            if (targetId === 'view-alertas') {
+                setTimeout(() => {
+                    const fEl = document.getElementById('filtro-status');
+                    if (fEl) { fEl.value = filterStatus || ''; this.renderAlertsTable(); }
+                }, 150);
             }
-            document.getElementById('form-station-submit').addEventListener('submit', (e) => {
-                e.preventDefault(); const stas = getDB(DB.STAS);
-                const obj = { id: document.getElementById('st-id').value ? parseInt(document.getElementById('st-id').value) : Date.now(), name: document.getElementById('st-name').value, region: document.getElementById('st-region').value, lat: parseFloat(document.getElementById('st-lat').value), lon: parseFloat(document.getElementById('st-lon').value), quota: parseFloat(document.getElementById('st-quota').value), mac: document.getElementById('st-mac').value, calib: document.getElementById('st-calib').value, cam: document.getElementById('st-cam').value };
-                if(document.getElementById('st-id').value) { const idx = stas.findIndex(x=>x.id===obj.id); stas[idx] = obj; } else { stas.push(obj); }
-                setDB(DB.STAS, stas); closeModal(); renderStations(); syncAPI(); alert("Ponto de telemetria cadastrado!");
+        }
+
+        /* ---------- MODAIS GENÉRICOS ---------- */
+        _openModal(title, templateId) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-body').innerHTML = document.getElementById(templateId).innerHTML;
+            document.getElementById('global-modal').classList.add('active');
+        }
+        closeModal() { document.getElementById('global-modal').classList.remove('active'); }
+
+        openAIModal(stationId) { this.ai.open(stationId); }
+        closeAIModal() { this.ai.close(); }
+
+        _latestLogFor(stationName) {
+            return this.storage.get(DB_KEYS.LOGS).find(l => l.station === stationName);
+        }
+
+        /* ---------- ESTAÇÕES (CRUD) ---------- */
+        openModalStation(id = null) {
+            this._openModal(id ? 'Editar Ponto Edge IoT' : 'Novo Provisionamento de Hardware', 'tpl-station-form');
+            if (id) {
+                const st = this.stations.getById(id);
+                document.getElementById('st-id').value = st.id;
+                document.getElementById('st-name').value = st.name;
+                document.getElementById('st-region').value = st.region;
+                document.getElementById('st-lat').value = st.lat;
+                document.getElementById('st-lon').value = st.lon;
+                document.getElementById('st-quota').value = st.quota;
+                document.getElementById('st-mac').value = st.mac || '';
+                document.getElementById('st-calib').value = st.calib || '';
+                document.getElementById('st-cam').value = st.cam || '';
+            }
+            document.getElementById('form-station-submit').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('station-submit-btn');
+                const errorEl = document.getElementById('station-form-error');
+                errorEl.style.display = 'none';
+                btn.disabled = true;
+                try {
+                    const lat = parseFloat(document.getElementById('st-lat').value);
+                    const lon = parseFloat(document.getElementById('st-lon').value);
+                    const quota = parseFloat(document.getElementById('st-quota').value);
+                    if (Number.isNaN(lat) || Number.isNaN(lon) || Number.isNaN(quota)) throw new Error('Latitude, longitude e cota crítica devem ser numéricos.');
+                    const obj = {
+                        id: document.getElementById('st-id').value ? parseInt(document.getElementById('st-id').value, 10) : Date.now(),
+                        name: document.getElementById('st-name').value.trim(),
+                        region: document.getElementById('st-region').value,
+                        lat, lon, quota,
+                        mac: document.getElementById('st-mac').value.trim(),
+                        calib: document.getElementById('st-calib').value,
+                        cam: document.getElementById('st-cam').value.trim()
+                    };
+                    await this.stations.upsert(obj);
+                    this.closeModal();
+                    this.renderStations();
+                    await this.syncAPI();
+                } catch (err) {
+                    errorEl.innerText = err.message || 'Falha ao salvar a estação.';
+                    errorEl.style.display = 'block';
+                } finally {
+                    btn.disabled = false;
+                }
             });
         }
-        function renderStations() {
-            document.querySelector('#table-stations tbody').innerHTML = getDB(DB.STAS).map(s => `<tr><td><span style="color:var(--text-muted)">#${s.id.toString().slice(-4)}</span></td><td><b style="color:var(--text-white)">${s.name}</b></td><td>${s.region}</td><td><span style="font-family:monospace; color:var(--text-muted)">${s.mac || 'N/A'}</span></td><td><span style="color:var(--color-yellow)">${s.quota} mm</span></td><td><button class="btn btn-outline" style="padding:4px 8px; font-size:0.7rem;" onclick="openAIModal(${s.id})"><i class="ph ph-camera"></i> IA</button></td><td class="admin-only" style="display:${currentUser && currentUser.role === 'Admin' ? 'table-cell' : 'none'}"><button class="btn btn-outline" style="padding:4px 8px; font-size:0.7rem; display:inline-block;" onclick="openModalStation(${s.id})">Config</button> <button class="btn btn-danger" style="padding:4px 8px; font-size:0.7rem; display:inline-block; margin-left:5px;" onclick="delStation(${s.id})">Excluir</button></td></tr>`).join('');
+
+        renderStations() {
+            const isAdmin = this.auth.isAdmin();
+            document.querySelector('#table-stations tbody').innerHTML = this.stations.getAll().map(s => `
+                <tr>
+                    <td><span style="color:var(--text-muted)">#${String(s.id).slice(-4)}</span></td>
+                    <td><b style="color:var(--text-white)">${s.name}</b></td>
+                    <td>${s.region}</td>
+                    <td><span style="font-family:monospace; color:var(--text-muted)">${s.mac || 'N/A'}</span></td>
+                    <td><span style="color:var(--color-yellow)">${s.quota} mm</span></td>
+                    <td><button class="btn btn-outline" style="padding:4px 8px; font-size:0.7rem;" onclick="SPPM.openAIModal(${s.id})"><i class="ph ph-camera"></i> IA</button></td>
+                    <td class="admin-only" style="display:${isAdmin ? 'table-cell' : 'none'}">
+                        <button class="btn btn-outline" style="padding:4px 8px; font-size:0.7rem; display:inline-block;" onclick="SPPM.openModalStation(${s.id})">Config</button>
+                        <button class="btn btn-danger" style="padding:4px 8px; font-size:0.7rem; display:inline-block; margin-left:5px;" onclick="SPPM.deleteStation(${s.id})">Excluir</button>
+                    </td>
+                </tr>`).join('');
         }
-        function delStation(id) { if(confirm('Desativar permanentemente?')) { setDB(DB.STAS, getDB(DB.STAS).filter(x=>x.id!==id)); renderStations(); syncAPI(); } }
 
-        function toggleUserStationSelection(role) { document.getElementById('container-station-select').style.display = role === 'Admin' ? 'none' : 'block'; }
+        async deleteStation(id) {
+            if (!confirm('Desativar permanentemente esta estação?')) return;
+            await this.stations.remove(id);
+            this.renderStations();
+            await this.syncAPI();
+        }
 
-        function openModalUser() {
-            openModal('Provisionar Servidor (RBAC)', 'tpl-user-form');
-            const allStations = getDB(DB.STAS);
-            document.getElementById('usr-stations-container').innerHTML = allStations.map(s => `<label class="checkbox-label"><input type="checkbox" name="usr_stations" value="${s.id}"> ${s.name} <span style="color:var(--text-muted);font-size:0.7rem">(${s.region})</span></label>`).join('');
-            
-            document.getElementById('form-user-submit').addEventListener('submit', (e) => {
-                e.preventDefault(); const usrs = getDB(DB.USRS); const role = document.getElementById('usr-role').value;
-                const emailToRegister = document.getElementById('usr-email').value.trim().toLowerCase();
-                
-                if(usrs.find(u => u.email.toLowerCase() === emailToRegister)) return alert("Este e-mail já está cadastrado.");
+        /* ---------- USUÁRIOS (RBAC) ---------- */
+        toggleUserStationSelection(role) {
+            document.getElementById('container-station-select').style.display = role === 'Admin' ? 'none' : 'block';
+        }
 
-                const selectedStations = Array.from(document.querySelectorAll('input[name="usr_stations"]:checked')).map(cb => parseInt(cb.value));
-                if (role === 'Operador' && selectedStations.length === 0) return alert("Selecione pelo menos uma passagem.");
-                
-                usrs.push({ id: Date.now(), name: document.getElementById('usr-name').value.trim(), email: emailToRegister, pass: document.getElementById('usr-pass').value.trim(), role: role, allowedStations: role === 'Admin' ? 'all' : selectedStations });
-                setDB(DB.USRS, usrs); closeModal(); renderUsers(); alert("Usuário provisionado com sucesso!");
+        openModalUser() {
+            this._openModal('Provisionar Servidor (RBAC)', 'tpl-user-form');
+            document.getElementById('usr-stations-container').innerHTML = this.stations.getAll()
+                .map(s => `<label class="checkbox-label"><input type="checkbox" name="usr_stations" value="${s.id}"> ${s.name} <span style="color:var(--text-muted);font-size:0.7rem">(${s.region})</span></label>`).join('');
+
+            document.getElementById('form-user-submit').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('user-submit-btn');
+                const errorEl = document.getElementById('user-form-error');
+                errorEl.style.display = 'none';
+                btn.disabled = true;
+                try {
+                    const role = document.getElementById('usr-role').value;
+                    const allowedStations = Array.from(document.querySelectorAll('input[name="usr_stations"]:checked')).map(cb => parseInt(cb.value, 10));
+                    await this.users.create({
+                        name: document.getElementById('usr-name').value,
+                        email: document.getElementById('usr-email').value,
+                        pass: document.getElementById('usr-pass').value,
+                        role, allowedStations
+                    });
+                    this.closeModal();
+                    this.renderUsers();
+                } catch (err) {
+                    errorEl.innerText = err.message || 'Falha ao provisionar usuário.';
+                    errorEl.style.display = 'block';
+                } finally {
+                    btn.disabled = false;
+                }
             });
         }
-        function renderUsers() {
-            document.querySelector('#table-users tbody').innerHTML = getDB(DB.USRS).map(u => {
-                let accessText = u.role === 'Admin' ? 'Acesso Total Global' : (u.allowedStations && u.allowedStations.length ? `${u.allowedStations.length} Passagem(ns)` : 'Nenhuma');
-                return `<tr><td><b style="color:var(--text-white)">${u.name}</b></td><td>${u.email}</td><td><span style="color:${u.role==='Admin'?'var(--color-green)':'var(--color-yellow)'}">${u.role}</span></td><td><span style="border:1px solid var(--border-color); padding:4px 8px; border-radius:4px; font-size:0.7rem; color:var(--text-muted)">${accessText}</span></td><td>${u.email !== 'admin' ? `<button class="btn btn-danger" style="padding:4px 8px; font-size:0.7rem;" onclick="delUser(${u.id})">Revogar</button>` : '-'}</td></tr>`;
+
+        renderUsers() {
+            document.querySelector('#table-users tbody').innerHTML = this.users.getAll().map(u => {
+                const accessText = u.role === 'Admin' ? 'Acesso Total Global' : (u.allowedStations && u.allowedStations.length ? `${u.allowedStations.length} Passagem(ns)` : 'Nenhuma');
+                const canRevoke = u.email !== 'admin';
+                return `<tr>
+                    <td><b style="color:var(--text-white)">${u.name}</b></td>
+                    <td>${u.email}</td>
+                    <td><span style="color:${u.role === 'Admin' ? 'var(--color-green)' : 'var(--color-yellow)'}">${u.role}</span></td>
+                    <td><span style="border:1px solid var(--border-color); padding:4px 8px; border-radius:4px; font-size:0.7rem; color:var(--text-muted)">${accessText}</span></td>
+                    <td>${canRevoke ? `<button class="btn btn-danger" style="padding:4px 8px; font-size:0.7rem;" onclick="SPPM.deleteUser(${u.id})">Revogar</button>` : '-'}</td>
+                </tr>`;
             }).join('');
         }
-        function delUser(id) { if(confirm('Revogar acesso deste servidor?')) { setDB(DB.USRS, getDB(DB.USRS).filter(x=>x.id!==id)); renderUsers(); } }
 
-        /* =====================================================================
-           MOTOR DE TELEMETRIA (OPEN-METEO) E DASHBOARD SCOPED
-        ===================================================================== */
-        async function syncAPI() {
-            const allStas = getDB(DB.STAS); let logs = getDB(DB.LOGS); let os = getDB(DB.OS);
-            const currentTime = getLocalTime();
-            for(let st of allStas) {
-                try {
-                    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${st.lat}&longitude=${st.lon}&current=precipitation,temperature_2m,relative_humidity_2m,wind_speed_10m`);
-                    if(!res.ok) throw new Error("Offline");
-                    const data = (await res.json()).current;
-                    let status = "Normal";
-                    if(data.precipitation > 0 && data.precipitation < st.quota) status = "Alerta"; else if(data.precipitation >= st.quota) status = "Interditado";
-                    logs.unshift({ id: Date.now()+Math.random(), date: currentTime, station: st.name, status: status, precip: data.precipitation, temp: data.temperature_2m, hum: data.relative_humidity_2m, wind: data.wind_speed_10m });
-                    
-                    if(data.wind_speed_10m > 40 || Math.random() < 0.05) { if(!os.find(x=>x.station === st.name && x.status === 'Open')) os.push({ id: Date.now(), station: st.name, issue: 'Anomalia Física / Descalibração JSN', status: 'Open', date: new Date().toLocaleDateString('pt-BR'), severity: 'warning' }); }
-                } catch(e) {
-                    if(!os.find(x=>x.station === st.name && x.status === 'Open')) os.push({ id: Date.now(), station: st.name, issue: 'Queda de Sinal (RTSP/MQTT)', status: 'Open', date: new Date().toLocaleDateString('pt-BR'), severity: 'critical' });
-                }
-            }
-            if(logs.length > 3000) logs.length = 3000;
-            setDB(DB.LOGS, logs); setDB(DB.OS, os);
-            updateDashboardUI();
+        async deleteUser(id) {
+            if (!confirm('Revogar acesso deste servidor?')) return;
+            await this.users.remove(id);
+            this.renderUsers();
         }
 
-        function updateDashboardUI() {
-            const myStas = getScopedStations(); const myStasNames = myStas.map(s => s.name); const myLogs = getDB(DB.LOGS).filter(l => myStasNames.includes(l.station));
-            let cOp=0, cAl=0, cIn=0, cOff=0; let htmlAlerts = []; let regCount = { 'Sertão Sobral':0, 'Sertão Central':0, 'Litoral Norte':0, 'Vale do Jaguaribe':0, 'Cariri':0 };
-            markersDash.forEach(m => mapDash.removeLayer(m)); markersDash = [];
+        /* ---------- ALERTAS / DATA LAKE (escopados por RBAC) ---------- */
+        _populateFilters() {
+            const scoped = this.stations.getScopedFor(this.auth.currentUser);
+            document.getElementById('filtro-estacao').innerHTML = '<option value="">Todas do Escopo</option>' + scoped.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+        }
 
-            myStas.forEach(st => {
-                const latestLog = myLogs.find(l => l.station === st.name);
-                let color = "gray", status = "Offline", precip = 0;
+        renderAlertsTable() {
+            const fd = document.getElementById('filtro-data').value;
+            const fs = document.getElementById('filtro-estacao').value;
+            const fst = document.getElementById('filtro-status').value;
+            const scopedNames = this.stations.getScopedFor(this.auth.currentUser).map(s => s.name);
+
+            document.querySelector('#table-logs tbody').innerHTML = this.storage.get(DB_KEYS.LOGS)
+                .filter(l => scopedNames.includes(l.station))
+                .filter(l => (!fd || l.date.startsWith(fd)) && (!fs || l.station === fs) && (!fst || l.status === fst))
+                .slice(0, 100)
+                .map(l => `<tr>
+                    <td style="color:var(--text-muted)">${l.date}</td>
+                    <td><b style="color:var(--text-white)">${l.station}</b></td>
+                    <td><span style="color:${l.status === 'Interditado' ? 'var(--color-red)' : (l.status === 'Alerta' ? 'var(--color-yellow)' : 'var(--color-green)')}; font-weight:700;">${l.status}</span></td>
+                    <td><span style="color:var(--color-yellow)">${l.precip ?? 'N/D'} mm</span></td>
+                    <td><i class="ph ph-check" style="color:var(--color-green)"></i> Validado</td>
+                </tr>`).join('');
+        }
+
+        exportCSV() {
+            try {
+                const scopedNames = this.stations.getScopedFor(this.auth.currentUser).map(s => s.name);
+                const logs = this.storage.get(DB_KEYS.LOGS).filter(l => scopedNames.includes(l.station));
+                CsvExportService.export(logs);
+            } catch (err) {
+                alert(err.message || 'Falha ao exportar o dataset.');
+            }
+        }
+
+        /* ---------- MANUTENÇÃO (O.S.) ---------- */
+        openModalCreateOS() {
+            this._openModal('Registrar Chamado / O.S.', 'tpl-os-form');
+            const scoped = this.stations.getScopedFor(this.auth.currentUser);
+            document.getElementById('os-station').innerHTML = scoped.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+            document.getElementById('form-os-submit').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.maintenance.create({
+                    station: document.getElementById('os-station').value,
+                    issue: document.getElementById('os-issue').value,
+                    severity: document.getElementById('os-severity').value
+                });
+                this.closeModal();
+                this.renderOS();
+            });
+        }
+
+        renderOS() {
+            const scopedNames = this.stations.getScopedFor(this.auth.currentUser).map(s => s.name);
+            const openList = this.maintenance.getOpenScoped(scopedNames);
+            const canClose = this.auth.isAdmin();
+
+            document.getElementById('os-container').innerHTML = openList.length ? openList.map(o => `
+                <div class="os-card ${o.severity}">
+                    <h4 style="color:var(--text-white); font-size:1rem; margin-bottom:10px;"><i class="ph-fill ph-warning"></i> ${o.station}</h4>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Abertura: <strong>${o.date}</strong></p>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:15px; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px;">Diagnóstico CCO: <span style="color:var(--text-white)">${o.issue}</span></p>
+                    ${canClose
+                        ? `<button class="btn btn-outline" style="width:100%;" onclick="SPPM.closeOS(${o.id})"><i class="ph ph-check-circle"></i> Marcar O.S como Concluída</button>`
+                        : `<span style="font-size:0.75rem; color:var(--color-yellow); display:flex; align-items:center; gap:5px; justify-content:center; padding:10px; background:rgba(245,158,11,0.1); border-radius:8px;"><i class="ph ph-lock"></i> Apenas Admins podem encerrar</span>`}
+                </div>`).join('') : '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted);"><i class="ph ph-check-circle" style="font-size:3rem; margin-bottom:10px; color:var(--color-green)"></i><p>Hardware operante. Nenhuma anomalia detectada.</p></div>';
+        }
+
+        async closeOS(id) { await this.maintenance.close(id); this.renderOS(); }
+
+        /* ---------- CONFIGURAÇÕES ---------- */
+        _loadConfig() { document.getElementById('cfg-sync').value = this.storage.get(DB_KEYS.CONFIG).syncInterval; }
+
+        async saveConfig(e) {
+            e.preventDefault();
+            const syncInterval = parseInt(document.getElementById('cfg-sync').value, 10) || 5;
+            await this.storage.set(DB_KEYS.CONFIG, { syncInterval });
+            clearInterval(this.syncTimer);
+            this.syncTimer = setInterval(() => this.syncAPI(), syncInterval * 60000);
+            alert('Parâmetros do Servidor atualizados.');
+        }
+
+        /* ---------- MOTOR DE TELEMETRIA ---------- */
+        async syncAPI() {
+            // Evita sobreposição de ciclos caso uma sincronização anterior ainda esteja em andamento
+            // (previne condição de corrida ao gravar logs/OS simultaneamente).
+            if (this._syncInFlight) return;
+            this._syncInFlight = true;
+            const btn = document.getElementById('btn-sync');
+            if (btn) btn.disabled = true;
+
+            try {
+                const allStations = this.stations.getAll();
+                const logs = this.storage.get(DB_KEYS.LOGS);
+                const currentTime = getLocalTime();
+
+                const results = await Promise.allSettled(allStations.map(st => TelemetryService.fetchCurrent(st.lat, st.lon)));
+
+                for (let i = 0; i < allStations.length; i++) {
+                    const st = allStations[i];
+                    const outcome = results[i];
+                    const reading = outcome.status === 'fulfilled' ? outcome.value : { ok: false, error: outcome.reason?.message };
+
+                    if (reading.ok) {
+                        const status = TelemetryService.classify(reading.precipitation, st.quota);
+                        logs.unshift({
+                            id: Date.now() + Math.random(),
+                            date: currentTime,
+                            station: st.name,
+                            status,
+                            precip: reading.precipitation,
+                            temp: reading.temperature,
+                            hum: reading.humidity,
+                            wind: reading.wind
+                        });
+                        if ((reading.wind ?? 0) > 40) {
+                            await this.maintenance.autoFlag(st.name, 'Anomalia Física / Descalibração JSN', 'warning');
+                        }
+                    } else {
+                        Logger.warn(`Falha de telemetria em ${st.name}: ${reading.error}`);
+                        await this.maintenance.autoFlag(st.name, 'Queda de Sinal (RTSP/MQTT)', 'critical');
+                    }
+                }
+
+                if (logs.length > MAX_LOG_ENTRIES) logs.length = MAX_LOG_ENTRIES;
+                await this.storage.set(DB_KEYS.LOGS, logs);
+                this._updateDashboardUI();
+            } catch (err) {
+                Logger.error('Falha crítica no ciclo de sincronização.', err);
+            } finally {
+                this._syncInFlight = false;
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        _updateDashboardUI() {
+            const scopedStations = this.stations.getScopedFor(this.auth.currentUser);
+            const scopedNames = scopedStations.map(s => s.name);
+            const scopedLogs = this.storage.get(DB_KEYS.LOGS).filter(l => scopedNames.includes(l.station));
+
+            let cOp = 0, cAl = 0, cIn = 0, cOff = 0;
+            const htmlAlerts = [];
+            const regCount = { 'Sertão Sobral': 0, 'Sertão Central': 0, 'Litoral Norte': 0, 'Vale do Jaguaribe': 0, 'Cariri': 0 };
+
+            this.mapDash.clearMarkers();
+
+            scopedStations.forEach(st => {
+                const latestLog = scopedLogs.find(l => l.station === st.name);
+                let color = 'gray', status = 'Offline', precip = 0;
+
                 if (latestLog) {
-                    status = latestLog.status; precip = latestLog.precip;
-                    if(status === 'Alerta') { color = 'yellow'; cAl++; } else if(status === 'Interditado') { color = 'red'; cIn++; } else { color = 'green'; cOp++; }
-                    if(regCount[st.region] !== undefined) regCount[st.region]++;
-                    if(status !== "Normal" && htmlAlerts.length < 5) htmlAlerts.push(`<div class="alert-item"><i class="ph-fill ${status==='Interditado'?'ph-minus-circle':'ph-warning'}" style="color:var(--color-${color}); font-size:1.4rem;"></i><div><h4 style="font-size:0.8rem; color:var(--text-white); margin-bottom:2px;">${st.name}</h4><p style="font-size:0.7rem; color:var(--text-muted);">${status} - ${precip}mm captados.</p></div></div>`);
-                } else { cOff++; }
-                const icon = L.divIcon({ className: '', html: `<div style="background:var(--color-${color}); width:12px; height:12px; border-radius:50%; border:1px solid #fff; box-shadow: 0 0 8px rgba(0,0,0,0.8);"></div>`});
-                markersDash.push(L.marker([st.lat, st.lon], {icon}).addTo(mapDash).bindPopup(`<div style="text-align:center;"><b style="color:#000">${st.name}</b><br><span style="color:#666; font-size:0.8rem;">Lâmina: ${precip}mm</span><br><button class="btn btn-primary" style="margin-top:8px; font-size:0.65rem; padding:4px 8px; width:100%; border-radius:4px;" onclick="openAIModal(${st.id})"><i class="ph-fill ph-camera"></i> Câmera IA</button></div>`));
+                    status = latestLog.status;
+                    precip = latestLog.precip;
+                    if (status === 'Alerta') { color = 'yellow'; cAl++; }
+                    else if (status === 'Interditado') { color = 'red'; cIn++; }
+                    else { color = 'green'; cOp++; }
+                    if (regCount[st.region] !== undefined) regCount[st.region]++;
+                    if (status !== 'Normal' && htmlAlerts.length < 5) {
+                        htmlAlerts.push(`<div class="alert-item"><i class="ph-fill ${status === 'Interditado' ? 'ph-minus-circle' : 'ph-warning'}" style="color:var(--color-${color}); font-size:1.4rem;"></i><div><h4 style="font-size:0.8rem; color:var(--text-white); margin-bottom:2px;">${st.name}</h4><p style="font-size:0.7rem; color:var(--text-muted);">${status} - ${precip ?? 'N/D'}mm captados.</p></div></div>`);
+                    }
+                } else {
+                    cOff++;
+                }
+
+                const icon = L.divIcon({ className: '', html: `<div style="background:var(--color-${color}); width:12px; height:12px; border-radius:50%; border:1px solid #fff; box-shadow: 0 0 8px rgba(0,0,0,0.8);"></div>` });
+                this.mapDash.addMarker(st.lat, st.lon, { icon }).bindPopup(`<div style="text-align:center;"><b style="color:#000">${st.name}</b><br><span style="color:#666; font-size:0.8rem;">Lâmina: ${precip ?? 'N/D'}mm</span><br><button class="btn btn-primary" style="margin-top:8px; font-size:0.65rem; padding:4px 8px; width:100%; border-radius:4px;" onclick="SPPM.openAIModal(${st.id})"><i class="ph-fill ph-camera"></i> Câmera IA</button></div>`);
             });
 
-            let total = myStas.length;
-            document.getElementById('card-op').innerText = cOp; document.getElementById('card-al').innerText = cAl; document.getElementById('card-in').innerText = cIn; document.getElementById('card-off').innerText = cOff;
-            document.getElementById('sb-op').innerText = cOp; document.getElementById('sb-al').innerText = cAl; document.getElementById('sb-in').innerText = cIn;
-            document.getElementById('perc-op').innerText = total ? Math.round((cOp/total)*100)+'%' : '0%';
+            const total = scopedStations.length;
+            document.getElementById('card-op').innerText = cOp;
+            document.getElementById('card-al').innerText = cAl;
+            document.getElementById('card-in').innerText = cIn;
+            document.getElementById('card-off').innerText = cOff;
+            document.getElementById('sb-op').innerText = cOp;
+            document.getElementById('sb-al').innerText = cAl;
+            document.getElementById('sb-in').innerText = cIn;
+            document.getElementById('perc-op').innerText = total ? Math.round((cOp / total) * 100) + '%' : '0%';
             document.getElementById('badge-alertas').innerText = cAl + cIn;
             document.getElementById('dashboard-alerts').innerHTML = htmlAlerts.length ? htmlAlerts.join('') : '<p style="color:var(--text-muted); font-size:0.8rem;">Malha sob seu escopo estável.</p>';
 
-            chartSidebar.data.datasets[0].data = [cOp, cAl, cIn]; chartSidebar.update();
-            chartEvol.data.datasets[0].data = [Math.max(0, cOp-2), cOp+1, cOp, Math.max(0, cOp-1), cOp]; chartEvol.data.datasets[1].data = [Math.max(0, cAl-1), cAl+1, cAl, cAl, cAl]; chartEvol.data.datasets[2].data = [cIn, cIn, cIn, cIn, cIn]; chartEvol.update();
-            chartHist.data.datasets[0].data = [cIn, cIn, cIn, cIn, cIn]; chartHist.update();
-            
+            this.chartManager.updateSidebar(cOp, cAl, cIn);
+            this.chartManager.updateEvolucao(cOp, cAl, cIn);
+            this.chartManager.updateHistorico(cIn);
             const rData = [regCount['Sertão Sobral'], regCount['Sertão Central'], regCount['Litoral Norte'], regCount['Vale do Jaguaribe'], regCount['Cariri']];
-            chartReg.data.datasets[0].data = rData; chartReg.update();
+            this.chartManager.updateRegiao(rData);
+
             document.getElementById('regiao-legend').innerHTML = `
                 <div style="display:flex; justify-content:space-between;"><span><span class="dot green"></span> Sertão Sobral</span> <strong>${rData[0]}</strong></div>
                 <div style="display:flex; justify-content:space-between;"><span><span class="dot blue" style="background:var(--color-blue)"></span> Sertão Central</span> <strong>${rData[1]}</strong></div>
@@ -731,95 +1501,22 @@
                 <div style="display:flex; justify-content:space-between;"><span><span class="dot yellow"></span> Vale Jaguaribe</span> <strong>${rData[3]}</strong></div>
                 <div style="display:flex; justify-content:space-between;"><span><span class="dot red"></span> Cariri</span> <strong>${rData[4]}</strong></div>
             `;
-            if(document.getElementById('view-alertas').classList.contains('active')) renderAlertsTable();
-            if(document.getElementById('view-manutencao').classList.contains('active')) renderOS();
+
+            if (document.getElementById('view-alertas').classList.contains('active')) this.renderAlertsTable();
+            if (document.getElementById('view-manutencao').classList.contains('active')) this.renderOS();
         }
+    }
 
-        /* =====================================================================
-           ALERTAS E RELATÓRIOS (DATA LAKE ESCOPADO)
-        ===================================================================== */
-        function populateFilters() { document.getElementById('filtro-estacao').innerHTML = '<option value="">Todas do Escopo</option>' + getScopedStations().map(s => `<option value="${s.name}">${s.name}</option>`).join(''); }
-
-        function renderAlertsTable() {
-            const fd = document.getElementById('filtro-data').value, fs = document.getElementById('filtro-estacao').value, fst = document.getElementById('filtro-status').value;
-            const myStasNames = getScopedStations().map(s => s.name);
-            document.querySelector('#table-logs tbody').innerHTML = getDB(DB.LOGS).filter(l => myStasNames.includes(l.station)).filter(l => (!fd || l.date.startsWith(fd)) && (!fs || l.station === fs) && (!fst || l.status === fst)).slice(0,100).map(l => `<tr><td style="color:var(--text-muted)">${l.date}</td><td><b style="color:var(--text-white)">${l.station}</b></td><td><span style="color:${l.status==='Interditado'?'var(--color-red)':(l.status==='Alerta'?'var(--color-yellow)':'var(--color-green)')}; font-weight:700;">${l.status}</span></td><td><span style="color:var(--color-yellow)">${l.precip} mm</span></td><td><i class="ph ph-check" style="color:var(--color-green)"></i> Validado</td></tr>`).join('');
-        }
-
-        function exportCSV() {
-            const myStasNames = getScopedStations().map(s => s.name); const logs = getDB(DB.LOGS).filter(l => myStasNames.includes(l.station)); 
-            if(!logs.length) return alert("Dataset Vazio para o seu Escopo.");
-            let csv = "DataHora,Ponto_Monitoramento,Status_Cancela,Chuva_mm,Temperatura_C,Umidade_Relativa,Vento_kmh\n";
-            logs.forEach(l => csv += `${l.date},${l.station},${l.status},${l.precip},${l.temp},${l.hum},${l.wind}\n`);
-            const a = document.createElement('a'); a.href = window.URL.createObjectURL(new Blob([csv], {type: 'text/csv'})); a.download = `SPPM_Dataset_${new Date().getTime()}.csv`; a.click();
-        }
-
-        /* =====================================================================
-           MANUTENÇÃO E O.S. (CRIAÇÃO PERMITIDA / EXCLUSÃO SÓ ADMIN)
-        ===================================================================== */
-        function openModalCreateOS() {
-            openModal('Registrar Chamado / O.S.', 'tpl-os-form');
-            document.getElementById('os-station').innerHTML = getScopedStations().map(s => `<option value="${s.name}">${s.name}</option>`).join('');
-            document.getElementById('form-os-submit').addEventListener('submit', (e) => {
-                e.preventDefault(); let os = getDB(DB.OS);
-                os.push({ id: Date.now(), station: document.getElementById('os-station').value, issue: document.getElementById('os-issue').value, status: 'Open', date: getLocalTime(), severity: document.getElementById('os-severity').value });
-                setDB(DB.OS, os); closeModal(); renderOS(); alert("Solicitação registrada.");
-            });
-        }
-
-        function renderOS() {
-            const myStasNames = getScopedStations().map(s => s.name);
-            const osList = getDB(DB.OS).filter(x => x.status === 'Open' && myStasNames.includes(x.station));
-            const canClose = currentUser && currentUser.role === 'Admin';
-            
-            document.getElementById('os-container').innerHTML = osList.length ? osList.map(o => `
-                <div class="os-card ${o.severity}">
-                    <h4 style="color:var(--text-white); font-size:1rem; margin-bottom:10px;"><i class="ph-fill ph-warning"></i> ${o.station}</h4>
-                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Abertura: <strong>${o.date}</strong></p>
-                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:15px; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px;">Diagnóstico CCO: <span style="color:var(--text-white)">${o.issue}</span></p>
-                    ${canClose ? `<button class="btn btn-outline" style="width:100%;" onclick="closeOS(${o.id})"><i class="ph ph-check-circle"></i> Marcar O.S como Concluída</button>` : `<span style="font-size:0.75rem; color:var(--color-yellow); display:flex; align-items:center; gap:5px; justify-content:center; padding:10px; background:rgba(245,158,11,0.1); border-radius:8px;"><i class="ph ph-lock"></i> Apenas Admins podem encerrar</span>`}
-                </div>
-            `).join('') : '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted);"><i class="ph ph-check-circle" style="font-size:3rem; margin-bottom:10px; color:var(--color-green)"></i><p>Hardware operante. Nenhuma anomalia detectada.</p></div>';
-        }
-        function closeOS(id) { let os = getDB(DB.OS); const idx = os.findIndex(x=>x.id===id); if(idx>-1) { os[idx].status = 'Closed'; setDB(DB.OS, os); renderOS(); } }
-
-        /* =====================================================================
-           CONFIGURAÇÕES DO SISTEMA E CARREGAMENTO GERAL
-        ===================================================================== */
-        function loadConfig() { const c = getDB(DB.CONF); document.getElementById('cfg-sync').value = c.syncInterval; }
-        document.getElementById('form-config').addEventListener('submit', (e) => {
-            e.preventDefault(); const c = { syncInterval: parseInt(document.getElementById('cfg-sync').value) }; setDB(DB.CONF, c); alert("Parâmetros do Servidor atualizados.");
-            clearInterval(syncTimer); syncTimer = setInterval(syncAPI, c.syncInterval * 60000);
-        });
-
-        function initMaps() {
-            mapDash = L.map('map-container', { zoomControl: false, attributionControl: false }).setView([-5.3, -39.3], 6.5); L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(mapDash);
-            mapFull = L.map('map-full').setView([-5.3, -39.3], 7); L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(mapFull);
-        }
-
-        function initCharts() {
-            Chart.defaults.color = '#8b9bb4'; Chart.defaults.font.family = "'Inter', sans-serif";
-            const commonOpts = { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#111a29', titleColor: '#f8fafc', bodyColor: '#8b9bb4', borderColor: '#1e293b', borderWidth: 1 } } };
-
-            chartSidebar = new Chart(document.getElementById('sidebarChart'), { type: 'doughnut', data: { labels: ['Op','Al','In'], datasets: [{ data: [1,0,0], backgroundColor: ['#10b981','#f59e0b','#ef4444'], borderWidth:0, cutout:'82%' }] }, options: commonOpts });
-            
-            const ctxEv = document.getElementById('evolucaoChart').getContext('2d');
-            const gradGr = ctxEv.createLinearGradient(0,0,0,300); gradGr.addColorStop(0,'rgba(16, 185, 129, 0.4)'); gradGr.addColorStop(1,'rgba(16, 185, 129, 0)');
-            const gradYe = ctxEv.createLinearGradient(0,0,0,300); gradYe.addColorStop(0,'rgba(245, 158, 11, 0.4)'); gradYe.addColorStop(1,'rgba(245, 158, 11, 0)');
-            const gradRe = ctxEv.createLinearGradient(0,0,0,300); gradRe.addColorStop(0,'rgba(239, 68, 68, 0.4)'); gradRe.addColorStop(1,'rgba(239, 68, 68, 0)');
-
-            chartEvol = new Chart(document.getElementById('evolucaoChart'), { type: 'line', data: { labels: ['D-4','D-3','D-2','Ontem','Hoje'], datasets: [{ data: [], borderColor: '#10b981', backgroundColor: gradGr, fill: true, tension: 0.4, borderWidth: 2, pointRadius:3 }, { data: [], borderColor: '#f59e0b', backgroundColor: gradYe, fill: true, tension: 0.4, borderWidth: 2, pointRadius:3 }, { data: [], borderColor: '#ef4444', backgroundColor: gradRe, fill: true, tension: 0.4, borderWidth: 2, pointRadius:3 }] }, options: { ...commonOpts, scales: { x:{grid:{display:false}}, y:{min:0, max:15, grid:{color:'#1e293b'}} } } });
-            chartHist = new Chart(document.getElementById('historicoChart'), { type: 'bar', data: { labels: ['D-4','D-3','D-2','Ontem','Hoje'], datasets: [{ data: [], backgroundColor: '#ef4444', borderRadius: 4 }] }, options: { ...commonOpts, scales: { x:{grid:{display:false}}, y:{min:0, max:10, grid:{color:'#1e293b'}} } } });
-            chartReg = new Chart(document.getElementById('regiaoChart'), { type: 'doughnut', data: { labels: ['Sobral', 'Central', 'Litoral', 'Jaguaribe', 'Cariri'], datasets: [{ data: [0,0,0,0,0], backgroundColor: ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'], borderWidth:0, cutout:'70%' }] }, options: commonOpts });
-        }
-
-        function bootSystem() { 
-            initMaps(); initCharts(); syncAPI(); 
-            const cfg = getDB(DB.CONF); syncTimer = setInterval(syncAPI, (cfg.syncInterval||5) * 60000); 
-        }
-        
-        checkSession();
-
+    /* =====================================================================
+       14. BOOTSTRAP — expõe a instância única da aplicação para os
+           manipuladores inline do HTML (window.SPPM)
+    ===================================================================== */
+    const app = new SPPMApp();
+    window.SPPM = app;
+    document.getElementById('form-config').addEventListener('submit', (e) => app.saveConfig(e));
+    // Módulos são executados após o parsing do HTML (defer implícito), então o DOM já
+    // está pronto neste ponto — uma única chamada de start() é suficiente e segura.
+    app.start();
     </script>
 </body>
 </html>
