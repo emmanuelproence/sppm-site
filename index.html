@@ -110,7 +110,7 @@
         .panel-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-white);}
         
         .card-map { grid-column: 1 / 3; grid-row: 1 / 3; padding: 0; overflow: hidden; border-radius: 12px;}
-        #map-container { width: 100%; height: 100%; z-index: 1; filter: brightness(0.6) sepia(0.3) hue-rotate(180deg) saturate(1.5) contrast(1.1); }
+        #map-container { width: 100%; height: 100%; z-index: 1; }
         .map-overlay-title { position: absolute; top: 15px; left: 15px; z-index: 400; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.8);}
         
         .card-resumo { grid-column: 3; grid-row: 1; }
@@ -209,7 +209,7 @@
         <div class="login-panel">
             <img src="Logo.jpeg" alt="SPPM Logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzEwYjk4MSI+PHBhdGggZD0iTTEyIDJMMyA1djZjMCA1LjU1IDMuODQgMTAuNzQgOSAxMmM1LjE2LTEuMjYgOS02LjQ1IDktMTJWNWwtOS0zem0wIDEwLjk5aDdjLS41MyA0LjEyLTMuMjggNy43OS03IDguOTRWMXoiLz48L3N2Zz4='" style="width: 85px; height: 85px; object-fit: cover; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
             <h1 style="color: var(--text-white);">SPPM OS</h1>
-            <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.85rem;">Autenticação Restrita</p>
+            <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.85rem;">Autenticação Restrita Operacional</p>
             <form id="form-login">
                 <div class="form-group"><input type="text" id="login-user" class="form-control" placeholder="E-mail / Usuário" required autocomplete="off"></div>
                 <div class="form-group"><input type="password" id="login-pass" class="form-control" placeholder="Senha" required></div>
@@ -222,7 +222,7 @@
     <!-- SISTEMA -->
     <div id="app-layout">
         <aside class="sidebar">
-            <ul class="nav-menu">
+            <ul class="nav-menu" style="margin-top: 20px;">
                 <li class="nav-item active" data-target="view-dashboard"><i class="ph ph-squares-four"></i> Visão Geral</li>
                 <li class="nav-item" data-target="view-mapa"><i class="ph ph-map-pin"></i> Mapa Fullscreen</li>
                 
@@ -424,7 +424,7 @@
         <form id="form-user-submit">
             <div style="display:flex; gap:15px;">
                 <div class="form-group" style="flex:1"><label>Nome Completo</label><input type="text" id="usr-name" class="form-control" required></div>
-                <div class="form-group" style="flex:1"><label>Login / E-mail</label><input type="text" id="usr-email" class="form-control" required></div>
+                <div class="form-group" style="flex:1"><label>Login / E-mail</label><input type="email" id="usr-email" class="form-control" required autocomplete="off"></div>
             </div>
             <div style="display:flex; gap:15px;">
                 <div class="form-group" style="flex:1"><label>Senha Temporária</label><input type="password" id="usr-pass" class="form-control" required></div>
@@ -503,7 +503,13 @@
             if(!localStorage.getItem(DB.OS)) localStorage.setItem(DB.OS, JSON.stringify([]));
         }
 
-        const getDB = (key) => JSON.parse(localStorage.getItem(key)) || [];
+        // Função melhorada que garante que os dados retornem sempre em formato Array, blindando o erro de conversão de listas no Firebase!
+        const getDB = (key) => {
+            const data = JSON.parse(localStorage.getItem(key));
+            if(!data) return [];
+            return Array.isArray(data) ? data : Object.values(data);
+        };
+
         const setDB = (key, val) => {
             localStorage.setItem(key, JSON.stringify(val));
             if(database) {
@@ -519,11 +525,11 @@
                 const snap = await database.ref('sppm').once('value');
                 const d = snap.val();
                 if(d) {
-                    if(d.users) localStorage.setItem(DB.USRS, JSON.stringify(d.users));
-                    if(d.stations) localStorage.setItem(DB.STAS, JSON.stringify(d.stations));
-                    if(d.logs) localStorage.setItem(DB.LOGS, JSON.stringify(d.logs));
+                    if(d.users) localStorage.setItem(DB.USRS, JSON.stringify(Array.isArray(d.users) ? d.users : Object.values(d.users)));
+                    if(d.stations) localStorage.setItem(DB.STAS, JSON.stringify(Array.isArray(d.stations) ? d.stations : Object.values(d.stations)));
+                    if(d.logs) localStorage.setItem(DB.LOGS, JSON.stringify(Array.isArray(d.logs) ? d.logs : Object.values(d.logs)));
                     if(d.config) localStorage.setItem(DB.CONF, JSON.stringify(d.config));
-                    if(d.os) localStorage.setItem(DB.OS, JSON.stringify(d.os));
+                    if(d.os) localStorage.setItem(DB.OS, JSON.stringify(Array.isArray(d.os) ? d.os : Object.values(d.os)));
                 } else { initLocalFallback(); }
             } catch(e) { initLocalFallback(); }
         }
@@ -536,8 +542,12 @@
         ===================================================================== */
         document.getElementById('form-login').addEventListener('submit', (e) => {
             e.preventDefault();
-            const u = document.getElementById('login-user').value, p = document.getElementById('login-pass').value;
-            const user = getDB(DB.USRS).find(x => x.email === u && x.pass === p);
+            // Evita quebra por conta de letras maiúsculas e espaços automáticos do celular
+            const u = document.getElementById('login-user').value.trim().toLowerCase();
+            const p = document.getElementById('login-pass').value.trim();
+            
+            const user = getDB(DB.USRS).find(x => x.email.toLowerCase() === u && x.pass === p);
+            
             if(user) {
                 currentUser = user; sessionStorage.setItem('sppm_active_user', JSON.stringify(user)); 
                 applyLoginUI(user); bootSystem();
@@ -556,7 +566,7 @@
             const savedSession = sessionStorage.getItem('sppm_active_user');
             if(savedSession) {
                 currentUser = JSON.parse(savedSession);
-                if(getDB(DB.USRS).find(u => u.email === currentUser.email)){ applyLoginUI(currentUser); bootSystem(); } else { logout(); }
+                if(getDB(DB.USRS).find(u => u.email.toLowerCase() === currentUser.email.toLowerCase())){ applyLoginUI(currentUser); bootSystem(); } else { logout(); }
             } else { document.getElementById('login-screen').style.display = 'flex'; }
         }
 
@@ -622,7 +632,7 @@
                 e.preventDefault(); const stas = getDB(DB.STAS);
                 const obj = { id: document.getElementById('st-id').value ? parseInt(document.getElementById('st-id').value) : Date.now(), name: document.getElementById('st-name').value, region: document.getElementById('st-region').value, lat: parseFloat(document.getElementById('st-lat').value), lon: parseFloat(document.getElementById('st-lon').value), quota: parseFloat(document.getElementById('st-quota').value), mac: document.getElementById('st-mac').value, calib: document.getElementById('st-calib').value, cam: document.getElementById('st-cam').value };
                 if(document.getElementById('st-id').value) { const idx = stas.findIndex(x=>x.id===obj.id); stas[idx] = obj; } else { stas.push(obj); }
-                setDB(DB.STAS, stas); closeModal(); renderStations(); syncAPI();
+                setDB(DB.STAS, stas); closeModal(); renderStations(); syncAPI(); alert("Ponto de telemetria cadastrado!");
             });
         }
         function renderStations() {
@@ -636,12 +646,18 @@
             openModal('Provisionar Servidor (RBAC)', 'tpl-user-form');
             const allStations = getDB(DB.STAS);
             document.getElementById('usr-stations-container').innerHTML = allStations.map(s => `<label class="checkbox-label"><input type="checkbox" name="usr_stations" value="${s.id}"> ${s.name} <span style="color:var(--text-muted);font-size:0.7rem">(${s.region})</span></label>`).join('');
+            
             document.getElementById('form-user-submit').addEventListener('submit', (e) => {
                 e.preventDefault(); const usrs = getDB(DB.USRS); const role = document.getElementById('usr-role').value;
+                const emailToRegister = document.getElementById('usr-email').value.trim().toLowerCase();
+                
+                if(usrs.find(u => u.email.toLowerCase() === emailToRegister)) return alert("Este e-mail já está cadastrado.");
+
                 const selectedStations = Array.from(document.querySelectorAll('input[name="usr_stations"]:checked')).map(cb => parseInt(cb.value));
                 if (role === 'Operador' && selectedStations.length === 0) return alert("Selecione pelo menos uma passagem.");
-                usrs.push({ id: Date.now(), name: document.getElementById('usr-name').value, email: document.getElementById('usr-email').value, pass: document.getElementById('usr-pass').value, role: role, allowedStations: role === 'Admin' ? 'all' : selectedStations });
-                setDB(DB.USRS, usrs); closeModal(); renderUsers();
+                
+                usrs.push({ id: Date.now(), name: document.getElementById('usr-name').value.trim(), email: emailToRegister, pass: document.getElementById('usr-pass').value.trim(), role: role, allowedStations: role === 'Admin' ? 'all' : selectedStations });
+                setDB(DB.USRS, usrs); closeModal(); renderUsers(); alert("Usuário provisionado com sucesso!");
             });
         }
         function renderUsers() {
@@ -653,7 +669,7 @@
         function delUser(id) { if(confirm('Revogar acesso deste servidor?')) { setDB(DB.USRS, getDB(DB.USRS).filter(x=>x.id!==id)); renderUsers(); } }
 
         /* =====================================================================
-           MOTOR DE TELEMETRIA E DASHBOARD
+           MOTOR DE TELEMETRIA (OPEN-METEO) E DASHBOARD SCOPED
         ===================================================================== */
         async function syncAPI() {
             const allStas = getDB(DB.STAS); let logs = getDB(DB.LOGS); let os = getDB(DB.OS);
@@ -747,7 +763,7 @@
             document.getElementById('form-os-submit').addEventListener('submit', (e) => {
                 e.preventDefault(); let os = getDB(DB.OS);
                 os.push({ id: Date.now(), station: document.getElementById('os-station').value, issue: document.getElementById('os-issue').value, status: 'Open', date: getLocalTime(), severity: document.getElementById('os-severity').value });
-                setDB(DB.OS, os); closeModal(); renderOS();
+                setDB(DB.OS, os); closeModal(); renderOS(); alert("Solicitação registrada.");
             });
         }
 
