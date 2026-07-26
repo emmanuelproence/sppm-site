@@ -30,6 +30,8 @@
         ::-webkit-scrollbar-track { background: var(--bg-main); }
         ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
 
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
         /* =========================================
            2. COMPONENTES (MODAIS, BOTÕES E FORMS)
         ========================================= */
@@ -46,10 +48,11 @@
         .form-control { width: 100%; padding: 12px 16px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); color: white; border-radius: 8px; outline: none; transition: var(--transition-smooth); font-size: 0.9rem; }
         .form-control:focus { border-color: var(--color-green); background: rgba(0,0,0,0.6);}
         select.form-control { appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%238b9bb4%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto; }
+        textarea.form-control { resize: vertical; min-height: 80px; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 9999; opacity: 0; transition: opacity 0.3s; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px); display: none; justify-content: center; align-items: center; z-index: 9999; opacity: 0; transition: opacity 0.3s; padding: 20px;}
         .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-content { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 30px; width: 100%; max-width: 500px; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto;}
+        .modal-content { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; padding: 30px; width: 100%; max-width: 650px; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); max-height: 95vh; overflow-y: auto;}
         .modal-overlay.active .modal-content { transform: translateY(0); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .modal-title { font-size: 1.2rem; font-weight: 700; color: var(--text-white); }
@@ -61,6 +64,11 @@
         th { color: var(--text-muted); text-transform: uppercase; font-size: 0.7rem; font-weight: 700; background: rgba(0,0,0,0.2); }
         tr:hover td { background: rgba(255,255,255,0.02); }
 
+        /* Estilização para Checkboxes Customizados */
+        .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; max-height: 180px; overflow-y: auto; }
+        .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-white); cursor: pointer; padding: 4px 0; }
+        .checkbox-label input[type="checkbox"] { accent-color: var(--color-green); width: 16px; height: 16px; cursor: pointer; }
+
         /* =========================================
            3. LAYOUT PRINCIPAL E LOGIN
         ========================================= */
@@ -69,8 +77,7 @@
         #app-layout { display: none; width: 100%; height: 100%; }
 
         .sidebar { width: var(--sidebar-width); height: 100vh; background-color: var(--bg-panel); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 1000; }
-        
-        .nav-menu { list-style: none; padding: 0 12px; flex: 1; overflow-y: auto;}
+        .nav-menu { list-style: none; padding: 0 12px; flex: 1; overflow-y: auto; margin-top: 20px;}
         .nav-item { display: flex; align-items: center; padding: 12px 14px; margin-bottom: 4px; border-radius: 8px; color: var(--text-muted); cursor: pointer; transition: var(--transition-smooth); font-size: 0.85rem; font-weight: 500; gap: 12px;}
         .nav-item i { font-size: 1.2rem; }
         .nav-item:hover { color: var(--text-white); background: rgba(255,255,255,0.03); }
@@ -84,7 +91,7 @@
         .dot.green { background: var(--color-green); } .dot.yellow { background: var(--color-yellow); } .dot.red { background: var(--color-red); }
 
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        .topbar { height: 76px; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; background: rgba(6, 11, 19, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); z-index: 100;}
+        .topbar { height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; background: var(--bg-main); border-bottom: 1px solid var(--border-color); z-index: 100;}
         
         .view-section { display: none; flex-direction: column; flex: 1; overflow-y: auto; padding: 20px 30px; }
         .view-section.active { display: flex; animation: fadeIn 0.3s ease; }
@@ -100,12 +107,11 @@
         .panel-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-white);}
         
         .card-map { grid-column: 1 / 3; grid-row: 1 / 3; padding: 0; overflow: hidden; border-radius: 12px;}
-        #map-container { width: 100%; height: 100%; z-index: 1; filter: brightness(0.6) sepia(0.3) hue-rotate(180deg) saturate(1.5) contrast(1.1); }
+        #map-container { width: 100%; height: 100%; z-index: 1; }
         .map-overlay-title { position: absolute; top: 15px; left: 15px; z-index: 400; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.8);}
         
         .card-resumo { grid-column: 3; grid-row: 1; }
         .resumo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 100%; }
-        
         .stat-box { background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 15px 0; transition: transform 0.2s, filter 0.2s; cursor: pointer; }
         .stat-box:hover { transform: translateY(-3px); filter: brightness(1.2); border-color: rgba(255,255,255,0.2); }
         .stat-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-bottom: 8px; border: 1px solid currentColor;}
@@ -124,7 +130,7 @@
         .os-card.warning { border-left-color: var(--color-yellow); }
 
         /* =========================================
-           5. RESPONSIVIDADE B2G (MOBILE)
+           5. RESPONSIVIDADE B2G (MOBILE) E UTILS
         ========================================= */
         .mobile-menu-btn { display: none; font-size: 1.5rem; color: var(--text-white); cursor: pointer; margin-right: 15px; }
 
@@ -141,14 +147,15 @@
             .card-regiao > div { flex-direction: column !important; }
             #regiao-legend, .donut-chart { width: 100% !important; margin-top: 15px; }
             .view-section { padding: 15px; }
-            .table-panel { margin: 10px 0; padding: 15px; overflow-x: auto; }
             .login-panel { margin: 20px; padding: 30px 20px; }
         }
+        
+        .admin-only { display: none; } /* Controlado via JS baseado no Role */
     </style>
 </head>
 <body>
 
-    <!-- MODAL GLOBAL -->
+    <!-- MODAL GLOBAL DE CRUD -->
     <div class="modal-overlay" id="global-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -159,16 +166,44 @@
         </div>
     </div>
 
+    <!-- MODAL ESPECÍFICO DE VISÃO COMPUTACIONAL (IA) -->
+    <div class="modal-overlay" id="ai-modal">
+        <div class="modal-content" style="max-width: 700px; padding: 20px;">
+            <div class="modal-header" style="margin-bottom: 10px;">
+                <h3 class="modal-title" id="ai-title">Monitoramento IA (Edge)</h3>
+                <i class="ph ph-x close-modal" onclick="document.getElementById('ai-modal').classList.remove('active')"></i>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:15px;">
+                <div style="position:relative; width:100%; height:320px; background: #000 url('https://images.unsplash.com/photo-1444312645910-fea9736d71f9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80') center/cover; border-radius:12px; overflow:hidden; border: 1px solid var(--border-color);">
+                    <div style="position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.8); padding:4px 8px; border-radius:4px; font-size:0.7rem; color:var(--color-green); font-family:monospace; display:flex; align-items:center; gap:5px;"><span class="dot green" style="width:6px; height:6px; margin:0; animation: blink 1.5s infinite;"></span> LIVE RTSP STREAM</div>
+                    <div id="ai-box" style="position:absolute; bottom:15%; left:15%; width:70%; height:35%; border: 2px dashed var(--color-green); background: rgba(16, 185, 129, 0.15); transition: all 0.3s ease;">
+                        <span id="ai-badge" style="position:absolute; top:-22px; left:-2px; background:var(--color-green); color:#000; font-size:0.65rem; padding:4px 6px; font-weight:bold; text-transform: uppercase;">Área de Tráfego: Desobstruída</span>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div style="background:var(--bg-main); padding:15px; border-radius:8px; border:1px solid var(--border-color);">
+                        <p style="font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">Status da Passagem (IA)</p>
+                        <strong style="color:var(--color-green); font-size:1rem;" id="ai-status">Sem Obstruções</strong>
+                    </div>
+                    <div style="background:var(--bg-main); padding:15px; border-radius:8px; border:1px solid var(--border-color);">
+                        <p style="font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">Confiança do Modelo</p>
+                        <strong style="color:var(--text-white); font-size:1rem;">YOLOv8 — 98.7%</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- TELA LOGIN -->
     <div id="login-screen">
         <div class="login-panel">
-            <img src="Logo.jpeg" alt="SPPM Logo" style="width: 85px; height: 85px; object-fit: cover; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
+            <img src="Logo.jpeg" alt="SPPM Logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzEwYjk4MSI+PHBhdGggZD0iTTEyIDJMMyA1djZjMCA1LjU1IDMuODQgMTAuNzQgOSAxMmM1LjE2LTEuMjYgOS02LjQ1IDktMTJWNWwtOS0zem0wIDEwLjk5aDdjLS41MyA0LjEyLTMuMjggNy43OS03IDguOTRWMXoiLz48L3N2Zz4='" style="width: 85px; height: 85px; object-fit: cover; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
             <h1 style="color: var(--text-white);">SPPM OS</h1>
-            <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.85rem;">Autenticação Restrita Operacional</p>
+            <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.85rem;">Autenticação Restrita</p>
             <form id="form-login">
                 <div class="form-group"><input type="text" id="login-user" class="form-control" placeholder="E-mail / Usuário" required autocomplete="off"></div>
                 <div class="form-group"><input type="password" id="login-pass" class="form-control" placeholder="Senha" required></div>
-                <button type="submit" class="btn btn-primary" style="width:100%">Autenticar Sessão</button>
+                <button type="submit" class="btn btn-primary" style="width:100%">Acessar</button>
             </form>
             <div id="login-error" style="color: var(--color-red); margin-top: 15px; font-size: 0.8rem; display: none;">Credenciais inválidas.</div>
         </div>
@@ -177,22 +212,25 @@
     <!-- SISTEMA -->
     <div id="app-layout">
         <aside class="sidebar">
-            <ul class="nav-menu" style="margin-top: 20px;">
+            <ul class="nav-menu">
                 <li class="nav-item active" data-target="view-dashboard"><i class="ph ph-squares-four"></i> Visão Geral</li>
                 <li class="nav-item" data-target="view-mapa"><i class="ph ph-map-pin"></i> Mapa Fullscreen</li>
+                
                 <li class="nav-item admin-only" data-target="view-sistemas"><i class="ph ph-desktop"></i> Gestão de Sistemas</li>
+                
                 <li class="nav-item" data-target="view-alertas" style="justify-content: space-between;">
                     <div style="display:flex; align-items:center; gap:12px;"><i class="ph ph-bell"></i> Histórico/Alertas</div>
                     <span style="background:var(--color-red); color:white; padding:2px 6px; border-radius:12px; font-size:0.6rem; font-weight:700;" id="badge-alertas">0</span>
                 </li>
                 <li class="nav-item" data-target="view-relatorios"><i class="ph ph-file-csv"></i> Data Lake & Export</li>
                 <li class="nav-item" data-target="view-manutencao"><i class="ph ph-wrench"></i> Manutenção (O.S.)</li>
+                
                 <li class="nav-item admin-only" data-target="view-usuarios"><i class="ph ph-users"></i> Controle RBAC</li>
                 <li class="nav-item admin-only" data-target="view-config"><i class="ph ph-gear"></i> Configurações Globais</li>
             </ul>
 
             <div class="sidebar-status">
-                <h3 style="color: var(--text-muted); font-size: 0.7rem; font-weight: 700; margin-bottom: 15px;">MALHA ESTADUAL</h3>
+                <h3 style="color: var(--text-muted); font-size: 0.7rem; font-weight: 700; margin-bottom: 15px;">ESCOPO DE REDE</h3>
                 <div class="chart-container-sm"><canvas id="sidebarChart"></canvas><div class="chart-center-text"><h2 id="perc-op" style="color: var(--text-white);">0%</h2><span>Operando</span></div></div>
                 <div class="status-row"><span><span class="dot green"></span>Seguro</span> <strong id="sb-op">0</strong></div>
                 <div class="status-row"><span><span class="dot yellow"></span>Alerta</span> <strong id="sb-al">0</strong></div>
@@ -202,14 +240,10 @@
 
         <main class="main-content">
             <header class="topbar">
-                <!-- LADO ESQUERDO: Menu e Logo estilo YouTube -->
                 <div style="display: flex; align-items: center; gap: 15px;">
-                    <!-- Ícone Hamburger (Mobile) -->
                     <i class="ph ph-list mobile-menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')"></i>
-                    
-                    <!-- LOGO CLICÁVEL (Volta pro Início) -->
                     <div style="display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.2s;" onclick="navigateTo('view-dashboard')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-                        <img src="Logo.jpeg" alt="SPPM Logo" style="width: 38px; height: 38px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                        <img src="Logo.jpeg" alt="SPPM" onerror="this.style.display='none'" style="width: 38px; height: 38px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
                         <div style="display: flex; flex-direction: column;">
                             <h2 style="font-size: 1.2rem; font-weight: 800; color: var(--text-white); margin: 0; line-height: 1;">SPPM</h2>
                             <span id="topbar-title" style="font-size: 0.7rem; color: var(--color-green); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Visão Geral</span>
@@ -217,7 +251,6 @@
                     </div>
                 </div>
                 
-                <!-- LADO DIREITO: Perfil e Botão Sair -->
                 <div style="display: flex; align-items: center; gap: 20px;">
                     <div style="display: flex; align-items: center; gap: 10px; border-left: 1px solid var(--border-color); padding-left: 20px;">
                         <i class="ph-fill ph-user-circle" style="font-size: 2rem; color: var(--text-muted);"></i>
@@ -233,9 +266,7 @@
             <!-- VIEW: DASHBOARD -->
             <section id="view-dashboard" class="view-section active">
                 <div class="toolbar">
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-outline"><i class="ph ph-funnel"></i> Hoje</button>
-                    </div>
+                    <div style="display: flex; gap: 10px;"><button class="btn btn-outline"><i class="ph ph-funnel"></i> Hoje</button></div>
                     <button class="btn btn-primary" onclick="syncAPI()"><i class="ph ph-arrows-clockwise"></i> Forçar Sincronização API</button>
                 </div>
                 
@@ -250,10 +281,10 @@
                     <div class="panel card-resumo">
                         <div class="panel-header"><span class="panel-title">Resumo Operacional</span></div>
                         <div class="resumo-grid">
-                            <div class="stat-box stat-green" onclick="navigateTo('view-sistemas')" title="Gerenciar Sistemas"><div class="stat-icon" style="color:var(--color-green)"><i class="ph ph-check"></i></div><h3 id="card-op" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Operando</span></div>
+                            <div class="stat-box stat-green" onclick="navigateTo('view-sistemas')" title="Ver Sensores Operantes"><div class="stat-icon" style="color:var(--color-green)"><i class="ph ph-check"></i></div><h3 id="card-op" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Operando</span></div>
                             <div class="stat-box stat-yellow" onclick="navigateTo('view-alertas', 'Alerta')" title="Ver Alertas"><div class="stat-icon" style="color:var(--color-yellow)"><i class="ph ph-warning"></i></div><h3 id="card-al" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Alerta</span></div>
                             <div class="stat-box stat-red" onclick="navigateTo('view-alertas', 'Interditado')" title="Ver Interdições"><div class="stat-icon" style="color:var(--color-red)"><i class="ph ph-minus-circle"></i></div><h3 id="card-in" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Interditado</span></div>
-                            <div class="stat-box" onclick="navigateTo('view-manutencao')" title="Ver Painel de Manutenções"><div class="stat-icon" style="color:var(--color-blue-gray)"><i class="ph ph-broadcast"></i></div><h3 style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Offline</span></div>
+                            <div class="stat-box" onclick="navigateTo('view-manutencao')" title="Ver Painel de Manutenções"><div class="stat-icon" style="color:var(--color-blue-gray)"><i class="ph ph-broadcast"></i></div><h3 style="color: var(--text-white);" id="card-off">0</h3><span style="color: var(--text-muted);">Offline</span></div>
                         </div>
                     </div>
                     <div class="panel card-alertas">
@@ -269,16 +300,16 @@
             <!-- VIEW: MAPA FULL -->
             <section id="view-mapa" class="view-section" style="padding:0;"><div id="map-full" style="width: 100%; height: 100%;"></div></section>
 
-            <!-- VIEW: SISTEMAS (CRUD) -->
+            <!-- VIEW: SISTEMAS (CRUD COM HARDWARE) -->
             <section id="view-sistemas" class="view-section">
                 <div class="panel" style="margin-bottom: 20px;">
                     <div class="panel-header">
-                        <span class="panel-title">Malha de Sensores</span>
-                        <button class="btn btn-primary" onclick="openModalStation()"><i class="ph ph-plus"></i> Nova Estação</button>
+                        <span class="panel-title">Malha de Sensores Edge IoT</span>
+                        <button class="btn btn-primary admin-only" onclick="openModalStation()"><i class="ph ph-plus"></i> Nova Estação</button>
                     </div>
                     <div style="overflow-x:auto; background:var(--bg-main); border-radius:8px; border: 1px solid var(--border-color);">
-                        <table id="table-stations" style="min-width: 600px;">
-                            <thead><tr><th>ID</th><th>Localidade / Nome</th><th>Região</th><th>Coordenadas GPS</th><th>Cota Crítica (mm)</th><th>Ações</th></tr></thead>
+                        <table id="table-stations" style="min-width: 800px;">
+                            <thead><tr><th>ID</th><th>Localidade / Nome</th><th>Região</th><th>Device MAC</th><th>Cota Crítica</th><th>Câmera IA</th><th class="admin-only">Ações</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -290,7 +321,7 @@
                 <div class="panel" style="margin-bottom:20px; padding: 15px;">
                     <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                         <div class="form-group" style="margin:0; flex: 1; min-width: 150px;"><input type="date" id="filtro-data" class="form-control" onchange="renderAlertsTable()"></div>
-                        <div class="form-group" style="margin:0; flex: 1; min-width: 150px;"><select id="filtro-estacao" class="form-control" onchange="renderAlertsTable()"><option value="">Todas as Estações</option></select></div>
+                        <div class="form-group" style="margin:0; flex: 1; min-width: 150px;"><select id="filtro-estacao" class="form-control" onchange="renderAlertsTable()"><option value="">Todas as Estações do Escopo</option></select></div>
                         <div class="form-group" style="margin:0; flex: 1; min-width: 150px;"><select id="filtro-status" class="form-control" onchange="renderAlertsTable()"><option value="">Todos os Status</option><option value="Normal">Operando Normal</option><option value="Alerta">Alerta Emitido</option><option value="Interditado">Interdição Crítica</option></select></div>
                     </div>
                 </div>
@@ -307,16 +338,16 @@
                 <div class="panel" style="max-width: 600px; text-align: center; padding: 50px 30px;">
                     <i class="ph-fill ph-database" style="font-size: 4rem; color: var(--color-green); margin-bottom: 20px;"></i>
                     <h2 style="color: var(--text-white); margin-bottom: 10px;">Extração de Data Lake</h2>
-                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px; line-height: 1.5;">O sistema arquiva continuamente variáveis como Precipitação, Umidade, Temperatura e Velocidade do Vento. Exporte a matriz CSV para auditoria e análises preditivas.</p>
-                    <button class="btn btn-primary" style="margin: 0 auto; font-size: 1rem; padding: 12px 24px;" onclick="exportCSV()"><i class="ph ph-download-simple"></i> Download Dataset B2G (.csv)</button>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px; line-height: 1.5;">O sistema arquiva continuamente as variáveis de telemetria. Exporte a matriz CSV para auditoria e análises preditivas. O arquivo exportado conterá **apenas as estações autorizadas para o seu perfil**.</p>
+                    <button class="btn btn-primary" style="margin: 0 auto; font-size: 1rem; padding: 12px 24px;" onclick="exportCSV()"><i class="ph ph-download-simple"></i> Download Dataset (.csv)</button>
                 </div>
             </section>
 
             <!-- VIEW: MANUTENÇÃO (O.S.) -->
             <section id="view-manutencao" class="view-section">
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
-                    <h2 style="font-size:1.1rem; color:var(--text-white)">Painel de Ordens de Serviço</h2>
-                    <button class="btn btn-outline" onclick="renderOS()"><i class="ph ph-arrows-clockwise"></i> Escanear Hardware</button>
+                <div class="toolbar" style="margin-bottom:20px;">
+                    <button class="btn btn-primary" onclick="openModalCreateOS()"><i class="ph ph-plus"></i> Registrar Nova O.S.</button>
+                    <button class="btn btn-outline" onclick="syncAPI()"><i class="ph ph-arrows-clockwise"></i> Escanear Hardware Online</button>
                 </div>
                 <div class="os-grid" id="os-container"></div>
             </section>
@@ -324,10 +355,10 @@
             <!-- VIEW: USUÁRIOS (RBAC) -->
             <section id="view-usuarios" class="view-section">
                 <div class="panel">
-                    <div class="panel-header"><span class="panel-title">Controle de Acesso de Servidores</span><button class="btn btn-primary" onclick="openModalUser()"><i class="ph ph-user-plus"></i> Novo Acesso</button></div>
+                    <div class="panel-header"><span class="panel-title">Controle de Acesso de Servidores (RBAC)</span><button class="btn btn-primary" onclick="openModalUser()"><i class="ph ph-user-plus"></i> Novo Acesso</button></div>
                     <div style="overflow-x: auto;">
                         <table id="table-users" style="min-width: 600px;">
-                            <thead><tr><th>Servidor / Nome</th><th>E-mail Corporativo</th><th>Perfil de Segurança</th><th>Ações</th></tr></thead>
+                            <thead><tr><th>Servidor / Nome</th><th>E-mail Corporativo</th><th>Perfil</th><th>Visualização (Passagens Permitidas)</th><th>Ações</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -343,11 +374,7 @@
                             <label>Intervalo de Sincronização via Satélite (Minutos)</label>
                             <input type="number" id="cfg-sync" class="form-control" value="5" min="1" max="60">
                         </div>
-                        <div class="form-group">
-                            <label>Habilitar Notificações Sonoras para Alertas</label>
-                            <select id="cfg-sound" class="form-control"><option value="yes">Sim</option><option value="no">Não</option></select>
-                        </div>
-                        <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações</button>
+                        <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações Globais</button>
                     </form>
                 </div>
             </section>
@@ -356,35 +383,87 @@
     </div>
 
     <!-- TEMPLATES DE MODAIS -->
+    
+    <!-- 1. Form de Estação -->
     <template id="tpl-station-form">
         <form id="form-station-submit">
             <input type="hidden" id="st-id">
-            <div class="form-group"><label>Nome / Localidade</label><input type="text" id="st-name" class="form-control" required placeholder="Ex: Passagem Morrinhos"></div>
-            <div class="form-group"><label>Região Administrativa</label>
-                <select id="st-region" class="form-control">
-                    <option value="Litoral Norte">Litoral Norte</option><option value="Sertão Sobral">Sertão Sobral</option>
-                    <option value="Sertão Central">Sertão Central</option><option value="Vale do Jaguaribe">Vale do Jaguaribe</option>
-                    <option value="Cariri">Cariri</option>
-                </select>
+            <div style="display:flex; gap:15px;">
+                <div class="form-group" style="flex:2"><label>Nome / Localidade</label><input type="text" id="st-name" class="form-control" required placeholder="Ex: Passagem Morrinhos"></div>
+                <div class="form-group" style="flex:1"><label>Região Admin.</label>
+                    <select id="st-region" class="form-control">
+                        <option value="Litoral Norte">Litoral Norte</option><option value="Sertão Sobral">Sertão Sobral</option>
+                        <option value="Sertão Central">Sertão Central</option><option value="Vale do Jaguaribe">Vale do Jaguaribe</option><option value="Cariri">Cariri</option>
+                    </select>
+                </div>
             </div>
             <div style="display:flex; gap:15px;">
                 <div class="form-group"><label>Latitude</label><input type="number" step="any" id="st-lat" class="form-control" required placeholder="-3.000"></div>
                 <div class="form-group"><label>Longitude</label><input type="number" step="any" id="st-lon" class="form-control" required placeholder="-39.000"></div>
+                <div class="form-group"><label>Cota Crítica (mm)</label><input type="number" id="st-quota" class="form-control" required value="15"></div>
             </div>
-            <div class="form-group"><label>Cota Crítica (Interdição em mm)</label><input type="number" id="st-quota" class="form-control" required value="15"></div>
-            <button type="submit" class="btn btn-primary" style="width:100%">Salvar Configurações</button>
+            
+            <h4 style="margin: 15px 0 10px; color: var(--text-white); font-size: 0.8rem; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; text-transform:uppercase;">Integração Edge IoT / IA</h4>
+            <div style="display:flex; gap:15px;">
+                <div class="form-group"><label>MAC Address (ESP32 / SIM7000G)</label><input type="text" id="st-mac" class="form-control" placeholder="XX:XX:XX:XX:XX:XX"></div>
+                <div class="form-group"><label>Distância Leito Seco (cm)</label><input type="number" id="st-calib" class="form-control" placeholder="Ex: 400"></div>
+            </div>
+            <div class="form-group"><label>IP / RTSP da Câmera (Stream WebRTC)</label><input type="text" id="st-cam" class="form-control" placeholder="rtsp://admin:pass@ip:554/stream"></div>
+            
+            <div class="form-group">
+                <label>Sensores Ativos</label>
+                <div style="display:flex; gap:15px; font-size:0.8rem; color:var(--text-muted); background: rgba(0,0,0,0.3); padding:12px; border-radius:8px; border: 1px solid var(--border-color);">
+                    <label style="display:flex; align-items:center; gap:5px; margin:0;"><input type="checkbox" checked> Nível (JSN)</label>
+                    <label style="display:flex; align-items:center; gap:5px; margin:0;"><input type="checkbox" checked> Pluviômetro</label>
+                    <label style="display:flex; align-items:center; gap:5px; margin:0;"><input type="checkbox" checked> SHT31 Temp</label>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; margin-top:10px;">Salvar & Provisionar Hardware</button>
         </form>
     </template>
 
+    <!-- 2. Form de Usuário (Modificado: SELEÇÃO EXPLÍCITA DE PASSAGENS via CHECKBOX) -->
     <template id="tpl-user-form">
         <form id="form-user-submit">
-            <div class="form-group"><label>Nome Completo</label><input type="text" id="usr-name" class="form-control" required></div>
-            <div class="form-group"><label>Login / E-mail</label><input type="text" id="usr-email" class="form-control" required></div>
-            <div class="form-group"><label>Senha Temporária</label><input type="password" id="usr-pass" class="form-control" required></div>
-            <div class="form-group"><label>Privilégio de Acesso</label>
-                <select id="usr-role" class="form-control"><option value="Operador">Operador de Defesa Civil (Visualização)</option><option value="Admin">Administrador (Total)</option></select>
+            <div style="display:flex; gap:15px;">
+                <div class="form-group" style="flex:1"><label>Nome Completo</label><input type="text" id="usr-name" class="form-control" required></div>
+                <div class="form-group" style="flex:1"><label>Login / E-mail</label><input type="text" id="usr-email" class="form-control" required></div>
+            </div>
+            <div style="display:flex; gap:15px;">
+                <div class="form-group" style="flex:1"><label>Senha</label><input type="password" id="usr-pass" class="form-control" required></div>
+                <div class="form-group" style="flex:1"><label>Privilégio de Acesso</label>
+                    <select id="usr-role" class="form-control" onchange="toggleUserStationSelection(this.value)">
+                        <option value="Operador">Operador (Restrito)</option>
+                        <option value="Admin">Administrador (Total)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" id="container-station-select">
+                <label>Permissões de Visualização (Selecione as Passagens Autorizadas)</label>
+                <div class="checkbox-grid" id="usr-stations-container">
+                    <!-- Preenchido via JS -->
+                </div>
             </div>
             <button type="submit" class="btn btn-primary" style="width:100%">Provisionar Servidor</button>
+        </form>
+    </template>
+
+    <!-- 3. Form para Criação de O.S. (Manual) -->
+    <template id="tpl-os-form">
+        <form id="form-os-submit">
+            <div class="form-group"><label>Passagem / Estação</label>
+                <select id="os-station" class="form-control" required></select>
+            </div>
+            <div class="form-group"><label>Descrição do Problema Encontrado</label>
+                <textarea id="os-issue" class="form-control" required placeholder="Ex: Sensor reportando dados nulos."></textarea>
+            </div>
+            <div class="form-group"><label>Prioridade da Manutenção</label>
+                <select id="os-severity" class="form-control">
+                    <option value="warning">Alerta de Manutenção (Normal)</option>
+                    <option value="critical">Crítico / Inoperante (Urgente)</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%">Registrar Solicitação de O.S.</button>
         </form>
     </template>
 
@@ -392,25 +471,25 @@
 
     <script>
         /* =====================================================================
-           CORE ARCHITECTURE (ESTADO, BANCO DE DADOS LOCAL E ROTAS)
+           CORE ARCHITECTURE E ESTADO
         ===================================================================== */
-        const DB = { USRS: 'sppm_v4_users', STAS: 'sppm_v4_stations', LOGS: 'sppm_v4_logs', CONF: 'sppm_v4_config', OS: 'sppm_v4_os' };
+        const DB = { USRS: 'sppm_v6_users', STAS: 'sppm_v6_stations', LOGS: 'sppm_v6_logs', CONF: 'sppm_v6_config', OS: 'sppm_v6_os' };
 
         const defaultStations = [
-            { id: 1, name: 'Morrinhos 1 (Piloto)', region: 'Litoral Norte', lat: -3.2261, lon: -40.1222, quota: 15 },
-            { id: 2, name: 'Santana do Acaraú 2', region: 'Sertão Sobral', lat: -3.4589, lon: -40.1167, quota: 12 },
-            { id: 3, name: 'Caridade 1', region: 'Sertão Central', lat: -4.2188, lon: -39.2086, quota: 10 },
-            { id: 4, name: 'Russas 1', region: 'Vale do Jaguaribe', lat: -4.9405, lon: -37.9755, quota: 15 },
-            { id: 5, name: 'Russas 2', region: 'Vale do Jaguaribe', lat: -4.9500, lon: -37.9800, quota: 15 },
-            { id: 6, name: 'Russas 3', region: 'Vale do Jaguaribe', lat: -4.9300, lon: -37.9600, quota: 15 },
-            { id: 7, name: 'Russas 4', region: 'Vale do Jaguaribe', lat: -4.9600, lon: -37.9900, quota: 15 },
-            { id: 8, name: 'Pentecoste 1', region: 'Litoral Norte', lat: -3.7913, lon: -39.2725, quota: 10 },
-            { id: 9, name: 'Paraipaba 1', region: 'Litoral Norte', lat: -3.4388, lon: -39.1480, quota: 10 },
-            { id: 10, name: 'S. Gonçalo do Amarante 1', region: 'Litoral Norte', lat: -3.6063, lon: -38.9705, quota: 12 }
+            { id: 1, name: 'Morrinhos 1 (Piloto)', region: 'Litoral Norte', lat: -3.2261, lon: -40.1222, quota: 15, mac: '', calib: 400, cam: '' },
+            { id: 2, name: 'Santana do Acaraú 2', region: 'Sertão Sobral', lat: -3.4589, lon: -40.1167, quota: 12, mac: '', calib: 400, cam: '' },
+            { id: 3, name: 'Caridade 1', region: 'Sertão Central', lat: -4.2188, lon: -39.2086, quota: 10, mac: '', calib: 400, cam: '' },
+            { id: 4, name: 'Russas 1', region: 'Vale do Jaguaribe', lat: -4.9405, lon: -37.9755, quota: 15, mac: '', calib: 400, cam: '' },
+            { id: 5, name: 'Russas 2', region: 'Vale do Jaguaribe', lat: -4.9500, lon: -37.9800, quota: 15, mac: '', calib: 400, cam: '' },
+            { id: 6, name: 'Russas 3', region: 'Vale do Jaguaribe', lat: -4.9300, lon: -37.9600, quota: 15, mac: '', calib: 400, cam: '' },
+            { id: 7, name: 'Russas 4', region: 'Vale do Jaguaribe', lat: -4.9600, lon: -37.9900, quota: 15, mac: '', calib: 400, cam: '' },
+            { id: 8, name: 'Pentecoste 1', region: 'Litoral Norte', lat: -3.7913, lon: -39.2725, quota: 10, mac: '', calib: 400, cam: '' },
+            { id: 9, name: 'Paraipaba 1', region: 'Litoral Norte', lat: -3.4388, lon: -39.1480, quota: 10, mac: '', calib: 400, cam: '' },
+            { id: 10, name: 'S. Gonçalo do Amarante 1', region: 'Litoral Norte', lat: -3.6063, lon: -38.9705, quota: 12, mac: '', calib: 400, cam: '' }
         ];
 
         function initDB() {
-            if(!localStorage.getItem(DB.USRS)) localStorage.setItem(DB.USRS, JSON.stringify([{ id:1, email: 'admin', pass: '1234', role: 'Admin', name: 'Comando Central' }]));
+            if(!localStorage.getItem(DB.USRS)) localStorage.setItem(DB.USRS, JSON.stringify([{ id:1, email: 'admin', pass: '1234', role: 'Admin', name: 'Comando Central', allowedStations: 'all' }]));
             if(!localStorage.getItem(DB.STAS)) localStorage.setItem(DB.STAS, JSON.stringify(defaultStations));
             if(!localStorage.getItem(DB.LOGS)) localStorage.setItem(DB.LOGS, JSON.stringify([]));
             if(!localStorage.getItem(DB.CONF)) localStorage.setItem(DB.CONF, JSON.stringify({ syncInterval: 5, sound: 'no' }));
@@ -423,7 +502,9 @@
         let currentUser = null; let syncTimer = null;
         let mapDash, mapFull; let markersDash = []; let chartSidebar, chartEvol, chartHist, chartReg;
 
-        // 1. SISTEMA DE LOGIN (COM SESSION STORAGE)
+        /* =====================================================================
+           LOGIN, SESSÃO E RBAC GRANULAR (CHECKBOXES DE ESTAÇÕES)
+        ===================================================================== */
         document.getElementById('form-login').addEventListener('submit', (e) => {
             e.preventDefault();
             const u = document.getElementById('login-user').value, p = document.getElementById('login-pass').value;
@@ -432,20 +513,13 @@
             if(user) {
                 currentUser = user;
                 sessionStorage.setItem('sppm_active_user', JSON.stringify(user)); 
-                
-                document.getElementById('login-screen').style.display = 'none'; 
-                document.getElementById('app-layout').style.display = 'flex';
-                document.getElementById('active-user-name').innerText = user.name; 
-                document.getElementById('active-user-role').innerText = user.role;
-                document.querySelectorAll('.admin-only').forEach(el => el.style.display = user.role === 'Admin' ? 'flex' : 'none');
-                
+                applyLoginUI(user);
                 bootSystem();
             } else {
                 document.getElementById('login-error').style.display = 'block';
             }
         });
 
-        // 2. APAGAR SESSÃO NO LOGOUT
         function logout() { 
             sessionStorage.removeItem('sppm_active_user'); 
             clearInterval(syncTimer); 
@@ -454,47 +528,61 @@
             document.getElementById('login-pass').value = ''; 
         }
 
-        // Função utilitária para pegar Data e Hora corretas (Fuso local - Correção)
+        function checkSession() {
+            initDB();
+            setupNavigation(); 
+            const savedSession = sessionStorage.getItem('sppm_active_user');
+            if(savedSession) {
+                currentUser = JSON.parse(savedSession);
+                applyLoginUI(currentUser);
+                bootSystem();
+            }
+        }
+
+        function applyLoginUI(user) {
+            document.getElementById('login-screen').style.display = 'none'; 
+            document.getElementById('app-layout').style.display = 'flex';
+            document.getElementById('active-user-name').innerText = user.name; 
+            document.getElementById('active-user-role').innerText = user.role;
+            
+            // Oculta módulos restritos para Operadores (.admin-only)
+            document.querySelectorAll('.admin-only').forEach(el => el.style.display = user.role === 'Admin' ? 'table-cell' /* se for th/td */ : 'flex');
+            // Como display flex pode quebrar td/th:
+            document.querySelectorAll('th.admin-only, td.admin-only').forEach(el => el.style.display = user.role === 'Admin' ? 'table-cell' : 'none');
+            document.querySelectorAll('li.admin-only, button.admin-only').forEach(el => el.style.display = user.role === 'Admin' ? 'flex' : 'none');
+        }
+
+        // MOTOR RBAC: Retorna APENAS as estações que o usuário logado tem direito de ver
+        function getScopedStations() {
+            const allStas = getDB(DB.STAS);
+            if(!currentUser || currentUser.role === 'Admin' || currentUser.allowedStations === 'all') return allStas;
+            
+            // Retorna apenas as estações que dão match na array de IDs salvos no Perfil do Operador
+            return allStas.filter(s => currentUser.allowedStations.includes(s.id));
+        }
+
         function getLocalTime() {
             const now = new Date();
             const tzOffset = now.getTimezoneOffset() * 60000;
             return new Date(now.getTime() - tzOffset).toISOString().slice(0,19).replace('T',' ');
         }
 
-        // Navegação Programática (Ação Clicável dos Cards do Resumo)
         function navigateTo(targetId, filterStatus = null) {
             const navItem = document.querySelector(`[data-target='${targetId}']`);
             if(navItem) navItem.click(); 
-            
             if(filterStatus) {
-                setTimeout(() => {
-                    const filterEl = document.getElementById('filtro-status');
-                    if(filterEl) {
-                        filterEl.value = filterStatus;
-                        renderAlertsTable();
-                    }
-                }, 150);
+                setTimeout(() => { const fEl = document.getElementById('filtro-status'); if(fEl){ fEl.value = filterStatus; renderAlertsTable(); } }, 150);
             } else if (targetId === 'view-alertas') {
-                setTimeout(() => {
-                    const filterEl = document.getElementById('filtro-status');
-                    if(filterEl) {
-                        filterEl.value = "";
-                        renderAlertsTable();
-                    }
-                }, 150);
+                setTimeout(() => { const fEl = document.getElementById('filtro-status'); if(fEl){ fEl.value = ""; renderAlertsTable(); } }, 150);
             }
         }
 
-        // Configuração de Navegação SPA
         function setupNavigation() {
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.addEventListener('click', () => {
                     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); item.classList.add('active');
                     const target = item.getAttribute('data-target'); document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active')); document.getElementById(target).classList.add('active');
-                    
-                    // Altera o título lá em cima na topbar ao invés do id topbar-title ser a h2, agora ele é o span
                     document.getElementById('topbar-title').innerText = item.innerText.trim();
-                    
                     document.querySelector('.sidebar').classList.remove('open'); 
                     
                     if(target==='view-dashboard' && mapDash) setTimeout(()=>mapDash.invalidateSize(), 100);
@@ -509,9 +597,6 @@
             });
         }
 
-        /* =====================================================================
-           MÓDULOS DE UI (MODAIS E ALERTAS)
-        ===================================================================== */
         function openModal(title, templateId) {
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-body').innerHTML = document.getElementById(templateId).innerHTML;
@@ -519,109 +604,207 @@
         }
         function closeModal() { document.getElementById('global-modal').classList.remove('active'); }
 
+        // MÓDULO DE IA (VISÃO COMPUTACIONAL)
+        function openAIModal(id) {
+            const st = getDB(DB.STAS).find(x => x.id === id);
+            const latestLog = getDB(DB.LOGS).find(l => l.station === st.name);
+            
+            let statusIA = "Sem Obstruções"; let colorIA = "var(--color-green)"; let bgIA = "rgba(16, 185, 129, 0.15)";
+            if(latestLog && latestLog.status === 'Interditado') {
+                statusIA = "Risco Iminente / Transbordo"; colorIA = "var(--color-red)"; bgIA = "rgba(239, 68, 68, 0.25)";
+            } else if (latestLog && latestLog.status === 'Alerta') {
+                statusIA = "Atenção: Lâmina Elevada"; colorIA = "var(--color-yellow)"; bgIA = "rgba(245, 158, 11, 0.25)";
+            }
+
+            document.getElementById('ai-title').innerText = "Edge AI IoT - " + st.name;
+            document.getElementById('ai-status').innerText = statusIA;
+            document.getElementById('ai-status').style.color = colorIA;
+            document.getElementById('ai-box').style.borderColor = colorIA;
+            document.getElementById('ai-box').style.background = bgIA;
+            document.getElementById('ai-badge').style.background = colorIA;
+            document.getElementById('ai-badge').innerText = "Área Delimitada: " + statusIA;
+            
+            document.getElementById('ai-modal').classList.add('active');
+        }
+
         /* =====================================================================
            CRUD DE ESTAÇÕES E USUÁRIOS
         ===================================================================== */
+        // -- ESTAÇÕES --
         function openModalStation(id = null) {
-            openModal(id ? 'Editar Ponto de Monitoramento' : 'Novo Ponto de Monitoramento', 'tpl-station-form');
+            openModal(id ? 'Editar Ponto Edge IoT' : 'Novo Provisionamento de Hardware', 'tpl-station-form');
             if(id) {
                 const st = getDB(DB.STAS).find(x => x.id === id);
                 document.getElementById('st-id').value = st.id; document.getElementById('st-name').value = st.name;
                 document.getElementById('st-region').value = st.region; document.getElementById('st-lat').value = st.lat;
                 document.getElementById('st-lon').value = st.lon; document.getElementById('st-quota').value = st.quota;
+                document.getElementById('st-mac').value = st.mac || ''; document.getElementById('st-calib').value = st.calib || '';
+                document.getElementById('st-cam').value = st.cam || '';
             }
             document.getElementById('form-station-submit').addEventListener('submit', (e) => {
                 e.preventDefault(); const stas = getDB(DB.STAS);
-                const obj = { id: document.getElementById('st-id').value ? parseInt(document.getElementById('st-id').value) : Date.now(), name: document.getElementById('st-name').value, region: document.getElementById('st-region').value, lat: parseFloat(document.getElementById('st-lat').value), lon: parseFloat(document.getElementById('st-lon').value), quota: parseFloat(document.getElementById('st-quota').value)};
+                const obj = { 
+                    id: document.getElementById('st-id').value ? parseInt(document.getElementById('st-id').value) : Date.now(), 
+                    name: document.getElementById('st-name').value, region: document.getElementById('st-region').value, 
+                    lat: parseFloat(document.getElementById('st-lat').value), lon: parseFloat(document.getElementById('st-lon').value), 
+                    quota: parseFloat(document.getElementById('st-quota').value), mac: document.getElementById('st-mac').value, 
+                    calib: document.getElementById('st-calib').value, cam: document.getElementById('st-cam').value 
+                };
                 if(document.getElementById('st-id').value) { const idx = stas.findIndex(x=>x.id===obj.id); stas[idx] = obj; } else { stas.push(obj); }
                 setDB(DB.STAS, stas); closeModal(); renderStations(); syncAPI();
             });
         }
         function renderStations() {
-            document.querySelector('#table-stations tbody').innerHTML = getDB(DB.STAS).map(s => `<tr><td><span style="color:var(--text-muted)">#${s.id.toString().slice(-4)}</span></td><td><b style="color:var(--text-white)">${s.name}</b></td><td>${s.region}</td><td><span style="font-family:monospace">${s.lat}, ${s.lon}</span></td><td><span style="color:var(--color-yellow)">${s.quota} mm</span></td><td><button class="btn btn-outline" style="padding:4px 8px; font-size:0.7rem; display:inline-block;" onclick="openModalStation(${s.id})">Editar</button> <button class="btn btn-danger" style="padding:4px 8px; font-size:0.7rem; display:inline-block; margin-left:5px;" onclick="delStation(${s.id})">Excluir</button></td></tr>`).join('');
+            document.querySelector('#table-stations tbody').innerHTML = getDB(DB.STAS).map(s => `<tr><td><span style="color:var(--text-muted)">#${s.id.toString().slice(-4)}</span></td><td><b style="color:var(--text-white)">${s.name}</b></td><td>${s.region}</td><td><span style="font-family:monospace; color:var(--text-muted)">${s.mac || 'N/A'}</span></td><td><span style="color:var(--color-yellow)">${s.quota} mm</span></td><td><button class="btn btn-outline" style="padding:4px 8px; font-size:0.7rem;" onclick="openAIModal(${s.id})"><i class="ph ph-camera"></i> IA</button></td><td class="admin-only" style="display:${currentUser.role === 'Admin' ? 'table-cell' : 'none'}"><button class="btn btn-outline" style="padding:4px 8px; font-size:0.7rem; display:inline-block;" onclick="openModalStation(${s.id})">Config</button> <button class="btn btn-danger" style="padding:4px 8px; font-size:0.7rem; display:inline-block; margin-left:5px;" onclick="delStation(${s.id})">Excluir</button></td></tr>`).join('');
         }
         function delStation(id) { if(confirm('Desativar permanentemente?')) { setDB(DB.STAS, getDB(DB.STAS).filter(x=>x.id!==id)); renderStations(); syncAPI(); } }
 
+        // -- USUÁRIOS (Nova Seleção Customizada via Checkbox) --
+        function toggleUserStationSelection(role) {
+            document.getElementById('container-station-select').style.display = role === 'Admin' ? 'none' : 'block';
+        }
+
         function openModalUser() {
             openModal('Provisionar Servidor (RBAC)', 'tpl-user-form');
+            
+            // Popula os checkboxes dinamicamente com as estações existentes no banco
+            const allStations = getDB(DB.STAS);
+            const container = document.getElementById('usr-stations-container');
+            container.innerHTML = allStations.map(s => `
+                <label class="checkbox-label">
+                    <input type="checkbox" name="usr_stations" value="${s.id}">
+                    ${s.name} <span style="color:var(--text-muted);font-size:0.7rem">(${s.region})</span>
+                </label>
+            `).join('');
+
             document.getElementById('form-user-submit').addEventListener('submit', (e) => {
-                e.preventDefault(); const usrs = getDB(DB.USRS);
-                usrs.push({ id: Date.now(), name: document.getElementById('usr-name').value, email: document.getElementById('usr-email').value, pass: document.getElementById('usr-pass').value, role: document.getElementById('usr-role').value });
+                e.preventDefault(); 
+                const usrs = getDB(DB.USRS);
+                const role = document.getElementById('usr-role').value;
+                
+                // Mapeia todos os checkboxes marcados (Converte Value para Number)
+                const selectedStations = Array.from(document.querySelectorAll('input[name="usr_stations"]:checked')).map(cb => parseInt(cb.value));
+                
+                if (role === 'Operador' && selectedStations.length === 0) {
+                    alert("Selecione pelo menos uma passagem para o Operador."); return;
+                }
+
+                usrs.push({ 
+                    id: Date.now(), 
+                    name: document.getElementById('usr-name').value, 
+                    email: document.getElementById('usr-email').value, 
+                    pass: document.getElementById('usr-pass').value, 
+                    role: role, 
+                    allowedStations: role === 'Admin' ? 'all' : selectedStations 
+                });
+                
                 setDB(DB.USRS, usrs); closeModal(); renderUsers();
             });
         }
+        
         function renderUsers() {
-            document.querySelector('#table-users tbody').innerHTML = getDB(DB.USRS).map(u => `<tr><td><b style="color:var(--text-white)">${u.name}</b></td><td>${u.email}</td><td><span style="color:${u.role==='Admin'?'var(--color-green)':'var(--color-yellow)'}">${u.role}</span></td><td>${u.email !== 'admin' ? `<button class="btn btn-danger" style="padding:4px 8px; font-size:0.7rem;" onclick="delUser(${u.id})">Revogar</button>` : '-'}</td></tr>`).join('');
+            document.querySelector('#table-users tbody').innerHTML = getDB(DB.USRS).map(u => {
+                let accessText = u.role === 'Admin' ? 'Acesso Total Global' : (u.allowedStations && u.allowedStations.length ? `${u.allowedStations.length} Passagem(ns)` : 'Nenhuma');
+                return `<tr><td><b style="color:var(--text-white)">${u.name}</b></td><td>${u.email}</td><td><span style="color:${u.role==='Admin'?'var(--color-green)':'var(--color-yellow)'}">${u.role}</span></td><td><span style="border:1px solid var(--border-color); padding:4px 8px; border-radius:4px; font-size:0.7rem; color:var(--text-muted)">${accessText}</span></td><td>${u.email !== 'admin' ? `<button class="btn btn-danger" style="padding:4px 8px; font-size:0.7rem;" onclick="delUser(${u.id})">Revogar</button>` : '-'}</td></tr>`;
+            }).join('');
         }
         function delUser(id) { if(confirm('Revogar acesso deste servidor?')) { setDB(DB.USRS, getDB(DB.USRS).filter(x=>x.id!==id)); renderUsers(); } }
 
         /* =====================================================================
-           MOTOR DE TELEMETRIA (OPEN-METEO) E DASHBOARD
+           MOTOR DE TELEMETRIA E DASHBOARD (APLICANDO O RBAC NAS ESTAÇÕES)
         ===================================================================== */
         async function syncAPI() {
-            const stas = getDB(DB.STAS); const logs = getDB(DB.LOGS); let os = getDB(DB.OS);
-            let cOp=0, cAl=0, cIn=0, cOff=0; let regCount = { 'Sertão Sobral':0, 'Sertão Central':0, 'Litoral Norte':0, 'Vale do Jaguaribe':0, 'Cariri':0 };
-            
+            // A API continua rodando para TODAS as estações globais para manter os relatórios íntegros (Servidor Back-end), 
+            // Mas a UI do Dashboard só reage ao 'getScopedStations()'
+            const allStas = getDB(DB.STAS); 
+            let logs = getDB(DB.LOGS); 
+            let os = getDB(DB.OS);
             const currentTime = getLocalTime();
 
-            markersDash.forEach(m => mapDash.removeLayer(m)); markersDash = [];
-
-            for(let st of stas) {
+            for(let st of allStas) {
                 try {
                     const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${st.lat}&longitude=${st.lon}&current=precipitation,temperature_2m,relative_humidity_2m,wind_speed_10m`);
                     if(!res.ok) throw new Error("Offline");
                     const data = (await res.json()).current;
                     
-                    let color = "green", status = "Normal";
-                    if(data.precipitation > 0 && data.precipitation < st.quota) { color = "yellow"; status = "Alerta"; cAl++; }
-                    else if(data.precipitation >= st.quota) { color = "red"; status = "Interditado"; cIn++; }
-                    else { cOp++; }
-
-                    if(regCount[st.region] !== undefined) regCount[st.region]++;
+                    let status = "Normal";
+                    if(data.precipitation > 0 && data.precipitation < st.quota) { status = "Alerta"; }
+                    else if(data.precipitation >= st.quota) { status = "Interditado"; }
 
                     logs.unshift({ id: Date.now()+Math.random(), date: currentTime, station: st.name, status: status, precip: data.precipitation, temp: data.temperature_2m, hum: data.relative_humidity_2m, wind: data.wind_speed_10m });
-
-                    const icon = L.divIcon({ className: '', html: `<div style="background:var(--color-${color}); width:12px; height:12px; border-radius:50%; border:1px solid #fff; box-shadow: 0 0 8px rgba(0,0,0,0.8);"></div>`});
-                    markersDash.push(L.marker([st.lat, st.lon], {icon}).addTo(mapDash).bindPopup(`<b style="color:#000">${st.name}</b><br>Lâmina: ${data.precipitation}mm`));
-
+                    
+                    // Hardware OS Aleatório pra simular
                     if(data.wind_speed_10m > 40 || Math.random() < 0.05) {
-                        if(!os.find(x=>x.station === st.name && x.status === 'Open')) os.push({ id: Date.now(), station: st.name, issue: 'Sensor de ultrassom descalibrado/Bloqueio Objeto', status: 'Open', date: new Date().toLocaleDateString('pt-BR'), severity: 'warning' });
+                        if(!os.find(x=>x.station === st.name && x.status === 'Open')) os.push({ id: Date.now(), station: st.name, issue: 'Descalibração JSN-SR04T / Obstrução', status: 'Open', date: new Date().toLocaleDateString('pt-BR'), severity: 'warning' });
                     }
                 } catch(e) {
-                    cOff++;
-                    if(!os.find(x=>x.station === st.name && x.status === 'Open')) os.push({ id: Date.now(), station: st.name, issue: 'Falha de comunicação via Satélite/GPRS', status: 'Open', date: new Date().toLocaleDateString('pt-BR'), severity: 'critical' });
+                    if(!os.find(x=>x.station === st.name && x.status === 'Open')) os.push({ id: Date.now(), station: st.name, issue: 'Sinal de Telemetria (RTSP/MQTT) Inoperante', status: 'Open', date: new Date().toLocaleDateString('pt-BR'), severity: 'critical' });
                 }
             }
 
-            if(logs.length > 2000) logs.length = 2000;
+            if(logs.length > 3000) logs.length = 3000;
             setDB(DB.LOGS, logs); setDB(DB.OS, os);
+            updateDashboardUI();
+        }
 
-            let total = stas.length;
-            document.getElementById('card-op').innerText = cOp; document.getElementById('card-al').innerText = cAl; document.getElementById('card-in').innerText = cIn; document.querySelectorAll('.stat-box h3')[3].innerText = cOff;
+        function updateDashboardUI() {
+            // APLICA O FILTRO RBAC AQUI!
+            const myStas = getScopedStations();
+            const myStasNames = myStas.map(s => s.name);
+            const logs = getDB(DB.LOGS);
+            const myLogs = logs.filter(l => myStasNames.includes(l.station));
+            
+            let cOp=0, cAl=0, cIn=0, cOff=0; 
+            let htmlAlerts = []; 
+            let regCount = { 'Sertão Sobral':0, 'Sertão Central':0, 'Litoral Norte':0, 'Vale do Jaguaribe':0, 'Cariri':0 };
+
+            markersDash.forEach(m => mapDash.removeLayer(m)); markersDash = [];
+
+            myStas.forEach(st => {
+                const latestLog = myLogs.find(l => l.station === st.name);
+                let color = "gray", status = "Offline", precip = 0;
+
+                if (latestLog) {
+                    status = latestLog.status; precip = latestLog.precip;
+                    if(status === 'Alerta') { color = 'yellow'; cAl++; }
+                    else if(status === 'Interditado') { color = 'red'; cIn++; }
+                    else { color = 'green'; cOp++; }
+                    if(regCount[st.region] !== undefined) regCount[st.region]++;
+                    
+                    if(status !== "Normal" && htmlAlerts.length < 5) {
+                        htmlAlerts.push(`<div class="alert-item"><i class="ph-fill ${status==='Interditado'?'ph-minus-circle':'ph-warning'}" style="color:var(--color-${color}); font-size:1.4rem;"></i><div><h4 style="font-size:0.8rem; color:var(--text-white); margin-bottom:2px;">${st.name}</h4><p style="font-size:0.7rem; color:var(--text-muted);">${status} - ${precip}mm captados.</p></div></div>`);
+                    }
+                } else { cOff++; }
+
+                const icon = L.divIcon({ className: '', html: `<div style="background:var(--color-${color}); width:12px; height:12px; border-radius:50%; border:1px solid #fff; box-shadow: 0 0 8px rgba(0,0,0,0.8);"></div>`});
+                markersDash.push(L.marker([st.lat, st.lon], {icon}).addTo(mapDash).bindPopup(`
+                    <div style="text-align:center;">
+                        <b style="color:#000">${st.name}</b><br><span style="color:#666; font-size:0.8rem;">Lâmina: ${precip}mm</span><br>
+                        <button class="btn btn-primary" style="margin-top:8px; font-size:0.65rem; padding:4px 8px; width:100%; border-radius:4px;" onclick="openAIModal(${st.id})"><i class="ph-fill ph-camera"></i> Câmera IA</button>
+                    </div>
+                `));
+            });
+
+            let total = myStas.length;
+            document.getElementById('card-op').innerText = cOp; document.getElementById('card-al').innerText = cAl; document.getElementById('card-in').innerText = cIn; document.getElementById('card-off').innerText = cOff;
             document.getElementById('sb-op').innerText = cOp; document.getElementById('sb-al').innerText = cAl; document.getElementById('sb-in').innerText = cIn;
             document.getElementById('perc-op').innerText = total ? Math.round((cOp/total)*100)+'%' : '0%';
             document.getElementById('badge-alertas').innerText = cAl + cIn;
+            document.getElementById('dashboard-alerts').innerHTML = htmlAlerts.length ? htmlAlerts.join('') : '<p style="color:var(--text-muted); font-size:0.8rem;">Malha sob seu escopo estável.</p>';
 
-            const recentAlerts = logs.filter(l => l.status !== "Normal").slice(0, 4);
-            let htmlAlerts = recentAlerts.map(l => {
-                let color = l.status === 'Interditado' ? 'red' : 'yellow';
-                let icClass = l.status === 'Interditado' ? 'ph-minus-circle' : 'ph-warning';
-                return `<div class="alert-item"><i class="ph-fill ${icClass} alert-icon" style="color:var(--color-${color}); font-size:1.4rem;"></i><div><h4 style="font-size:0.8rem; color:var(--text-white); margin-bottom:2px;">${l.station}</h4><p style="font-size:0.7rem; color:var(--text-muted);">${l.status} - Lâmina d'água: ${l.precip}mm <br>(${l.date})</p></div></div>`;
-            });
-            document.getElementById('dashboard-alerts').innerHTML = htmlAlerts.length ? htmlAlerts.join('') : '<div style="display:flex; justify-content:center; align-items:center; height:100%; color:var(--text-muted);"><p style="font-size:0.8rem;">Malha estável. Zero ocorrências.</p></div>';
-
+            // Update Polished Charts
             chartSidebar.data.datasets[0].data = [cOp, cAl, cIn]; chartSidebar.update();
-            chartEvol.data.datasets[0].data = [80, 85, 82, 86, cOp]; chartEvol.data.datasets[1].data = [15, 10, 14, 10, cAl]; chartEvol.data.datasets[2].data = [5, 5, 4, 4, cIn]; chartEvol.update();
-            chartHist.data.datasets[0].data = [5, 5, 4, 4, cIn]; chartHist.update();
+            chartEvol.data.datasets[0].data = [Math.max(0, cOp-2), cOp+1, cOp, Math.max(0, cOp-1), cOp]; chartEvol.data.datasets[1].data = [Math.max(0, cAl-1), cAl+1, cAl, cAl, cAl]; chartEvol.data.datasets[2].data = [cIn, cIn, cIn, cIn, cIn]; chartEvol.update();
+            chartHist.data.datasets[0].data = [cIn, cIn, cIn, cIn, cIn]; chartHist.update();
             
             const rData = [regCount['Sertão Sobral'], regCount['Sertão Central'], regCount['Litoral Norte'], regCount['Vale do Jaguaribe'], regCount['Cariri']];
             chartReg.data.datasets[0].data = rData; chartReg.update();
             document.getElementById('regiao-legend').innerHTML = `
-                <div style="display:flex; justify-content:space-between;"><span><span class="dot green"></span> Sertão Sobral</span> <strong>${rData[0] || 0}</strong></div>
-                <div style="display:flex; justify-content:space-between;"><span><span class="dot blue" style="background:var(--color-blue)"></span> Sertão Central</span> <strong>${rData[1] || 0}</strong></div>
-                <div style="display:flex; justify-content:space-between;"><span><span class="dot purple" style="background:var(--color-purple)"></span> Litoral Norte</span> <strong>${rData[2] || 0}</strong></div>
-                <div style="display:flex; justify-content:space-between;"><span><span class="dot yellow"></span> Vale Jaguaribe</span> <strong>${rData[3] || 0}</strong></div>
-                <div style="display:flex; justify-content:space-between;"><span><span class="dot red"></span> Cariri</span> <strong>${rData[4] || 0}</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span><span class="dot green"></span> Sertão Sobral</span> <strong>${rData[0]}</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span><span class="dot blue" style="background:var(--color-blue)"></span> Sertão Central</span> <strong>${rData[1]}</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span><span class="dot purple" style="background:var(--color-purple)"></span> Litoral Norte</span> <strong>${rData[2]}</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span><span class="dot yellow"></span> Vale Jaguaribe</span> <strong>${rData[3]}</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span><span class="dot red"></span> Cariri</span> <strong>${rData[4]}</strong></div>
             `;
             
             if(document.getElementById('view-alertas').classList.contains('active')) renderAlertsTable();
@@ -629,46 +812,79 @@
         }
 
         /* =====================================================================
-           ALERTAS E RELATÓRIOS (DATA LAKE)
+           ALERTAS E RELATÓRIOS (DATA LAKE ESCOPADO)
         ===================================================================== */
         function populateFilters() {
-            document.getElementById('filtro-estacao').innerHTML = '<option value="">Todas as Estações</option>' + getDB(DB.STAS).map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+            document.getElementById('filtro-estacao').innerHTML = '<option value="">Todas do Escopo</option>' + getScopedStations().map(s => `<option value="${s.name}">${s.name}</option>`).join('');
         }
 
         function renderAlertsTable() {
             const fd = document.getElementById('filtro-data').value, fs = document.getElementById('filtro-estacao').value, fst = document.getElementById('filtro-status').value;
-            document.querySelector('#table-logs tbody').innerHTML = getDB(DB.LOGS).filter(l => (!fd || l.date.startsWith(fd)) && (!fs || l.station === fs) && (!fst || l.status === fst)).slice(0,100).map(l => `<tr><td style="color:var(--text-muted)">${l.date}</td><td><b style="color:var(--text-white)">${l.station}</b></td><td><span style="color:${l.status==='Interditado'?'var(--color-red)':(l.status==='Alerta'?'var(--color-yellow)':'var(--color-green)')}; font-weight:700;">${l.status}</span></td><td><span style="color:var(--color-yellow)">${l.precip} mm</span></td><td><i class="ph ph-check" style="color:var(--color-green)"></i> Validado CCO</td></tr>`).join('');
+            const myStasNames = getScopedStations().map(s => s.name);
+            
+            document.querySelector('#table-logs tbody').innerHTML = getDB(DB.LOGS)
+                .filter(l => myStasNames.includes(l.station)) // Filtro RBAC
+                .filter(l => (!fd || l.date.startsWith(fd)) && (!fs || l.station === fs) && (!fst || l.status === fst))
+                .slice(0,100).map(l => `<tr><td style="color:var(--text-muted)">${l.date}</td><td><b style="color:var(--text-white)">${l.station}</b></td><td><span style="color:${l.status==='Interditado'?'var(--color-red)':(l.status==='Alerta'?'var(--color-yellow)':'var(--color-green)')}; font-weight:700;">${l.status}</span></td><td><span style="color:var(--color-yellow)">${l.precip} mm</span></td><td><i class="ph ph-check" style="color:var(--color-green)"></i> Automático</td></tr>`).join('');
         }
 
         function exportCSV() {
-            const logs = getDB(DB.LOGS); if(!logs.length) return alert("Dataset Vazio.");
-            let csv = "DataHora,Ponto_Monitoramento,Status_Cancela,Chuva_mm,Temperatura_C,Umidade_Relativa,Vento_kmh\n";
+            const myStasNames = getScopedStations().map(s => s.name);
+            const logs = getDB(DB.LOGS).filter(l => myStasNames.includes(l.station)); 
+            if(!logs.length) return alert("Dataset Vazio para o seu Escopo.");
+            
+            let csv = "DataHora,Ponto_Monitoramento,Status_IA,Chuva_mm,Temperatura_C,Umidade_Relativa,Vento_kmh\n";
             logs.forEach(l => csv += `${l.date},${l.station},${l.status},${l.precip},${l.temp},${l.hum},${l.wind}\n`);
-            const a = document.createElement('a'); a.href = window.URL.createObjectURL(new Blob([csv], {type: 'text/csv'})); a.download = `SPPM_DataLake_${new Date().getTime()}.csv`; a.click();
+            const a = document.createElement('a'); a.href = window.URL.createObjectURL(new Blob([csv], {type: 'text/csv'})); a.download = `SPPM_Dataset_${new Date().getTime()}.csv`; a.click();
         }
 
         /* =====================================================================
-           MANUTENÇÃO E O.S. KANBAN
+           MANUTENÇÃO E O.S. (CRIAÇÃO MANUAL PERMITIDA PARA OPERADOR, EXCLUSÃO SÓ ADMIN)
         ===================================================================== */
+        function openModalCreateOS() {
+            openModal('Nova Ordem de Serviço (O.S.)', 'tpl-os-form');
+            const selectSt = document.getElementById('os-station');
+            selectSt.innerHTML = getScopedStations().map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+            
+            document.getElementById('form-os-submit').addEventListener('submit', (e) => {
+                e.preventDefault();
+                let os = getDB(DB.OS);
+                os.push({
+                    id: Date.now(),
+                    station: document.getElementById('os-station').value,
+                    issue: document.getElementById('os-issue').value,
+                    status: 'Open',
+                    date: getLocalTime(),
+                    severity: document.getElementById('os-severity').value
+                });
+                setDB(DB.OS, os); closeModal(); renderOS();
+            });
+        }
+
         function renderOS() {
-            const osList = getDB(DB.OS).filter(x => x.status === 'Open');
+            const myStasNames = getScopedStations().map(s => s.name);
+            const osList = getDB(DB.OS).filter(x => x.status === 'Open' && myStasNames.includes(x.station));
+            
+            // Regra: Apenas Admin pode concluir/apagar O.S.
+            const canClose = currentUser && currentUser.role === 'Admin';
+            
             document.getElementById('os-container').innerHTML = osList.length ? osList.map(o => `
                 <div class="os-card ${o.severity}">
                     <h4 style="color:var(--text-white); font-size:1rem; margin-bottom:10px;"><i class="ph-fill ph-warning"></i> ${o.station}</h4>
-                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Data de Abertura: <strong>${o.date}</strong></p>
-                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:15px; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px;">Falha reportada: <span style="color:var(--text-white)">${o.issue}</span></p>
-                    <button class="btn btn-outline" style="width:100%;" onclick="closeOS(${o.id})"><i class="ph ph-check-circle"></i> Marcar O.S como Concluída</button>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Abertura: <strong>${o.date}</strong></p>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:15px; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px;">Diagnóstico CCO: <span style="color:var(--text-white)">${o.issue}</span></p>
+                    ${canClose ? `<button class="btn btn-outline" style="width:100%;" onclick="closeOS(${o.id})"><i class="ph ph-check-circle"></i> Marcar O.S como Concluída</button>` : `<span style="font-size:0.75rem; color:var(--color-yellow); display:flex; align-items:center; gap:5px; justify-content:center; padding:10px; background:rgba(245,158,11,0.1); border-radius:8px;"><i class="ph ph-lock"></i> Apenas Admins podem encerrar</span>`}
                 </div>
-            `).join('') : '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted);"><i class="ph ph-check-circle" style="font-size:3rem; margin-bottom:10px; color:var(--color-green)"></i><p>Nenhuma anomalia de hardware detectada no momento.</p></div>';
+            `).join('') : '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted);"><i class="ph ph-check-circle" style="font-size:3rem; margin-bottom:10px; color:var(--color-green)"></i><p>Hardware operante. Nenhuma anomalia detectada.</p></div>';
         }
         function closeOS(id) { let os = getDB(DB.OS); const idx = os.findIndex(x=>x.id===id); if(idx>-1) { os[idx].status = 'Closed'; setDB(DB.OS, os); renderOS(); } }
 
         /* =====================================================================
            CONFIGURAÇÕES DO SISTEMA E CARREGAMENTO GERAL
         ===================================================================== */
-        function loadConfig() { const c = getDB(DB.CONF); document.getElementById('cfg-sync').value = c.syncInterval; document.getElementById('cfg-sound').value = c.sound; }
+        function loadConfig() { const c = getDB(DB.CONF); document.getElementById('cfg-sync').value = c.syncInterval; }
         document.getElementById('form-config').addEventListener('submit', (e) => {
-            e.preventDefault(); const c = { syncInterval: parseInt(document.getElementById('cfg-sync').value), sound: document.getElementById('cfg-sound').value }; setDB(DB.CONF, c); alert("Parâmetros do Servidor atualizados.");
+            e.preventDefault(); const c = { syncInterval: parseInt(document.getElementById('cfg-sync').value) }; setDB(DB.CONF, c); alert("Parâmetros do Servidor atualizados.");
             clearInterval(syncTimer); syncTimer = setInterval(syncAPI, c.syncInterval * 60000);
         });
 
@@ -678,39 +894,24 @@
         }
 
         function initCharts() {
-            Chart.defaults.color = '#475569'; Chart.defaults.font.family = "'Inter', sans-serif"; Chart.defaults.plugins.legend.display = false;
-            chartSidebar = new Chart(document.getElementById('sidebarChart'), { type: 'doughnut', data: { labels: ['Op','Al','In'], datasets: [{ data: [1,0,0], backgroundColor: ['#10b981','#f59e0b','#ef4444'], borderWidth:0, cutout:'82%' }] }, options: { maintainAspectRatio: false } });
-            chartEvol = new Chart(document.getElementById('evolucaoChart'), { type: 'line', data: { labels: ['D-4','D-3','D-2','Ontem','Hoje'], datasets: [{ data: [], borderColor: '#10b981', pointBackgroundColor: '#10b981', borderWidth: 2, tension: 0.3 }, { data: [], borderColor: '#f59e0b', pointBackgroundColor: '#f59e0b', borderWidth: 2, tension: 0.3 }, { data: [], borderColor: '#ef4444', pointBackgroundColor: '#ef4444', borderWidth: 2, tension: 0.3 }] }, options: { maintainAspectRatio: false, scales: { x:{grid:{display:false}}, y:{min:0, max:15, grid:{color:'#1e293b'}} } } });
-            chartHist = new Chart(document.getElementById('historicoChart'), { type: 'bar', data: { labels: ['D-4','D-3','D-2','Ontem','Hoje'], datasets: [{ data: [], backgroundColor: '#ef4444', borderRadius: 2 }] }, options: { maintainAspectRatio: false, scales: { x:{grid:{display:false}}, y:{min:0, max:10, grid:{color:'#1e293b'}} } } });
-            chartReg = new Chart(document.getElementById('regiaoChart'), { type: 'doughnut', data: { labels: ['Sobral', 'Central', 'Litoral', 'Jaguaribe', 'Cariri'], datasets: [{ data: [0,0,0,0,0], backgroundColor: ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'], borderWidth:0, cutout:'70%' }] }, options: { maintainAspectRatio: false } });
+            Chart.defaults.color = '#8b9bb4'; Chart.defaults.font.family = "'Inter', sans-serif";
+            const commonOpts = { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#111a29', titleColor: '#f8fafc', bodyColor: '#8b9bb4', borderColor: '#1e293b', borderWidth: 1 } } };
+
+            chartSidebar = new Chart(document.getElementById('sidebarChart'), { type: 'doughnut', data: { labels: ['Op','Al','In'], datasets: [{ data: [1,0,0], backgroundColor: ['#10b981','#f59e0b','#ef4444'], borderWidth:0, cutout:'82%' }] }, options: commonOpts });
+            
+            const ctxEv = document.getElementById('evolucaoChart').getContext('2d');
+            const gradGr = ctxEv.createLinearGradient(0,0,0,300); gradGr.addColorStop(0,'rgba(16, 185, 129, 0.4)'); gradGr.addColorStop(1,'rgba(16, 185, 129, 0)');
+            const gradYe = ctxEv.createLinearGradient(0,0,0,300); gradYe.addColorStop(0,'rgba(245, 158, 11, 0.4)'); gradYe.addColorStop(1,'rgba(245, 158, 11, 0)');
+            const gradRe = ctxEv.createLinearGradient(0,0,0,300); gradRe.addColorStop(0,'rgba(239, 68, 68, 0.4)'); gradRe.addColorStop(1,'rgba(239, 68, 68, 0)');
+
+            chartEvol = new Chart(document.getElementById('evolucaoChart'), { type: 'line', data: { labels: ['D-4','D-3','D-2','Ontem','Hoje'], datasets: [{ data: [], borderColor: '#10b981', backgroundColor: gradGr, fill: true, tension: 0.4, borderWidth: 2, pointRadius:3 }, { data: [], borderColor: '#f59e0b', backgroundColor: gradYe, fill: true, tension: 0.4, borderWidth: 2, pointRadius:3 }, { data: [], borderColor: '#ef4444', backgroundColor: gradRe, fill: true, tension: 0.4, borderWidth: 2, pointRadius:3 }] }, options: { ...commonOpts, scales: { x:{grid:{display:false}}, y:{min:0, max:15, grid:{color:'#1e293b'}} } } });
+            chartHist = new Chart(document.getElementById('historicoChart'), { type: 'bar', data: { labels: ['D-4','D-3','D-2','Ontem','Hoje'], datasets: [{ data: [], backgroundColor: '#ef4444', borderRadius: 4 }] }, options: { ...commonOpts, scales: { x:{grid:{display:false}}, y:{min:0, max:10, grid:{color:'#1e293b'}} } } });
+            chartReg = new Chart(document.getElementById('regiaoChart'), { type: 'doughnut', data: { labels: ['Sobral', 'Central', 'Litoral', 'Jaguaribe', 'Cariri'], datasets: [{ data: [0,0,0,0,0], backgroundColor: ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'], borderWidth:0, cutout:'70%' }] }, options: commonOpts });
         }
 
         function bootSystem() { 
-            initMaps(); 
-            initCharts(); 
-            syncAPI(); 
-            const cfg = getDB(DB.CONF); 
-            syncTimer = setInterval(syncAPI, (cfg.syncInterval||5) * 60000); 
-        }
-        
-        // 3. VERIFICAR A SESSÃO QUANDO A PÁGINA CARREGAR
-        function checkSession() {
-            initDB();
-            setupNavigation(); 
-            
-            const savedSession = sessionStorage.getItem('sppm_active_user');
-            
-            if(savedSession) {
-                const user = JSON.parse(savedSession);
-                currentUser = user;
-                document.getElementById('login-screen').style.display = 'none'; 
-                document.getElementById('app-layout').style.display = 'flex';
-                document.getElementById('active-user-name').innerText = user.name; 
-                document.getElementById('active-user-role').innerText = user.role;
-                document.querySelectorAll('.admin-only').forEach(el => el.style.display = user.role === 'Admin' ? 'flex' : 'none');
-                
-                bootSystem();
-            }
+            initMaps(); initCharts(); syncAPI(); 
+            const cfg = getDB(DB.CONF); syncTimer = setInterval(syncAPI, (cfg.syncInterval||5) * 60000); 
         }
         
         checkSession();
