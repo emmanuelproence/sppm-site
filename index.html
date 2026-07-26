@@ -62,19 +62,13 @@
         tr:hover td { background: rgba(255,255,255,0.02); }
 
         /* =========================================
-           3. LAYOUT PRINCIPAL E LOGIN (ATUALIZADO)
+           3. LAYOUT PRINCIPAL E LOGIN
         ========================================= */
         #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at top left, #111a29 0%, var(--bg-main) 100%); display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .login-panel { background: rgba(17, 26, 41, 0.9); backdrop-filter: blur(10px); border: 1px solid var(--border-color); padding: 40px; border-radius: 16px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
         #app-layout { display: none; width: 100%; height: 100%; }
 
         .sidebar { width: var(--sidebar-width); height: 100vh; background-color: var(--bg-panel); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 0; z-index: 1000; }
-        
-        /* Modificação: Adicionado o Logo.jpeg na Sidebar */
-        .logo-container { display: flex; align-items: center; padding: 0 20px 20px 20px; gap: 15px; border-bottom: 1px solid var(--border-color); margin-bottom: 10px; }
-        .logo-img-sidebar { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .brand-text h1 { font-size: 1.4rem; font-weight: 800; margin: 0; line-height: 1;}
-        .brand-text span { font-size: 0.5rem; color: var(--text-muted); font-weight: 700; line-height: 1.2; text-transform: uppercase;}
         
         .nav-menu { list-style: none; padding: 0 12px; flex: 1; overflow-y: auto;}
         .nav-item { display: flex; align-items: center; padding: 12px 14px; margin-bottom: 4px; border-radius: 8px; color: var(--text-muted); cursor: pointer; transition: var(--transition-smooth); font-size: 0.85rem; font-weight: 500; gap: 12px;}
@@ -90,7 +84,7 @@
         .dot.green { background: var(--color-green); } .dot.yellow { background: var(--color-yellow); } .dot.red { background: var(--color-red); }
 
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        .topbar { height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; background: var(--bg-main); border-bottom: 1px solid var(--border-color); z-index: 100;}
+        .topbar { height: 76px; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; background: rgba(6, 11, 19, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); z-index: 100;}
         
         .view-section { display: none; flex-direction: column; flex: 1; overflow-y: auto; padding: 20px 30px; }
         .view-section.active { display: flex; animation: fadeIn 0.3s ease; }
@@ -111,7 +105,9 @@
         
         .card-resumo { grid-column: 3; grid-row: 1; }
         .resumo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 100%; }
-        .stat-box { background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 15px 0;}
+        
+        .stat-box { background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 15px 0; transition: transform 0.2s, filter 0.2s; cursor: pointer; }
+        .stat-box:hover { transform: translateY(-3px); filter: brightness(1.2); border-color: rgba(255,255,255,0.2); }
         .stat-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-bottom: 8px; border: 1px solid currentColor;}
         
         .card-alertas { grid-column: 3; grid-row: 2; }
@@ -163,12 +159,12 @@
         </div>
     </div>
 
-    <!-- TELA LOGIN (Atualizada) -->
+    <!-- TELA LOGIN -->
     <div id="login-screen">
         <div class="login-panel">
             <img src="Logo.jpeg" alt="SPPM Logo" style="width: 85px; height: 85px; object-fit: cover; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
             <h1 style="color: var(--text-white);">SPPM OS</h1>
-            <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.85rem;">Autenticação Restrita</p>
+            <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.85rem;">Autenticação Restrita Operacional</p>
             <form id="form-login">
                 <div class="form-group"><input type="text" id="login-user" class="form-control" placeholder="E-mail / Usuário" required autocomplete="off"></div>
                 <div class="form-group"><input type="password" id="login-pass" class="form-control" placeholder="Senha" required></div>
@@ -181,12 +177,7 @@
     <!-- SISTEMA -->
     <div id="app-layout">
         <aside class="sidebar">
-            <div class="logo-container">
-                <img src="Logo.jpeg" alt="SPPM" class="logo-img-sidebar">
-                <div class="brand-text"><h1 style="color: var(--text-white);">SPPM</h1><span>SISTEMA INTELIGENTE PARA<br>PASSAGENS MOLHADAS</span></div>
-            </div>
-
-            <ul class="nav-menu">
+            <ul class="nav-menu" style="margin-top: 20px;">
                 <li class="nav-item active" data-target="view-dashboard"><i class="ph ph-squares-four"></i> Visão Geral</li>
                 <li class="nav-item" data-target="view-mapa"><i class="ph ph-map-pin"></i> Mapa Fullscreen</li>
                 <li class="nav-item admin-only" data-target="view-sistemas"><i class="ph ph-desktop"></i> Gestão de Sistemas</li>
@@ -211,14 +202,22 @@
 
         <main class="main-content">
             <header class="topbar">
-                <div style="display: flex; align-items: center;">
+                <!-- LADO ESQUERDO: Menu e Logo estilo YouTube -->
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <!-- Ícone Hamburger (Mobile) -->
                     <i class="ph ph-list mobile-menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')"></i>
-                    <div>
-                        <h2 id="topbar-title" style="font-size: 1.1rem; color: var(--text-white);">Visão Geral</h2>
-                        <p style="font-size: 0.75rem; color: var(--text-muted);">Defesa Civil - CCO</p>
+                    
+                    <!-- LOGO CLICÁVEL (Volta pro Início) -->
+                    <div style="display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.2s;" onclick="navigateTo('view-dashboard')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        <img src="Logo.jpeg" alt="SPPM Logo" style="width: 38px; height: 38px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                        <div style="display: flex; flex-direction: column;">
+                            <h2 style="font-size: 1.2rem; font-weight: 800; color: var(--text-white); margin: 0; line-height: 1;">SPPM</h2>
+                            <span id="topbar-title" style="font-size: 0.7rem; color: var(--color-green); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Visão Geral</span>
+                        </div>
                     </div>
                 </div>
                 
+                <!-- LADO DIREITO: Perfil e Botão Sair -->
                 <div style="display: flex; align-items: center; gap: 20px;">
                     <div style="display: flex; align-items: center; gap: 10px; border-left: 1px solid var(--border-color); padding-left: 20px;">
                         <i class="ph-fill ph-user-circle" style="font-size: 2rem; color: var(--text-muted);"></i>
@@ -251,14 +250,14 @@
                     <div class="panel card-resumo">
                         <div class="panel-header"><span class="panel-title">Resumo Operacional</span></div>
                         <div class="resumo-grid">
-                            <div class="stat-box stat-green"><div class="stat-icon" style="color:var(--color-green)"><i class="ph ph-check"></i></div><h3 id="card-op" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Operando</span></div>
-                            <div class="stat-box stat-yellow"><div class="stat-icon" style="color:var(--color-yellow)"><i class="ph ph-warning"></i></div><h3 id="card-al" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Alerta</span></div>
-                            <div class="stat-box stat-red"><div class="stat-icon" style="color:var(--color-red)"><i class="ph ph-minus-circle"></i></div><h3 id="card-in" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Interditado</span></div>
-                            <div class="stat-box"><div class="stat-icon" style="color:var(--color-blue-gray)"><i class="ph ph-broadcast"></i></div><h3 style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Offline</span></div>
+                            <div class="stat-box stat-green" onclick="navigateTo('view-sistemas')" title="Gerenciar Sistemas"><div class="stat-icon" style="color:var(--color-green)"><i class="ph ph-check"></i></div><h3 id="card-op" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Operando</span></div>
+                            <div class="stat-box stat-yellow" onclick="navigateTo('view-alertas', 'Alerta')" title="Ver Alertas"><div class="stat-icon" style="color:var(--color-yellow)"><i class="ph ph-warning"></i></div><h3 id="card-al" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Alerta</span></div>
+                            <div class="stat-box stat-red" onclick="navigateTo('view-alertas', 'Interditado')" title="Ver Interdições"><div class="stat-icon" style="color:var(--color-red)"><i class="ph ph-minus-circle"></i></div><h3 id="card-in" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Interditado</span></div>
+                            <div class="stat-box" onclick="navigateTo('view-manutencao')" title="Ver Painel de Manutenções"><div class="stat-icon" style="color:var(--color-blue-gray)"><i class="ph ph-broadcast"></i></div><h3 style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Offline</span></div>
                         </div>
                     </div>
                     <div class="panel card-alertas">
-                        <div class="panel-header"><span class="panel-title">Logs Recentes</span><a class="btn btn-outline" style="padding:4px 8px; font-size:0.7rem;" onclick="document.querySelector('[data-target=\'view-alertas\']').click()">Ver tudo</a></div>
+                        <div class="panel-header"><span class="panel-title">Logs Recentes</span><a class="btn btn-outline" style="padding:4px 8px; font-size:0.7rem;" onclick="navigateTo('view-alertas')">Ver tudo</a></div>
                         <div class="alert-list" id="dashboard-alerts"></div>
                     </div>
                     <div class="panel card-evolucao"><div class="panel-header"><span class="panel-title">Telemetria (Lâmina d'água)</span></div><div class="chart-wrapper"><canvas id="evolucaoChart"></canvas></div></div>
@@ -297,7 +296,7 @@
                 </div>
                 <div style="overflow-x:auto; background:var(--bg-panel); border-radius:8px; border: 1px solid var(--border-color); flex:1;">
                     <table id="table-logs" style="min-width: 600px;">
-                        <thead><tr><th>Data / Hora</th><th>Estação Acionada</th><th>Severidade</th><th>Precipitação Lida</th><th>Leitura Concluída</th></tr></thead>
+                        <thead><tr><th>Data / Hora Local</th><th>Estação Acionada</th><th>Severidade</th><th>Precipitação Lida</th><th>Leitura Concluída</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -356,7 +355,7 @@
         </main>
     </div>
 
-    <!-- TEMPLATES DE MODAIS (Injetados via JS) -->
+    <!-- TEMPLATES DE MODAIS -->
     <template id="tpl-station-form">
         <form id="form-station-submit">
             <input type="hidden" id="st-id">
@@ -395,13 +394,7 @@
         /* =====================================================================
            CORE ARCHITECTURE (ESTADO, BANCO DE DADOS LOCAL E ROTAS)
         ===================================================================== */
-        const DB = {
-            USRS: 'sppm_v3_users',
-            STAS: 'sppm_v3_stations',
-            LOGS: 'sppm_v3_logs',
-            CONF: 'sppm_v3_config',
-            OS: 'sppm_v3_os'
-        };
+        const DB = { USRS: 'sppm_v4_users', STAS: 'sppm_v4_stations', LOGS: 'sppm_v4_logs', CONF: 'sppm_v4_config', OS: 'sppm_v4_os' };
 
         const defaultStations = [
             { id: 1, name: 'Morrinhos 1 (Piloto)', region: 'Litoral Norte', lat: -3.2261, lon: -40.1222, quota: 15 },
@@ -430,42 +423,91 @@
         let currentUser = null; let syncTimer = null;
         let mapDash, mapFull; let markersDash = []; let chartSidebar, chartEvol, chartHist, chartReg;
 
-        // Login Logic
+        // 1. SISTEMA DE LOGIN (COM SESSION STORAGE)
         document.getElementById('form-login').addEventListener('submit', (e) => {
             e.preventDefault();
             const u = document.getElementById('login-user').value, p = document.getElementById('login-pass').value;
             const user = getDB(DB.USRS).find(x => x.email === u && x.pass === p);
+            
             if(user) {
-                currentUser = user; document.getElementById('login-screen').style.display = 'none'; document.getElementById('app-layout').style.display = 'flex';
-                document.getElementById('active-user-name').innerText = user.name; document.getElementById('active-user-role').innerText = user.role;
+                currentUser = user;
+                sessionStorage.setItem('sppm_active_user', JSON.stringify(user)); 
+                
+                document.getElementById('login-screen').style.display = 'none'; 
+                document.getElementById('app-layout').style.display = 'flex';
+                document.getElementById('active-user-name').innerText = user.name; 
+                document.getElementById('active-user-role').innerText = user.role;
                 document.querySelectorAll('.admin-only').forEach(el => el.style.display = user.role === 'Admin' ? 'flex' : 'none');
+                
                 bootSystem();
-            } else document.getElementById('login-error').style.display = 'block';
+            } else {
+                document.getElementById('login-error').style.display = 'block';
+            }
         });
 
-        function logout() { clearInterval(syncTimer); document.getElementById('app-layout').style.display = 'none'; document.getElementById('login-screen').style.display = 'flex'; document.getElementById('login-pass').value = ''; }
+        // 2. APAGAR SESSÃO NO LOGOUT
+        function logout() { 
+            sessionStorage.removeItem('sppm_active_user'); 
+            clearInterval(syncTimer); 
+            document.getElementById('app-layout').style.display = 'none'; 
+            document.getElementById('login-screen').style.display = 'flex'; 
+            document.getElementById('login-pass').value = ''; 
+        }
 
-        // Navigation (SPA)
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', () => {
-                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); item.classList.add('active');
-                const target = item.getAttribute('data-target'); document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active')); document.getElementById(target).classList.add('active');
-                document.getElementById('topbar-title').innerText = item.innerText.trim();
-                
-                // Fecha o menu no mobile após clique
-                document.querySelector('.sidebar').classList.remove('open');
-                
-                if(target==='view-dashboard' && mapDash) setTimeout(()=>mapDash.invalidateSize(), 100);
-                if(target==='view-mapa' && mapFull) setTimeout(()=>mapFull.invalidateSize(), 100);
-                
-                // Lazy Load data when entering view
-                if(target==='view-sistemas') renderStations();
-                if(target==='view-usuarios') renderUsers();
-                if(target==='view-alertas') { populateFilters(); renderAlertsTable(); }
-                if(target==='view-manutencao') renderOS();
-                if(target==='view-config') loadConfig();
+        // Função utilitária para pegar Data e Hora corretas (Fuso local - Correção)
+        function getLocalTime() {
+            const now = new Date();
+            const tzOffset = now.getTimezoneOffset() * 60000;
+            return new Date(now.getTime() - tzOffset).toISOString().slice(0,19).replace('T',' ');
+        }
+
+        // Navegação Programática (Ação Clicável dos Cards do Resumo)
+        function navigateTo(targetId, filterStatus = null) {
+            const navItem = document.querySelector(`[data-target='${targetId}']`);
+            if(navItem) navItem.click(); 
+            
+            if(filterStatus) {
+                setTimeout(() => {
+                    const filterEl = document.getElementById('filtro-status');
+                    if(filterEl) {
+                        filterEl.value = filterStatus;
+                        renderAlertsTable();
+                    }
+                }, 150);
+            } else if (targetId === 'view-alertas') {
+                setTimeout(() => {
+                    const filterEl = document.getElementById('filtro-status');
+                    if(filterEl) {
+                        filterEl.value = "";
+                        renderAlertsTable();
+                    }
+                }, 150);
+            }
+        }
+
+        // Configuração de Navegação SPA
+        function setupNavigation() {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); item.classList.add('active');
+                    const target = item.getAttribute('data-target'); document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active')); document.getElementById(target).classList.add('active');
+                    
+                    // Altera o título lá em cima na topbar ao invés do id topbar-title ser a h2, agora ele é o span
+                    document.getElementById('topbar-title').innerText = item.innerText.trim();
+                    
+                    document.querySelector('.sidebar').classList.remove('open'); 
+                    
+                    if(target==='view-dashboard' && mapDash) setTimeout(()=>mapDash.invalidateSize(), 100);
+                    if(target==='view-mapa' && mapFull) setTimeout(()=>mapFull.invalidateSize(), 100);
+                    
+                    if(target==='view-sistemas') renderStations();
+                    if(target==='view-usuarios') renderUsers();
+                    if(target==='view-alertas') { populateFilters(); renderAlertsTable(); }
+                    if(target==='view-manutencao') renderOS();
+                    if(target==='view-config') loadConfig();
+                });
             });
-        });
+        }
 
         /* =====================================================================
            MÓDULOS DE UI (MODAIS E ALERTAS)
@@ -480,7 +522,6 @@
         /* =====================================================================
            CRUD DE ESTAÇÕES E USUÁRIOS
         ===================================================================== */
-        // Estações
         function openModalStation(id = null) {
             openModal(id ? 'Editar Ponto de Monitoramento' : 'Novo Ponto de Monitoramento', 'tpl-station-form');
             if(id) {
@@ -493,7 +534,7 @@
                 e.preventDefault(); const stas = getDB(DB.STAS);
                 const obj = { id: document.getElementById('st-id').value ? parseInt(document.getElementById('st-id').value) : Date.now(), name: document.getElementById('st-name').value, region: document.getElementById('st-region').value, lat: parseFloat(document.getElementById('st-lat').value), lon: parseFloat(document.getElementById('st-lon').value), quota: parseFloat(document.getElementById('st-quota').value)};
                 if(document.getElementById('st-id').value) { const idx = stas.findIndex(x=>x.id===obj.id); stas[idx] = obj; } else { stas.push(obj); }
-                setDB(DB.STAS, stas); closeModal(); renderStations(); syncAPI(); // Force refresh map
+                setDB(DB.STAS, stas); closeModal(); renderStations(); syncAPI();
             });
         }
         function renderStations() {
@@ -501,7 +542,6 @@
         }
         function delStation(id) { if(confirm('Desativar permanentemente?')) { setDB(DB.STAS, getDB(DB.STAS).filter(x=>x.id!==id)); renderStations(); syncAPI(); } }
 
-        // Usuários
         function openModalUser() {
             openModal('Provisionar Servidor (RBAC)', 'tpl-user-form');
             document.getElementById('form-user-submit').addEventListener('submit', (e) => {
@@ -520,7 +560,9 @@
         ===================================================================== */
         async function syncAPI() {
             const stas = getDB(DB.STAS); const logs = getDB(DB.LOGS); let os = getDB(DB.OS);
-            let cOp=0, cAl=0, cIn=0, cOff=0; let htmlAlerts = []; let regCount = { 'Sertão Sobral':0, 'Sertão Central':0, 'Litoral Norte':0, 'Vale do Jaguaribe':0, 'Cariri':0 };
+            let cOp=0, cAl=0, cIn=0, cOff=0; let regCount = { 'Sertão Sobral':0, 'Sertão Central':0, 'Litoral Norte':0, 'Vale do Jaguaribe':0, 'Cariri':0 };
+            
+            const currentTime = getLocalTime();
 
             markersDash.forEach(m => mapDash.removeLayer(m)); markersDash = [];
 
@@ -535,58 +577,51 @@
                     else if(data.precipitation >= st.quota) { color = "red"; status = "Interditado"; cIn++; }
                     else { cOp++; }
 
-                    // Incrementa região
                     if(regCount[st.region] !== undefined) regCount[st.region]++;
 
-                    // Salva Log
-                    logs.unshift({ id: Date.now()+Math.random(), date: new Date().toISOString().slice(0,19).replace('T',' '), station: st.name, status: status, precip: data.precipitation, temp: data.temperature_2m, hum: data.relative_humidity_2m, wind: data.wind_speed_10m });
+                    logs.unshift({ id: Date.now()+Math.random(), date: currentTime, station: st.name, status: status, precip: data.precipitation, temp: data.temperature_2m, hum: data.relative_humidity_2m, wind: data.wind_speed_10m });
 
-                    // Plota Mapa
                     const icon = L.divIcon({ className: '', html: `<div style="background:var(--color-${color}); width:12px; height:12px; border-radius:50%; border:1px solid #fff; box-shadow: 0 0 8px rgba(0,0,0,0.8);"></div>`});
                     markersDash.push(L.marker([st.lat, st.lon], {icon}).addTo(mapDash).bindPopup(`<b style="color:#000">${st.name}</b><br>Lâmina: ${data.precipitation}mm`));
 
-                    // UI Alertas
-                    if(status !== "Normal") {
-                        htmlAlerts.push(`<div class="alert-item"><i class="ph-fill ${status==='Interditado'?'ph-minus-circle':'ph-warning'}" style="color:var(--color-${color}); font-size:1.4rem;"></i><div><h4 style="font-size:0.8rem; color:var(--text-white); margin-bottom:2px;">${st.name}</h4><p style="font-size:0.7rem; color:var(--text-muted);">${status} - ${data.precipitation}mm captados.</p></div></div>`);
-                    }
-
-                    // Motor de Manutenção
                     if(data.wind_speed_10m > 40 || Math.random() < 0.05) {
-                        if(!os.find(x=>x.station === st.name && x.status === 'Open')) os.push({ id: Date.now(), station: st.name, issue: 'Sensor de ultrassom descalibrado', status: 'Open', date: new Date().toLocaleDateString(), severity: 'warning' });
+                        if(!os.find(x=>x.station === st.name && x.status === 'Open')) os.push({ id: Date.now(), station: st.name, issue: 'Sensor de ultrassom descalibrado/Bloqueio Objeto', status: 'Open', date: new Date().toLocaleDateString('pt-BR'), severity: 'warning' });
                     }
-
                 } catch(e) {
                     cOff++;
-                    // Gera OS Critica de Comunicação
-                    if(!os.find(x=>x.station === st.name && x.status === 'Open')) os.push({ id: Date.now(), station: st.name, issue: 'Falha de comunicação via Satélite/GPRS', status: 'Open', date: new Date().toLocaleDateString(), severity: 'critical' });
+                    if(!os.find(x=>x.station === st.name && x.status === 'Open')) os.push({ id: Date.now(), station: st.name, issue: 'Falha de comunicação via Satélite/GPRS', status: 'Open', date: new Date().toLocaleDateString('pt-BR'), severity: 'critical' });
                 }
             }
 
-            if(logs.length > 1000) logs.length = 1000; // Limite de cache
+            if(logs.length > 2000) logs.length = 2000;
             setDB(DB.LOGS, logs); setDB(DB.OS, os);
 
-            // Atualiza Dashboard Contadores
             let total = stas.length;
             document.getElementById('card-op').innerText = cOp; document.getElementById('card-al').innerText = cAl; document.getElementById('card-in').innerText = cIn; document.querySelectorAll('.stat-box h3')[3].innerText = cOff;
             document.getElementById('sb-op').innerText = cOp; document.getElementById('sb-al').innerText = cAl; document.getElementById('sb-in').innerText = cIn;
             document.getElementById('perc-op').innerText = total ? Math.round((cOp/total)*100)+'%' : '0%';
             document.getElementById('badge-alertas').innerText = cAl + cIn;
-            document.getElementById('dashboard-alerts').innerHTML = htmlAlerts.length ? htmlAlerts.slice(0,4).join('') : '<p style="color:var(--text-muted); font-size:0.8rem;">Malha estável. Zero ocorrências.</p>';
 
-            // Atualiza Gráficos
+            const recentAlerts = logs.filter(l => l.status !== "Normal").slice(0, 4);
+            let htmlAlerts = recentAlerts.map(l => {
+                let color = l.status === 'Interditado' ? 'red' : 'yellow';
+                let icClass = l.status === 'Interditado' ? 'ph-minus-circle' : 'ph-warning';
+                return `<div class="alert-item"><i class="ph-fill ${icClass} alert-icon" style="color:var(--color-${color}); font-size:1.4rem;"></i><div><h4 style="font-size:0.8rem; color:var(--text-white); margin-bottom:2px;">${l.station}</h4><p style="font-size:0.7rem; color:var(--text-muted);">${l.status} - Lâmina d'água: ${l.precip}mm <br>(${l.date})</p></div></div>`;
+            });
+            document.getElementById('dashboard-alerts').innerHTML = htmlAlerts.length ? htmlAlerts.join('') : '<div style="display:flex; justify-content:center; align-items:center; height:100%; color:var(--text-muted);"><p style="font-size:0.8rem;">Malha estável. Zero ocorrências.</p></div>';
+
             chartSidebar.data.datasets[0].data = [cOp, cAl, cIn]; chartSidebar.update();
             chartEvol.data.datasets[0].data = [80, 85, 82, 86, cOp]; chartEvol.data.datasets[1].data = [15, 10, 14, 10, cAl]; chartEvol.data.datasets[2].data = [5, 5, 4, 4, cIn]; chartEvol.update();
             chartHist.data.datasets[0].data = [5, 5, 4, 4, cIn]; chartHist.update();
             
-            // Gráfico Região
             const rData = [regCount['Sertão Sobral'], regCount['Sertão Central'], regCount['Litoral Norte'], regCount['Vale do Jaguaribe'], regCount['Cariri']];
             chartReg.data.datasets[0].data = rData; chartReg.update();
             document.getElementById('regiao-legend').innerHTML = `
-                <div style="display:flex; justify-content:space-between;"><span><span class="dot green"></span> Sertão Sobral</span> <strong>${rData[0]}</strong></div>
-                <div style="display:flex; justify-content:space-between;"><span><span class="dot blue" style="background:var(--color-blue)"></span> Sertão Central</span> <strong>${rData[1]}</strong></div>
-                <div style="display:flex; justify-content:space-between;"><span><span class="dot purple" style="background:var(--color-purple)"></span> Litoral Norte</span> <strong>${rData[2]}</strong></div>
-                <div style="display:flex; justify-content:space-between;"><span><span class="dot yellow"></span> Vale Jaguaribe</span> <strong>${rData[3]}</strong></div>
-                <div style="display:flex; justify-content:space-between;"><span><span class="dot red"></span> Cariri</span> <strong>${rData[4]}</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span><span class="dot green"></span> Sertão Sobral</span> <strong>${rData[0] || 0}</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span><span class="dot blue" style="background:var(--color-blue)"></span> Sertão Central</span> <strong>${rData[1] || 0}</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span><span class="dot purple" style="background:var(--color-purple)"></span> Litoral Norte</span> <strong>${rData[2] || 0}</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span><span class="dot yellow"></span> Vale Jaguaribe</span> <strong>${rData[3] || 0}</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span><span class="dot red"></span> Cariri</span> <strong>${rData[4] || 0}</strong></div>
             `;
             
             if(document.getElementById('view-alertas').classList.contains('active')) renderAlertsTable();
@@ -602,7 +637,7 @@
 
         function renderAlertsTable() {
             const fd = document.getElementById('filtro-data').value, fs = document.getElementById('filtro-estacao').value, fst = document.getElementById('filtro-status').value;
-            document.querySelector('#table-logs tbody').innerHTML = getDB(DB.LOGS).filter(l => (!fd || l.date.startsWith(fd)) && (!fs || l.station === fs) && (!fst || l.status === fst)).slice(0,100).map(l => `<tr><td style="color:var(--text-muted)">${l.date}</td><td><b style="color:var(--text-white)">${l.station}</b></td><td><span style="color:${l.status==='Interditado'?'var(--color-red)':(l.status==='Alerta'?'var(--color-yellow)':'var(--color-green)')}; font-weight:700;">${l.status}</span></td><td><span style="color:var(--color-yellow)">${l.precip} mm</span></td><td><i class="ph ph-check" style="color:var(--color-green)"></i> Validado</td></tr>`).join('');
+            document.querySelector('#table-logs tbody').innerHTML = getDB(DB.LOGS).filter(l => (!fd || l.date.startsWith(fd)) && (!fs || l.station === fs) && (!fst || l.status === fst)).slice(0,100).map(l => `<tr><td style="color:var(--text-muted)">${l.date}</td><td><b style="color:var(--text-white)">${l.station}</b></td><td><span style="color:${l.status==='Interditado'?'var(--color-red)':(l.status==='Alerta'?'var(--color-yellow)':'var(--color-green)')}; font-weight:700;">${l.status}</span></td><td><span style="color:var(--color-yellow)">${l.precip} mm</span></td><td><i class="ph ph-check" style="color:var(--color-green)"></i> Validado CCO</td></tr>`).join('');
         }
 
         function exportCSV() {
@@ -622,14 +657,14 @@
                     <h4 style="color:var(--text-white); font-size:1rem; margin-bottom:10px;"><i class="ph-fill ph-warning"></i> ${o.station}</h4>
                     <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Data de Abertura: <strong>${o.date}</strong></p>
                     <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:15px; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px;">Falha reportada: <span style="color:var(--text-white)">${o.issue}</span></p>
-                    <button class="btn btn-outline" style="width:100%;" onclick="closeOS(${o.id})"><i class="ph ph-check-circle"></i> Marcar como Resolvido</button>
+                    <button class="btn btn-outline" style="width:100%;" onclick="closeOS(${o.id})"><i class="ph ph-check-circle"></i> Marcar O.S como Concluída</button>
                 </div>
             `).join('') : '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-muted);"><i class="ph ph-check-circle" style="font-size:3rem; margin-bottom:10px; color:var(--color-green)"></i><p>Nenhuma anomalia de hardware detectada no momento.</p></div>';
         }
         function closeOS(id) { let os = getDB(DB.OS); const idx = os.findIndex(x=>x.id===id); if(idx>-1) { os[idx].status = 'Closed'; setDB(DB.OS, os); renderOS(); } }
 
         /* =====================================================================
-           CONFIGURAÇÕES DO SISTEMA
+           CONFIGURAÇÕES DO SISTEMA E CARREGAMENTO GERAL
         ===================================================================== */
         function loadConfig() { const c = getDB(DB.CONF); document.getElementById('cfg-sync').value = c.syncInterval; document.getElementById('cfg-sound').value = c.sound; }
         document.getElementById('form-config').addEventListener('submit', (e) => {
@@ -637,9 +672,6 @@
             clearInterval(syncTimer); syncTimer = setInterval(syncAPI, c.syncInterval * 60000);
         });
 
-        /* =====================================================================
-           BOOTSTRAP DE GRÁFICOS E MAPA
-        ===================================================================== */
         function initMaps() {
             mapDash = L.map('map-container', { zoomControl: false, attributionControl: false }).setView([-5.3, -39.3], 6.5); L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(mapDash);
             mapFull = L.map('map-full').setView([-5.3, -39.3], 7); L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(mapFull);
@@ -653,8 +685,36 @@
             chartReg = new Chart(document.getElementById('regiaoChart'), { type: 'doughnut', data: { labels: ['Sobral', 'Central', 'Litoral', 'Jaguaribe', 'Cariri'], datasets: [{ data: [0,0,0,0,0], backgroundColor: ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'], borderWidth:0, cutout:'70%' }] }, options: { maintainAspectRatio: false } });
         }
 
-        function bootSystem() { initDB(); initMaps(); initCharts(); syncAPI(); const cfg = getDB(DB.CONF); syncTimer = setInterval(syncAPI, (cfg.syncInterval||5) * 60000); }
-        initDB(); document.querySelectorAll('.nav-item').forEach(i => i.addEventListener('click', initNav));
+        function bootSystem() { 
+            initMaps(); 
+            initCharts(); 
+            syncAPI(); 
+            const cfg = getDB(DB.CONF); 
+            syncTimer = setInterval(syncAPI, (cfg.syncInterval||5) * 60000); 
+        }
+        
+        // 3. VERIFICAR A SESSÃO QUANDO A PÁGINA CARREGAR
+        function checkSession() {
+            initDB();
+            setupNavigation(); 
+            
+            const savedSession = sessionStorage.getItem('sppm_active_user');
+            
+            if(savedSession) {
+                const user = JSON.parse(savedSession);
+                currentUser = user;
+                document.getElementById('login-screen').style.display = 'none'; 
+                document.getElementById('app-layout').style.display = 'flex';
+                document.getElementById('active-user-name').innerText = user.name; 
+                document.getElementById('active-user-role').innerText = user.role;
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = user.role === 'Admin' ? 'flex' : 'none');
+                
+                bootSystem();
+            }
+        }
+        
+        checkSession();
+
     </script>
 </body>
 </html>
