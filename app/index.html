@@ -72,8 +72,7 @@
     <div id="login-screen" style="display: none;">
         <div class="login-panel">
             <!-- Logo base64 para não quebrar se a imagem não carregar -->
-            <img src="Logo.jpeg" alt="SPPM Logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzEwYjk4MSI+PHBhdGggZD0iTTEyIDJMMyA1djZjMCA1LjU1IDMuODQgMTAuNzQgOSAxMmM1LjE2LTEuMjYgOS02LjQ1IDktMTJWNWwtOS0zem0wIDEwLjk5aDdjLS41MyA0LjEyLTMuMjggNy43OS03IDguOTRWMXoiLz48L3N2Zz4='" style="width: 85px; height: 85px; object-fit: cover; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
-            <h1 style="color: var(--text-white);">SPPM OS</h1>
+<img src="../Logo.jpeg" alt="Logo SPPM" style="max-width: 150px; height: auto;">            <h1 style="color: var(--text-white);">SPPM OS</h1>
             <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.85rem;">Autenticação Restrita Operacional</p>
             <form id="form-login">
                 <div class="form-group"><input type="email" id="login-user" class="form-control" placeholder="E-mail" required autocomplete="off"></div>
@@ -118,7 +117,7 @@
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <i class="ph ph-list mobile-menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')"></i>
                     <div style="display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.2s;" onclick="document.querySelector(`[data-target='view-dashboard']`).click()" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-                        <img src="Logo.jpeg" alt="SPPM" onerror="this.style.display='none'" style="width: 38px; height: 38px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                        <img src="../Logo.jpeg" alt="SPPM" onerror="this.style.display='none'" style="width: 38px; height: 38px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
                         <div style="display: flex; flex-direction: column;">
                             <h2 style="font-size: 1.2rem; font-weight: 800; color: var(--text-white); margin: 0; line-height: 1;">SPPM</h2>
                             <span id="topbar-title" style="font-size: 0.7rem; color: var(--color-green); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Visão Geral</span>
