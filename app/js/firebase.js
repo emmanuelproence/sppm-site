@@ -11,7 +11,7 @@ const firebaseConfig = {
     measurementId: "G-9N8LY8N9G7"
 };
 
-let database = null;
+export let database = null;
 export let auth = null; // Exportação do Auth oficial do Firebase
 
 try { 
