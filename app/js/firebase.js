@@ -11,12 +11,14 @@ const firebaseConfig = {
     measurementId: "G-9N8LY8N9G7"
 };
 
-// 1. INICIALIZAÇÃO IMEDIATA (Sem condicionais)
-firebase.initializeApp(firebaseConfig);
+// 1. INICIALIZAÇÃO SEGURA (Amarrada ao Window)
+if (!window.firebase.apps.length) {
+    window.firebase.initializeApp(firebaseConfig);
+}
 
 // 2. EXPORTAÇÕES LIGADAS DIRETAMENTE AO MOTOR
-export const database = firebase.database();
-export const auth = firebase.auth();
+export const database = window.firebase.database();
+export const auth = window.firebase.auth();
 
 // 3. MUDANÇA PARA V12 PARA DESTRUIR O CACHE LOCAL ANTIGO
 export const DB = { USRS: 'sppm_v12_users', STAS: 'sppm_v12_stations', LOGS: 'sppm_v12_logs', CONF: 'sppm_v12_config', OS: 'sppm_v12_os' };
