@@ -2,6 +2,7 @@
 import { setupNavigation } from './ui.js';
 import { checkSession, setupAuthListeners } from './auth.js';
 import { syncAPI } from './telemetry.js';
+import './ui.js';
 
 // Transforma o mapa em variável global para o Leaflet não perder a referência
 window.mapDash = null;
