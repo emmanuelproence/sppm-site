@@ -1,4 +1,4 @@
-// js/firebase.js
+// app/js/firebase.js
 
 const firebaseConfig = {
     apiKey: "AIzaSyBPwg63RIXP6xgasmQEPEemyBLS4eiPe48",
@@ -11,17 +11,15 @@ const firebaseConfig = {
     measurementId: "G-9N8LY8N9G7"
 };
 
-// 1. PRIMEIRO LIGA O MOTOR DO FIREBASE
-if (!window.firebase.apps.length) {
-    window.firebase.initializeApp(firebaseConfig);
-}
+// 1. INICIALIZAÇÃO IMEDIATA (Sem condicionais)
+firebase.initializeApp(firebaseConfig);
 
-// 2. SÓ DEPOIS EXPORTA AS VARIÁVEIS (O ERRO MORAVA AQUI)
-export const database = window.firebase.database();
-export const auth = window.firebase.auth();
+// 2. EXPORTAÇÕES LIGADAS DIRETAMENTE AO MOTOR
+export const database = firebase.database();
+export const auth = firebase.auth();
 
-// ATUALIZADO PARA V10 PARA FORÇAR LIMPEZA DE CACHE
-export const DB = { USRS: 'sppm_v10_users', STAS: 'sppm_v10_stations', LOGS: 'sppm_v10_logs', CONF: 'sppm_v10_config', OS: 'sppm_v10_os' };
+// 3. MUDANÇA PARA V12 PARA DESTRUIR O CACHE LOCAL ANTIGO
+export const DB = { USRS: 'sppm_v12_users', STAS: 'sppm_v12_stations', LOGS: 'sppm_v12_logs', CONF: 'sppm_v12_config', OS: 'sppm_v12_os' };
 
 const defaultStations = [
     { id: 1, name: 'Morrinhos 1 (Piloto)', region: 'Litoral Norte', lat: -3.2261, lon: -40.1222, quota: 15, mac: '', calib: 400, cam: '' },
