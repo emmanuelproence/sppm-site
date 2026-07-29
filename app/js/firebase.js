@@ -11,16 +11,14 @@ const firebaseConfig = {
     measurementId: "G-9N8LY8N9G7"
 };
 
-export const database = firebase.database();
-export const auth = firebase.auth();
-
-try { 
-    firebase.initializeApp(firebaseConfig); 
-    database = firebase.database(); 
-    auth = firebase.auth(); // Inicializa o motor de senhas criptografadas
-} catch(e) { 
-    console.warn("Conexão com Firebase falhou. Usando modo offline."); 
+// 1. PRIMEIRO LIGA O MOTOR DO FIREBASE
+if (!window.firebase.apps.length) {
+    window.firebase.initializeApp(firebaseConfig);
 }
+
+// 2. SÓ DEPOIS EXPORTA AS VARIÁVEIS (O ERRO MORAVA AQUI)
+export const database = window.firebase.database();
+export const auth = window.firebase.auth();
 
 // ATUALIZADO PARA V10 PARA FORÇAR LIMPEZA DE CACHE
 export const DB = { USRS: 'sppm_v10_users', STAS: 'sppm_v10_stations', LOGS: 'sppm_v10_logs', CONF: 'sppm_v10_config', OS: 'sppm_v10_os' };
@@ -39,7 +37,6 @@ const defaultStations = [
 ];
 
 export function initLocalFallback() {
-    // ATUALIZADO COM O SEU E-MAIL PARA GARANTIR PERMISSÃO DE ADMIN
     if(!localStorage.getItem(DB.USRS)) localStorage.setItem(DB.USRS, JSON.stringify([{ id:1, email: 'emanu.spb@gmail.com', pass: '1234', role: 'Admin', name: 'Comando Central', allowedStations: 'all' }]));
     
     if(!localStorage.getItem(DB.STAS)) localStorage.setItem(DB.STAS, JSON.stringify(defaultStations));
@@ -48,7 +45,6 @@ export function initLocalFallback() {
     if(!localStorage.getItem(DB.OS)) localStorage.setItem(DB.OS, JSON.stringify([]));
 }
 
-// Função blindada para forçar array
 export const getDB = (key) => {
     const data = JSON.parse(localStorage.getItem(key));
     if(!data) return [];
