@@ -11,8 +11,8 @@ const firebaseConfig = {
     measurementId: "G-9N8LY8N9G7"
 };
 
-export let database = null;
-export let auth = null; // Exportação do Auth oficial do Firebase
+export const database = firebase.database();
+export const auth = firebase.auth();
 
 try { 
     firebase.initializeApp(firebaseConfig); 
