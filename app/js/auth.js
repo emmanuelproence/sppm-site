@@ -1,96 +1,102 @@
-// js/auth.js
-import { DB, getDB, syncCloudToLocal, auth } from './firebase.js';
+// app/js/auth.js
+import { auth, database, DB, getDB, setDB } from './firebase.js';
 
 export let currentUser = null;
 
-export function setupAuthListeners(bootSystemCallback) {
-    document.getElementById('form-login').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('btn-login-submit');
-        btn.innerText = "Autenticando na Nuvem...";
-        btn.disabled = true;
-
-        const email = document.getElementById('login-user').value.trim().toLowerCase();
-        const password = document.getElementById('login-pass').value.trim();
-        
-        try {
-            // 1. O FIREBASE VALIDA A SENHA CRIPTOGRAFADA (Fim do texto plano!)
-            const userCredential = await auth.signInWithEmailAndPassword(email, password);
-            const firebaseUser = userCredential.user;
-
-            // 2. Sincroniza o banco para pegar as permissões (RBAC) do usuário
-            await syncCloudToLocal();
-            
-            // 3. Busca o perfil do usuário no banco de dados para saber se é Admin ou Operador
-            const users = getDB(DB.USRS);
-            const userProfile = users.find(x => (x.email || "").trim().toLowerCase() === email);
-            
-            if(userProfile) {
-                currentUser = userProfile; 
-                sessionStorage.setItem('sppm_active_user', JSON.stringify(userProfile)); 
-                applyLoginUI(userProfile); 
-                bootSystemCallback(); 
-            } else {
-                // Usuário autenticado, mas sem perfil criado no painel do sistema
-                alert("Usuário sem permissões configuradas no sistema.");
-                auth.signOut();
-            }
-        } catch (error) {
-            console.error("Erro no login:", error.code);
-            document.getElementById('login-error').style.display = 'block'; 
-            document.getElementById('login-error').innerText = "Credenciais inválidas ou conta inexistente.";
-        } finally {
-            btn.innerText = "Acessar Sistema";
-            btn.disabled = false;
-        }
-    });
-
-    const logoutBtn = document.getElementById('btn-logout');
-    if(logoutBtn) logoutBtn.addEventListener('click', logout);
-}
-
-export async function checkSession(bootSystemCallback, setupNavigationCallback) {
-    document.getElementById('loading-overlay').style.display = 'flex';
-    await syncCloudToLocal();
-    document.getElementById('loading-overlay').style.opacity = '0';
-    setTimeout(()=> document.getElementById('loading-overlay').style.display = 'none', 500);
-
-    setupNavigationCallback(); 
-    
-    // O Firebase Auth gerencia a sessão automaticamente, mas mantemos o sessionStorage para o RBAC da UI
-    auth.onAuthStateChanged((firebaseUser) => {
-        if (firebaseUser) {
-            const savedSession = sessionStorage.getItem('sppm_active_user');
-            if(savedSession) {
-                currentUser = JSON.parse(savedSession);
-                applyLoginUI(currentUser); 
-                bootSystemCallback(); 
-            }
+export function initAuth() {
+    // Fica escutando se alguém fez login no Google
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            checkUserRole(user.email);
         } else {
-            document.getElementById('login-screen').style.display = 'flex'; 
+            showLogin(true);
         }
     });
+
+    // Ação do Botão de Login
+    document.getElementById('btn-login').addEventListener('click', () => {
+        const email = document.getElementById('login-email').value.trim();
+        const pass = document.getElementById('login-pass').value.trim();
+        const btn = document.getElementById('btn-login');
+        
+        btn.innerText = "Autenticando...";
+        const errorMsg = document.getElementById('login-error');
+        if(errorMsg) errorMsg.style.display = 'none';
+        
+        auth.signInWithEmailAndPassword(email, pass)
+            .catch(err => {
+                console.error("Erro no Auth:", err);
+                if(errorMsg) {
+                    errorMsg.style.display = 'block';
+                    errorMsg.innerText = 'Credenciais inválidas ou conta não existe.';
+                }
+                btn.innerText = "Acessar Plataforma";
+            });
+    });
+
+    // Botão de Sair (se existir no HTML)
+    const btnLogout = document.getElementById('btn-logout');
+    if(btnLogout) {
+        btnLogout.addEventListener('click', () => {
+            auth.signOut();
+            window.location.reload();
+        });
+    }
 }
 
-function applyLoginUI(user) {
-    document.getElementById('login-screen').style.display = 'none'; 
-    document.getElementById('app-layout').style.display = 'flex';
-    document.getElementById('active-user-name').innerText = user.name; 
-    document.getElementById('active-user-role').innerText = user.role;
+// Verifica no banco de dados se o e-mail logado tem permissão
+function checkUserRole(email) {
+    database.ref('sppm/users').once('value').then(snap => {
+        const users = snap.val();
+        let foundUser = null;
+        
+        if (users) {
+            // Converte pra Array garantindo a leitura
+            const usersArray = Array.isArray(users) ? users : Object.values(users);
+            // BUSCA BLINDADA: Ignora se a letra está maiúscula ou minúscula no BD
+            foundUser = usersArray.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+        }
+
+        if (foundUser) {
+            applyLoginUI(foundUser);
+        } else {
+            auth.signOut();
+            alert("Acesso Negado: Usuário sem permissões cadastradas no SPPM OS.");
+        }
+    }).catch(err => {
+        console.warn("Nuvem inacessível, tentando cache local...", err);
+        const localUsers = getDB(DB.USRS);
+        const foundLocal = localUsers.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+        if (foundLocal) applyLoginUI(foundLocal);
+    });
+}
+
+// Libera a tela principal
+export function applyLoginUI(user) {
+    currentUser = user;
+    showLogin(false);
     
-    document.querySelectorAll('th.admin-only, td.admin-only').forEach(el => el.style.display = user.role === 'Admin' ? 'table-cell' : 'none');
-    document.querySelectorAll('li.admin-only, button.admin-only, .admin-only').forEach(el => { 
-        if(el.tagName !== 'TH' && el.tagName !== 'TD') el.style.display = user.role === 'Admin' ? 'flex' : 'none'; 
+    // Atualiza o crachá do topo
+    const nameEl = document.getElementById('user-name-display');
+    const roleEl = document.getElementById('user-role-display');
+    if(nameEl) nameEl.innerText = user.name || 'Operador';
+    if(roleEl) roleEl.innerText = user.role || 'Geral';
+    
+    // VERIFICAÇÃO DE ADMIN BLINDADA (Ignora erros de digitação no BD)
+    const role = user.role ? user.role.toLowerCase() : '';
+    const isAdmin = (role === 'admin' || role === 'cto');
+
+    // Mostra as abas secretas na barra lateral só pra quem é Admin
+    const adminElements = document.querySelectorAll('.admin-only');
+    adminElements.forEach(el => {
+        el.style.display = isAdmin ? 'flex' : 'none';
     });
+    
+    // Dispara a interface visual e os mapas
+    if (typeof window.setupUI === 'function') window.setupUI();
 }
 
-export function logout() { 
-    auth.signOut().then(() => {
-        sessionStorage.removeItem('sppm_active_user'); 
-        currentUser = null;
-        document.getElementById('app-layout').style.display = 'none'; 
-        document.getElementById('login-screen').style.display = 'flex'; 
-        document.getElementById('login-pass').value = ''; 
-        window.dispatchEvent(new Event('userLogout'));
-    });
+function showLogin(show) {
+    const overlay = document.getElementById('login-overlay');
+    if (overlay) overlay.style.display = show ? 'flex' : 'none';
 }
