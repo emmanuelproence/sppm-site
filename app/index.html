@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPPM | Sistema Inteligente para Passagens Molhadas</title>
+    
+    <!-- FONTES E ÍCONES -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- FIREBASE SDK (NUVEM) - AGORA COM O AUTH INCLUÍDO -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+
+    <!-- ARQUIVO DE ESTILOS -->
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+    <!-- Tela de Loading da Nuvem -->
+    <div id="loading-overlay">
+        <i class="ph-fill ph-shield-check" style="font-size: 4rem; margin-bottom: 20px; animation: blink 1.5s infinite;"></i>
+        <h3 style="color:var(--text-white)">Sincronizando com a Nuvem...</h3>
+    </div>
+
+    <!-- MODAL GLOBAL -->
+    <div class="modal-overlay" id="global-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Título</h3>
+                <i class="ph ph-x close-modal" onclick="document.getElementById('global-modal').classList.remove('active')"></i>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- MODAL IA -->
+    <div class="modal-overlay" id="ai-modal">
+        <div class="modal-content" style="max-width: 700px; padding: 20px;">
+            <div class="modal-header" style="margin-bottom: 10px;">
+                <h3 class="modal-title" id="ai-title">Monitoramento IA (Edge)</h3>
+                <i class="ph ph-x close-modal" onclick="document.getElementById('ai-modal').classList.remove('active')"></i>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:15px;">
+                <div style="position:relative; width:100%; height:320px; background: #000 url('https://images.unsplash.com/photo-1444312645910-fea9736d71f9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80') center/cover; border-radius:12px; overflow:hidden; border: 1px solid var(--border-color);">
+                    <div style="position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.8); padding:4px 8px; border-radius:4px; font-size:0.7rem; color:var(--color-green); font-family:monospace; display:flex; align-items:center; gap:5px;"><span class="dot green" style="width:6px; height:6px; margin:0; animation: blink 1.5s infinite;"></span> LIVE RTSP STREAM</div>
+                    <div id="ai-box" style="position:absolute; bottom:15%; left:15%; width:70%; height:35%; border: 2px dashed var(--color-green); background: rgba(16, 185, 129, 0.15); transition: all 0.3s ease;">
+                        <span id="ai-badge" style="position:absolute; top:-22px; left:-2px; background:var(--color-green); color:#000; font-size:0.65rem; padding:4px 6px; font-weight:bold; text-transform: uppercase;">Área de Tráfego: Desobstruída</span>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div style="background:var(--bg-main); padding:15px; border-radius:8px; border:1px solid var(--border-color);">
+                        <p style="font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">Status da Passagem (IA)</p>
+                        <strong style="color:var(--color-green); font-size:1rem;" id="ai-status">Sem Obstruções</strong>
+                    </div>
+                    <div style="background:var(--bg-main); padding:15px; border-radius:8px; border:1px solid var(--border-color);">
+                        <p style="font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">Confiança do Modelo</p>
+                        <strong style="color:var(--text-white); font-size:1rem;">YOLOv8 — 98.7%</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA LOGIN -->
+    <div id="login-screen" style="display: none;">
+        <div class="login-panel">
+            <!-- Logo base64 para não quebrar se a imagem não carregar -->
+            <img src="Logo.jpeg" alt="SPPM Logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzEwYjk4MSI+PHBhdGggZD0iTTEyIDJMMyA1djZjMCA1LjU1IDMuODQgMTAuNzQgOSAxMmM1LjE2LTEuMjYgOS02LjQ1IDktMTJWNWwtOS0zem0wIDEwLjk5aDdjLS41MyA0LjEyLTMuMjggNy43OS03IDguOTRWMXoiLz48L3N2Zz4='" style="width: 85px; height: 85px; object-fit: cover; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
+            <h1 style="color: var(--text-white);">SPPM OS</h1>
+            <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.85rem;">Autenticação Restrita Operacional</p>
+            <form id="form-login">
+                <div class="form-group"><input type="email" id="login-user" class="form-control" placeholder="E-mail" required autocomplete="off"></div>
+                <div class="form-group"><input type="password" id="login-pass" class="form-control" placeholder="Senha" required></div>
+                <button type="submit" class="btn btn-primary" style="width:100%" id="btn-login-submit">Acessar Sistema</button>
+            </form>
+            <div id="login-error" style="color: var(--color-red); margin-top: 15px; font-size: 0.8rem; display: none;">Credenciais inválidas. Verifique os dados.</div>
+        </div>
+    </div>
+
+    <!-- SISTEMA -->
+    <div id="app-layout">
+        <aside class="sidebar">
+            <ul class="nav-menu" style="margin-top: 20px;">
+                <li class="nav-item active" data-target="view-dashboard"><i class="ph ph-squares-four"></i> Visão Geral</li>
+                <li class="nav-item" data-target="view-mapa"><i class="ph ph-map-pin"></i> Mapa Fullscreen</li>
+                
+                <li class="nav-item admin-only" data-target="view-sistemas"><i class="ph ph-desktop"></i> Gestão de Sistemas</li>
+                
+                <li class="nav-item" data-target="view-alertas" style="justify-content: space-between;">
+                    <div style="display:flex; align-items:center; gap:12px;"><i class="ph ph-bell"></i> Histórico/Alertas</div>
+                    <span style="background:var(--color-red); color:white; padding:2px 6px; border-radius:12px; font-size:0.6rem; font-weight:700;" id="badge-alertas">0</span>
+                </li>
+                <li class="nav-item" data-target="view-relatorios"><i class="ph ph-file-csv"></i> Data Lake & Export</li>
+                <li class="nav-item" data-target="view-manutencao"><i class="ph ph-wrench"></i> Manutenção (O.S.)</li>
+                
+                <li class="nav-item admin-only" data-target="view-usuarios"><i class="ph ph-users"></i> Controle RBAC</li>
+                <li class="nav-item admin-only" data-target="view-config"><i class="ph ph-gear"></i> Configurações Globais</li>
+            </ul>
+
+            <div class="sidebar-status">
+                <h3 style="color: var(--text-muted); font-size: 0.7rem; font-weight: 700; margin-bottom: 15px;">ESCOPO DE REDE</h3>
+                <div class="chart-container-sm"><canvas id="sidebarChart"></canvas><div class="chart-center-text"><h2 id="perc-op" style="color: var(--text-white);">0%</h2><span>Operando</span></div></div>
+                <div class="status-row"><span><span class="dot green"></span>Seguro</span> <strong id="sb-op">0</strong></div>
+                <div class="status-row"><span><span class="dot yellow"></span>Alerta</span> <strong id="sb-al">0</strong></div>
+                <div class="status-row"><span><span class="dot red"></span>Interditado</span> <strong id="sb-in">0</strong></div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <i class="ph ph-list mobile-menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')"></i>
+                    <div style="display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.2s;" onclick="document.querySelector(`[data-target='view-dashboard']`).click()" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        <img src="Logo.jpeg" alt="SPPM" onerror="this.style.display='none'" style="width: 38px; height: 38px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                        <div style="display: flex; flex-direction: column;">
+                            <h2 style="font-size: 1.2rem; font-weight: 800; color: var(--text-white); margin: 0; line-height: 1;">SPPM</h2>
+                            <span id="topbar-title" style="font-size: 0.7rem; color: var(--color-green); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Visão Geral</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div style="display: flex; align-items: center; gap: 10px; border-left: 1px solid var(--border-color); padding-left: 20px;">
+                        <i class="ph-fill ph-user-circle" style="font-size: 2rem; color: var(--text-muted);"></i>
+                        <div style="display: flex; flex-direction: column;">
+                            <span id="active-user-name" style="font-size: 0.85rem; font-weight: 600;">Admin</span>
+                            <small id="active-user-role" style="font-size: 0.7rem; color: var(--color-green);">Cargo</small>
+                        </div>
+                    </div>
+                    <!-- AQUI FOI APLICADA A CORREÇÃO DE SEGURANÇA (ID btn-logout) -->
+                    <button class="btn btn-outline" id="btn-logout" style="padding: 6px 12px; font-size:0.75rem;"><i class="ph ph-sign-out"></i> Sair</button>
+                </div>
+            </header>
+
+            <!-- VIEW: DASHBOARD -->
+            <section id="view-dashboard" class="view-section active">
+                <div class="toolbar">
+                    <div style="display: flex; gap: 10px;"><button class="btn btn-outline"><i class="ph ph-funnel"></i> Hoje</button></div>
+                    <button class="btn btn-primary" id="btn-sync-api"><i class="ph ph-arrows-clockwise"></i> Forçar Sincronização API</button>
+                </div>
+                
+                <div class="grid-layout">
+                    <div class="panel card-map">
+                        <div class="map-overlay-title">Monitoramento Espacial</div>
+                        <div id="map-container"></div>
+                        <div style="position: absolute; bottom: 15px; left: 15px; z-index: 400; display: flex; gap: 12px; background: rgba(17, 26, 41, 0.85); padding: 8px 14px; border-radius: 8px; font-size: 0.7rem; font-weight: 600;">
+                            <span><span class="dot green"></span> Seguro</span><span><span class="dot yellow"></span> Alerta</span><span><span class="dot red"></span> Crítico</span>
+                        </div>
+                    </div>
+                    <div class="panel card-resumo">
+                        <div class="panel-header"><span class="panel-title">Resumo Operacional</span></div>
+                        <div class="resumo-grid">
+                            <div class="stat-box stat-green" onclick="document.querySelector(`[data-target='view-sistemas']`).click()" title="Gerenciar Sistemas"><div class="stat-icon" style="color:var(--color-green)"><i class="ph ph-check"></i></div><h3 id="card-op" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Operando</span></div>
+                            <div class="stat-box stat-yellow" onclick="document.querySelector(`[data-target='view-alertas']`).click()" title="Ver Alertas"><div class="stat-icon" style="color:var(--color-yellow)"><i class="ph ph-warning"></i></div><h3 id="card-al" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Alerta</span></div>
+                            <div class="stat-box stat-red" onclick="document.querySelector(`[data-target='view-alertas']`).click()" title="Ver Interdições"><div class="stat-icon" style="color:var(--color-red)"><i class="ph ph-minus-circle"></i></div><h3 id="card-in" style="color: var(--text-white);">0</h3><span style="color: var(--text-muted);">Interditado</span></div>
+                            <div class="stat-box" onclick="document.querySelector(`[data-target='view-manutencao']`).click()" title="Ver Painel de Manutenções"><div class="stat-icon" style="color:var(--color-blue-gray)"><i class="ph ph-broadcast"></i></div><h3 style="color: var(--text-white);" id="card-off">0</h3><span style="color: var(--text-muted);">Offline</span></div>
+                        </div>
+                    </div>
+                    <div class="panel card-alertas">
+                        <div class="panel-header"><span class="panel-title">Logs Recentes</span><a class="btn btn-outline" style="padding:4px 8px; font-size:0.7rem;" onclick="document.querySelector(`[data-target='view-alertas']`).click()">Ver tudo</a></div>
+                        <div class="alert-list" id="dashboard-alerts"></div>
+                    </div>
+                    <div class="panel card-evolucao"><div class="panel-header"><span class="panel-title">Telemetria (Lâmina d'água)</span></div><div class="chart-wrapper"><canvas id="evolucaoChart"></canvas></div></div>
+                    <div class="panel card-historico"><div class="panel-header"><span class="panel-title">Histórico de Bloqueios</span></div><div class="chart-wrapper"><canvas id="historicoChart"></canvas></div></div>
+                    <div class="panel card-regiao"><div class="panel-header"><span class="panel-title">Distribuição por Região</span></div><div style="display:flex; align-items:center; height:100%"><div style="width:50%; height:100%"><canvas id="regiaoChart"></canvas></div><div id="regiao-legend" style="width:50%; display:flex; flex-direction:column; gap:8px; font-size:0.7rem;"></div></div></div>
+                </div>
+            </section>
+
+            <!-- VIEW: MAPA FULL -->
+            <section id="view-mapa" class="view-section" style="padding:0;"><div id="map-full" style="width: 100%; height: 100%;"></div></section>
+
+            <!-- VIEW: SISTEMAS (CRUD COM HARDWARE) -->
+            <section id="view-sistemas" class="view-section">
+                <div class="panel" style="margin-bottom: 20px;">
+                    <div class="panel-header">
+                        <span class="panel-title">Malha de Sensores Edge IoT</span>
+                        <button class="btn btn-primary admin-only" id="btn-new-station"><i class="ph ph-plus"></i> Nova Estação</button>
+                    </div>
+                    <div style="overflow-x:auto; background:var(--bg-main); border-radius:8px; border: 1px solid var(--border-color);">
+                        <table id="table-stations" style="min-width: 800px;">
+                            <thead><tr><th>ID</th><th>Localidade / Nome</th><th>Região</th><th>Device MAC</th><th>Cota Crítica</th><th>Câmera IA</th><th class="admin-only">Ações</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: ALERTAS E HISTÓRICO -->
+            <section id="view-alertas" class="view-section">
+                <div class="panel" style="margin-bottom:20px; padding: 15px;">
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <div class="form-group" style="margin:0; flex: 1; min-width: 150px;"><input type="date" id="filtro-data" class="form-control"></div>
+                        <div class="form-group" style="margin:0; flex: 1; min-width: 150px;"><select id="filtro-estacao" class="form-control"><option value="">Todas as Estações do Escopo</option></select></div>
+                        <div class="form-group" style="margin:0; flex: 1; min-width: 150px;"><select id="filtro-status" class="form-control"><option value="">Todos os Status</option><option value="Normal">Operando Normal</option><option value="Alerta">Alerta Emitido</option><option value="Interditado">Interdição Crítica</option></select></div>
+                    </div>
+                </div>
+                <div style="overflow-x:auto; background:var(--bg-panel); border-radius:8px; border: 1px solid var(--border-color); flex:1;">
+                    <table id="table-logs" style="min-width: 600px;">
+                        <thead><tr><th>Data / Hora Local</th><th>Estação Acionada</th><th>Severidade</th><th>Precipitação Lida</th><th>Leitura Concluída</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- VIEW: RELATÓRIOS (DATA LAKE) -->
+            <section id="view-relatorios" class="view-section" style="align-items: center; justify-content: center;">
+                <div class="panel" style="max-width: 600px; text-align: center; padding: 50px 30px;">
+                    <i class="ph-fill ph-database" style="font-size: 4rem; color: var(--color-green); margin-bottom: 20px;"></i>
+                    <h2 style="color: var(--text-white); margin-bottom: 10px;">Extração de Data Lake</h2>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 30px; line-height: 1.5;">O sistema arquiva continuamente as variáveis de telemetria. Exporte a matriz CSV para auditoria e análises preditivas. O arquivo exportado conterá **apenas as estações autorizadas para o seu perfil**.</p>
+                    <button class="btn btn-primary" id="btn-export-csv" style="margin: 0 auto; font-size: 1rem; padding: 12px 24px;"><i class="ph ph-download-simple"></i> Download Dataset (.csv)</button>
+                </div>
+            </section>
+
+            <!-- VIEW: MANUTENÇÃO (O.S.) -->
+            <section id="view-manutencao" class="view-section">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
+                    <h2 style="font-size:1.1rem; color:var(--text-white)">Painel de Ordens de Serviço</h2>
+                    <button class="btn btn-primary" id="btn-new-os"><i class="ph ph-plus"></i> Abrir Nova O.S.</button>
+                </div>
+                <div class="os-grid" id="os-container"></div>
+            </section>
+
+            <!-- VIEW: USUÁRIOS (RBAC) -->
+            <section id="view-usuarios" class="view-section">
+                <div class="panel">
+                    <div class="panel-header"><span class="panel-title">Controle de Acesso de Servidores (RBAC)</span><button class="btn btn-primary" id="btn-new-user"><i class="ph ph-user-plus"></i> Novo Acesso</button></div>
+                    <div style="overflow-x: auto;">
+                        <table id="table-users" style="min-width: 600px;">
+                            <thead><tr><th>Servidor / Nome</th><th>E-mail Corporativo</th><th>Perfil</th><th>Visualização (Passagens Permitidas)</th><th>Ações</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: CONFIGURAÇÕES -->
+            <section id="view-config" class="view-section">
+                <div class="panel" style="max-width: 600px;">
+                    <div class="panel-header"><span class="panel-title">Parâmetros Globais do Sistema</span></div>
+                    <form id="form-config">
+                        <div class="form-group"><label>Intervalo de Sincronização via Satélite (Minutos)</label><input type="number" id="cfg-sync" class="form-control" value="5" min="1" max="60"></div>
+                        <button type="submit" class="btn btn-primary"><i class="ph ph-floppy-disk"></i> Salvar Alterações Globais</button>
+                    </form>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- TEMPLATES DE MODAIS -->
+    <template id="tpl-station-form">
+        <form id="form-station-submit">
+            <input type="hidden" id="st-id">
+            <div style="display:flex; gap:15px;">
+                <div class="form-group" style="flex:2"><label>Nome / Localidade</label><input type="text" id="st-name" class="form-control" required placeholder="Ex: Passagem Morrinhos"></div>
+                <div class="form-group" style="flex:1"><label>Região Admin.</label>
+                    <select id="st-region" class="form-control">
+                        <option value="Litoral Norte">Litoral Norte</option><option value="Sertão Sobral">Sertão Sobral</option>
+                        <option value="Sertão Central">Sertão Central</option><option value="Vale do Jaguaribe">Vale do Jaguaribe</option><option value="Cariri">Cariri</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:flex; gap:15px;">
+                <div class="form-group"><label>Latitude</label><input type="number" step="any" id="st-lat" class="form-control" required placeholder="-3.000"></div>
+                <div class="form-group"><label>Longitude</label><input type="number" step="any" id="st-lon" class="form-control" required placeholder="-39.000"></div>
+                <div class="form-group"><label>Cota Crítica (mm)</label><input type="number" id="st-quota" class="form-control" required value="15"></div>
+            </div>
+            <h4 style="margin: 15px 0 10px; color: var(--text-white); font-size: 0.8rem; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; text-transform:uppercase;">Integração Edge IoT / IA</h4>
+            <div style="display:flex; gap:15px;">
+                <div class="form-group"><label>MAC Address (ESP32 / SIM7000G)</label><input type="text" id="st-mac" class="form-control" placeholder="XX:XX:XX:XX:XX:XX"></div>
+                <div class="form-group"><label>Distância Leito Seco (cm)</label><input type="number" id="st-calib" class="form-control" placeholder="Ex: 400"></div>
+            </div>
+            <div class="form-group"><label>IP / RTSP da Câmera</label><input type="text" id="st-cam" class="form-control" placeholder="rtsp://admin:pass@ip:554/stream"></div>
+            <button type="submit" class="btn btn-primary" style="width:100%; margin-top:10px;">Salvar & Provisionar Hardware</button>
+        </form>
+    </template>
+
+    <template id="tpl-user-form">
+        <form id="form-user-submit">
+            <div style="display:flex; gap:15px;">
+                <div class="form-group" style="flex:1"><label>Nome Completo</label><input type="text" id="usr-name" class="form-control" required></div>
+                <div class="form-group" style="flex:1"><label>Login / E-mail</label><input type="email" id="usr-email" class="form-control" required autocomplete="off"></div>
+            </div>
+            <div style="display:flex; gap:15px;">
+                <div class="form-group" style="flex:1"><label>Senha Temporária</label><input type="password" id="usr-pass" class="form-control" required></div>
+                <div class="form-group" style="flex:1"><label>Privilégio de Acesso</label>
+                    <select id="usr-role" class="form-control" onchange="document.getElementById('container-station-select').style.display = this.value === 'Admin' ? 'none' : 'block'">
+                        <option value="Operador">Operador (Restrito)</option><option value="Admin">Administrador (Total)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" id="container-station-select">
+                <label>Permissões de Visualização (Selecione as Passagens Autorizadas)</label>
+                <div class="checkbox-grid" id="usr-stations-container"></div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%">Provisionar Servidor</button>
+        </form>
+    </template>
+
+    <template id="tpl-os-form">
+        <form id="form-os-submit">
+            <div class="form-group"><label>Passagem / Estação (Dentro do seu Escopo)</label><select id="os-station" class="form-control" required></select></div>
+            <div class="form-group"><label>Descrição do Problema Encontrado</label><textarea id="os-issue" class="form-control" required placeholder="Ex: Sensor reportando dados nulos. Bateria aparenta estar falhando."></textarea></div>
+            <div class="form-group"><label>Prioridade da Manutenção</label>
+                <select id="os-severity" class="form-control"><option value="warning">Alerta de Manutenção (Normal)</option><option value="critical">Crítico / Inoperante (Urgente)</option></select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%">Registrar Solicitação de O.S.</button>
+        </form>
+    </template>
+
+    <!-- INICIALIZAÇÃO LEAFLET -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- PONTO DE ENTRADA MODULAR DO JAVASCRIPT -->
+    <script type="module" src="./js/app.js"></script>
+</body>
+</html>
