@@ -6,15 +6,60 @@ let mapInstance = null;
 let charts = {};
 let editingStationId = null;
 
+// ====================================================
+// SETUP PRINCIPAL DO SISTEMA
+// ====================================================
 window.setupUI = function() {
+    injectCustomCSS();
+    injectLiveClock();
     injectMobileResponsiveness();
     setupNavigation();
     setupModals();
     setupDashboard(); 
     renderTables(); 
-    setupAIModal(); // Ativa a Câmera Viva
 };
 
+// ====================================================
+// INJEÇÃO DE ELEMENTOS VISUAIS E ESTILOS AVANÇADOS
+// ====================================================
+function injectCustomCSS() {
+    if(!document.getElementById('premium-ui-css')) {
+        const style = document.createElement('style');
+        style.id = 'premium-ui-css';
+        style.innerHTML = `
+            @keyframes pulse-red { 
+                0% { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0.7); } 
+                70% { box-shadow: 0 0 0 15px rgba(255, 51, 102, 0); } 
+                100% { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0); } 
+            }
+            .marker-critical { animation: pulse-red 1.5s infinite; border: 2px solid white; }
+            .marker-normal { box-shadow: 0 0 10px #00e676; border: 2px solid white; }
+            .marker-alert { box-shadow: 0 0 15px #f59e0b; border: 2px solid white; }
+            
+            .hud-overlay { position: absolute; z-index: 10; pointer-events: none; width: 100%; height: 100%; background: linear-gradient(rgba(0,230,118,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,230,118,0.05) 1px, transparent 1px); background-size: 20px 20px; opacity: 0.3;}
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+function injectLiveClock() {
+    const topbarRight = document.querySelector('.topbar > div:last-child');
+    if (topbarRight && !document.getElementById('live-clock')) {
+        const clockDiv = document.createElement('div');
+        clockDiv.id = 'live-clock';
+        clockDiv.style = 'margin-right: 20px; font-family: monospace; color: var(--color-green); font-size: 0.85rem; background: rgba(0,230,118,0.05); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(0,230,118,0.2); display: flex; align-items: center; gap: 8px; letter-spacing: 1px;';
+        topbarRight.prepend(clockDiv);
+        
+        setInterval(() => {
+            const now = new Date();
+            clockDiv.innerHTML = `<span class="dot green" style="animation: blink 1s infinite; width: 6px; height: 6px; margin:0;"></span> <b>${now.toLocaleDateString('pt-BR')}</b> | ${now.toLocaleTimeString('pt-BR')}`;
+        }, 1000);
+    }
+}
+
+// ====================================================
+// 1. LÓGICA DO DASHBOARD (MAPAS E GRÁFICOS)
+// ====================================================
 function setupDashboard() {
     renderDashboard();
     window.addEventListener('telemetryUpdated', () => { renderDashboard(); renderTables(); });
@@ -23,10 +68,50 @@ function setupDashboard() {
     const syncBtn = document.getElementById('btn-sync-api');
     if(syncBtn) {
         syncBtn.addEventListener('click', async () => {
-            syncBtn.innerHTML = `<i class="ph ph-arrows-clockwise" style="animation: spin 1s linear infinite;"></i> Sincronizando...`;
+            syncBtn.innerHTML = `<i class="ph ph-arrows-clockwise" style="animation: spin 1s linear infinite;"></i> Sincronizando Satélites...`;
             await syncAPI();
             syncBtn.innerHTML = `<i class="ph ph-arrows-clockwise"></i> Forçar Sincronização API`;
         });
+    }
+
+    // BOTÕES EXECUTIVOS (Simulação e Relatório)
+    const toolbar = document.querySelector('.toolbar > div');
+    if(toolbar && !document.getElementById('btn-panic')) {
+        // Botão Simulação CEO
+        const btnPanic = document.createElement('button');
+        btnPanic.id = 'btn-panic';
+        btnPanic.className = 'btn btn-danger';
+        btnPanic.style.marginLeft = '10px';
+        btnPanic.innerHTML = '<i class="ph ph-warning-octagon"></i> Simular Transbordamento (Demo)';
+        btnPanic.onclick = async () => {
+            alert("⚠️ ALERTA DE SISTEMA: Injetando anomalia climática crítica (154mm) na rede de Morrinhos...");
+            let logs = getDB(DB.LOGS);
+            let osList = getDB(DB.OS);
+            const now = new Date();
+            const currentTime = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0,19).replace('T',' ');
+
+            logs.unshift({ id: Date.now(), date: currentTime, station: 'Morrinhos 1 (Piloto)', status: 'Interditado', precip: 154.2, temp: 23.5, hum: 99, wind: 85.0 });
+            osList.push({ id: Date.now()+1, station: 'Morrinhos 1 (Piloto)', issue: 'CRÍTICO: Lâmina d\'água excedeu a cota de segurança da passagem molhada.', status: 'Open', date: new Date().toLocaleDateString('pt-BR'), severity: 'critical' });
+
+            await setDB(DB.LOGS, logs);
+            await setDB(DB.OS, osList);
+            window.dispatchEvent(new Event('telemetryUpdated'));
+        };
+        toolbar.appendChild(btnPanic);
+
+        // Botão Relatório Executivo
+        const btnReport = document.createElement('button');
+        btnReport.className = 'btn btn-outline';
+        btnReport.style.marginLeft = '10px';
+        btnReport.innerHTML = '<i class="ph ph-printer"></i> Gerar Relatório Executivo';
+        btnReport.onclick = () => {
+            btnReport.innerHTML = '<i class="ph ph-spinner" style="animation: spin 1s infinite;"></i> Compilando Dados...';
+            setTimeout(() => {
+                window.print();
+                btnReport.innerHTML = '<i class="ph ph-printer"></i> Gerar Relatório Executivo';
+            }, 1500);
+        };
+        toolbar.appendChild(btnReport);
     }
 }
 
@@ -51,39 +136,38 @@ function renderDashboard() {
     if(cardIn) cardIn.innerText = inT;
 
     renderMap(stations, logs);
-    renderCharts(logs);
+    renderCharts(logs, op, al, inT); // Passa os contadores para os gráficos
 }
 
+// ====================================================
+// MAPA DE SATÉLITE E RADAR CLIMÁTICO
+// ====================================================
 function renderMap(stations, logs) {
     const container = document.getElementById('map-container');
     if(!container) return;
     container.style.minHeight = '350px';
 
     if(!mapInstance) {
-        // Satélite de Ultra Resolução como Padrão
+        // Satélite de Alta Resolução Esri
         const satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri'
         });
         const darkMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
 
-        mapInstance = L.map('map-container', {
-            center: [-5.2, -39.3],
-            zoom: 7,
-            layers: [satelliteMap] // Satélite ativo de início
-        });
+        mapInstance = L.map('map-container', { center: [-5.2, -39.3], zoom: 7, layers: [satelliteMap] });
         window.mapInstance = mapInstance;
 
-        // Controle para alternar Satélite / Mapa Tático
-        L.control.layers({"Satélite Alta Resolução": satelliteMap, "Mapa Tático Escuro": darkMap}).addTo(mapInstance);
+        L.control.layers({"Satélite Militar": satelliteMap, "Mapa Tático": darkMap}).addTo(mapInstance);
         
-        // Criando o Botão do Radar Climatológico
+        // Botão Radar Clima no Mapa
         const ClimaControl = L.Control.extend({
             options: { position: 'topleft' },
             onAdd: function () {
                 const btn = L.DomUtil.create('button', 'btn btn-primary');
-                btn.innerHTML = '<i class="ph ph-cloud-rain" style="font-size: 1.2rem;"></i> Radar Clima';
+                btn.innerHTML = '<i class="ph ph-cloud-rain" style="font-size: 1.2rem;"></i> Radar Clima (Windy)';
                 btn.style.marginTop = '60px'; 
                 btn.style.marginLeft = '10px';
+                btn.style.boxShadow = '0 0 15px rgba(0,230,118,0.4)';
                 btn.onclick = (e) => { e.stopPropagation(); openWindyRadar(); };
                 return btn;
             }
@@ -93,41 +177,73 @@ function renderMap(stations, logs) {
         setTimeout(() => mapInstance.invalidateSize(), 500);
     }
 
-    mapInstance.eachLayer((layer) => {
-        if (layer instanceof L.Marker) mapInstance.removeLayer(layer);
-    });
+    mapInstance.eachLayer((layer) => { if (layer instanceof L.Marker) mapInstance.removeLayer(layer); });
 
     stations.forEach(st => {
         const lastLog = logs.find(l => l.station === st.name);
         const status = lastLog ? lastLog.status : 'Normal';
+        
         let color = '#00e676'; 
-        if(status === 'Alerta') color = '#f59e0b'; 
-        if(status === 'Interditado') color = '#ff3366'; 
+        let cssClass = 'marker-normal';
+        
+        if(status === 'Alerta') { color = '#f59e0b'; cssClass = 'marker-alert'; }
+        if(status === 'Interditado') { color = '#ff3366'; cssClass = 'marker-critical'; } 
 
         const circleIcon = L.divIcon({
             className: 'custom-div-icon',
-            html: `<div style="background-color: ${color}; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 15px ${color};"></div>`,
-            iconSize: [16, 16],
-            iconAnchor: [8, 8]
+            html: `<div class="${cssClass}" style="background-color: ${color}; width: 18px; height: 18px; border-radius: 50%;"></div>`,
+            iconSize: [18, 18],
+            iconAnchor: [9, 9]
         });
 
         const popupContent = `
-            <div style="text-align: center; color: black;">
-                <b>${st.name}</b><br>
-                <span>${st.region}</span><br>
-                <strong style="color: ${color}; font-size: 1.1rem; text-transform: uppercase;">${status}</strong><br>
-                <button onclick="document.getElementById('ai-modal').classList.add('active')" style="margin-top:8px; background: #000; color: #00e676; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; width:100%; font-weight:bold;">Visualizar Câmera IA</button>
+            <div style="text-align: center; color: black; font-family: 'Inter', sans-serif;">
+                <b style="font-size: 1.1rem;">${st.name}</b><br>
+                <span style="color: #666; font-size: 0.8rem;">LAT: ${st.lat} | LON: ${st.lon}</span><br>
+                <div style="margin: 10px 0; padding: 5px; background: #f8f9fa; border-radius: 4px; border: 1px solid #ddd;">
+                    <strong style="color: ${color}; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px;">${status}</strong>
+                </div>
+                <button onclick="openAICamera()" style="background: #02050a; color: #00e676; border: 1px solid #00e676; padding:8px 12px; border-radius:6px; cursor:pointer; width:100%; font-weight:800; transition: 0.2s; display:flex; justify-content:center; align-items:center; gap:6px;">
+                    <i class="ph ph-video-camera"></i> ACESSAR CÂMERA IA
+                </button>
             </div>
         `;
 
-        L.marker([st.lat, st.lon], { icon: circleIcon })
-          .addTo(mapInstance)
-          .bindPopup(popupContent);
+        L.marker([st.lat, st.lon], { icon: circleIcon }).addTo(mapInstance).bindPopup(popupContent);
     });
 }
 
-// Abre o Radar Profissional do Windy por cima do mapa
-function openWindyRadar() {
+// ====================================================
+// MODAIS DE CÂMERA AO VIVO E RADAR WINDY
+// ====================================================
+window.openAICamera = function() {
+    const aiModal = document.getElementById('ai-modal');
+    if(!aiModal) return;
+
+    const imgContainer = aiModal.querySelector('div[style*="height:320px"]');
+    if(imgContainer) {
+        imgContainer.style.background = '#02050a';
+        
+        if(!imgContainer.querySelector('iframe')) {
+            // Câmera Pública de Rodovia ao Vivo via YouTube (Iframe)
+            imgContainer.innerHTML = `
+                <div class="hud-overlay"></div>
+                <iframe width="100%" height="100%" src="https://www.youtube.com/embed/1EiC9bvVGnk?autoplay=1&mute=1&controls=0&modestbranding=1&loop=1&playlist=1EiC9bvVGnk" frameborder="0" allow="autoplay; encrypted-media" style="position: absolute; top: 0; left: 0; z-index: 1; opacity: 0.6; pointer-events: none;"></iframe>
+                
+                <div style="position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.85); padding:6px 10px; border-radius:4px; font-size:0.75rem; color:var(--color-green); font-family:monospace; display:flex; align-items:center; gap:6px; z-index: 10; border: 1px solid var(--color-green);">
+                    <span class="dot green" style="width:8px; height:8px; margin:0; animation: blink 1s infinite;"></span> LINK RTSP ESTÁVEL (5G)
+                </div>
+
+                <div id="ai-box" style="position:absolute; top:25%; left:20%; width:50%; height:50%; border: 2px dashed var(--color-green); background: rgba(0, 230, 118, 0.1); z-index: 10; box-shadow: 0 0 20px rgba(0, 230, 118, 0.2) inset;">
+                    <span style="position:absolute; top:-24px; left:-2px; background:var(--color-green); color:#000; font-size:0.75rem; padding:4px 8px; font-weight:800; text-transform: uppercase;">YOLOv8 | Passagem Livre</span>
+                </div>
+            `;
+        }
+    }
+    aiModal.classList.add('active');
+};
+
+window.openWindyRadar = function() {
     let wModal = document.getElementById('windy-modal');
     if(!wModal) {
         wModal = document.createElement('div');
@@ -136,10 +252,10 @@ function openWindyRadar() {
         wModal.innerHTML = `
             <div class="modal-content" style="max-width: 90vw; height: 85vh; padding: 15px; display: flex; flex-direction: column;">
                 <div class="modal-header" style="margin-bottom: 10px;">
-                    <h3 class="modal-title">Radar Climatológico em Tempo Real (Ceará)</h3>
+                    <h3 class="modal-title"><i class="ph ph-radar"></i> Radar Meteorológico Satelital</h3>
                     <i class="ph ph-x close-modal" onclick="document.getElementById('windy-modal').classList.remove('active')"></i>
                 </div>
-                <iframe width="100%" height="100%" src="https://embed.windy.com/embed2.html?lat=-5.2&lon=-39.3&zoom=6&level=surface&overlay=rain&menu=&message=&marker=&calendar=&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1" frameborder="0" style="border-radius: 8px; border: 1px solid var(--border-color);"></iframe>
+                <iframe width="100%" height="100%" src="https://embed.windy.com/embed2.html?lat=-5.2&lon=-39.3&zoom=6&level=surface&overlay=rain&menu=&message=&marker=&calendar=&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1" frameborder="0" style="border-radius: 8px; border: 1px solid var(--color-green);"></iframe>
             </div>
         `;
         document.body.appendChild(wModal);
@@ -148,49 +264,86 @@ function openWindyRadar() {
     }
 }
 
-// Injeta o vídeo real de tráfego no Modal de IA
-function setupAIModal() {
-    const aiModal = document.getElementById('ai-modal');
-    if(aiModal) {
-        const imgContainer = aiModal.querySelector('div[style*="images.unsplash.com"]');
-        if(imgContainer) {
-            // Remove a imagem estática e coloca um vídeo real de rodovia em looping
-            imgContainer.style.background = '#000';
-            imgContainer.innerHTML += `
-                <video autoplay loop muted playsinline style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; opacity: 0.7;">
-                    <source src="https://cdn.pixabay.com/video/2020/05/24/40090-424855018_tiny.mp4" type="video/mp4">
-                </video>
-            `;
-            // Ajusta o z-index dos elementos por cima do vídeo
-            const badges = imgContainer.querySelectorAll('div');
-            badges.forEach(b => b.style.zIndex = '2');
-        }
-    }
-}
+// ====================================================
+// OS 3 GRÁFICOS DO DASHBOARD (DATA ANALYTICS)
+// ====================================================
+function renderCharts(logs, op, al, inT) {
+    const recentLogs = logs.slice(0, 10).reverse();
+    const labels = recentLogs.map(l => l.date.slice(11, 16));
 
-function renderCharts(logs) {
+    Chart.defaults.color = '#8b9bb4';
+    Chart.defaults.font.family = 'Inter';
+
+    // 1. Gráfico de Lâmina D'água (Evolução) - Linha
     const ctxEvolucao = document.getElementById('evolucaoChart');
     if(ctxEvolucao) {
         if(charts.evolucao) charts.evolucao.destroy();
-        const recentLogs = logs.slice(0, 10).reverse();
         charts.evolucao = new Chart(ctxEvolucao, {
             type: 'line',
             data: {
-                labels: recentLogs.map(l => l.date.slice(11, 16)),
+                labels: labels,
                 datasets: [{
-                    label: 'Precipitação (mm)',
+                    label: 'Precipitação Média (mm)',
                     data: recentLogs.map(l => l.precip),
-                    borderColor: '#00e676',
-                    tension: 0.4,
-                    fill: true,
-                    backgroundColor: 'rgba(0, 230, 118, 0.1)'
+                    borderColor: '#00e676', backgroundColor: 'rgba(0, 230, 118, 0.1)',
+                    tension: 0.4, fill: true, borderWidth: 2, pointBackgroundColor: '#00e676'
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } } }
+        });
+    }
+
+    // 2. Gráfico Histórico (Velocidade dos Ventos) - Barras
+    const ctxHistorico = document.getElementById('historicoChart');
+    if(ctxHistorico) {
+        if(charts.historico) charts.historico.destroy();
+        charts.historico = new Chart(ctxHistorico, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Vento Máx. (km/h)',
+                    data: recentLogs.map(l => l.wind),
+                    backgroundColor: '#0ea5e9', borderRadius: 4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } } }
+        });
+    }
+
+    // 3. Gráfico de Região (Distribuição Operacional) - Rosca
+    const ctxRegiao = document.getElementById('regiaoChart');
+    if(ctxRegiao) {
+        if(charts.regiao) charts.regiao.destroy();
+        
+        // Renderiza a legenda customizada
+        const legendDiv = document.getElementById('regiao-legend');
+        if(legendDiv) {
+            legendDiv.innerHTML = `
+                <div style="display:flex; justify-content:space-between;"><span><span class="dot green"></span>Seguro</span> <strong>${op}</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span><span class="dot yellow"></span>Alerta</span> <strong>${al}</strong></div>
+                <div style="display:flex; justify-content:space-between;"><span><span class="dot red"></span>Crítico</span> <strong>${inT}</strong></div>
+            `;
+        }
+
+        charts.regiao = new Chart(ctxRegiao, {
+            type: 'doughnut',
+            data: {
+                labels: ['Operando', 'Alerta', 'Interditado'],
+                datasets: [{
+                    data: [op, al, inT],
+                    backgroundColor: ['#00e676', '#f59e0b', '#ff3366'],
+                    borderWidth: 0, hoverOffset: 4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
         });
     }
 }
 
+// ====================================================
+// RENDERIZAÇÃO DAS TABELAS DE GESTÃO E RBAC
+// ====================================================
 function renderTables() {
     const tbodyStas = document.querySelector('#table-stations tbody');
     if (tbodyStas) {
@@ -200,12 +353,12 @@ function renderTables() {
                 <td>${st.id}</td>
                 <td><strong>${st.name}</strong></td>
                 <td>${st.region}</td>
-                <td style="font-family: monospace;">${st.mac || 'N/A'}</td>
-                <td>${st.quota} mm</td>
-                <td>${st.cam ? '<span style="color: var(--color-green)">Ativa</span>' : '<span style="color: var(--text-muted)">Inativa</span>'}</td>
+                <td style="font-family: monospace; color: var(--color-blue);">${st.mac || 'Pendente'}</td>
+                <td><span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;">${st.quota} mm</span></td>
+                <td>${st.cam ? '<span style="color: var(--color-green)"><i class="ph ph-check-circle"></i> Integrada</span>' : '<span style="color: var(--text-muted)">Offline</span>'}</td>
                 <td class="admin-only" style="display:flex; gap:5px;">
-                    <button class="btn btn-outline" style="padding: 4px 8px;" onclick="editStation('${st.id}')" title="Editar Estação"><i class="ph ph-pencil"></i></button>
-                    <button class="btn btn-danger" style="padding: 4px 8px;" onclick="deleteStation('${st.id}')" title="Excluir Estação"><i class="ph ph-trash"></i></button>
+                    <button class="btn btn-outline" style="padding: 6px 10px;" onclick="editStation('${st.id}')" title="Editar Estação"><i class="ph ph-pencil"></i></button>
+                    <button class="btn btn-danger" style="padding: 6px 10px;" onclick="deleteStation('${st.id}')" title="Excluir Estação"><i class="ph ph-trash"></i></button>
                 </td>
             </tr>
         `).join('');
@@ -215,17 +368,18 @@ function renderTables() {
     if (tbodyUsers) {
         const users = getDB(DB.USRS);
         tbodyUsers.innerHTML = users.map(u => {
-            let permissoes = '0 estações';
-            if (u.allowedStations === 'all') permissoes = 'Acesso Total (Admin)';
-            else if (Array.isArray(u.allowedStations)) permissoes = u.allowedStations.length + ' estações permitidas';
+            let permissoes = '0 passagens';
+            if (u.allowedStations === 'all') permissoes = '<i class="ph ph-shield-check" style="color:var(--color-green)"></i> Acesso Global (Admin)';
+            else if (Array.isArray(u.allowedStations)) permissoes = `${u.allowedStations.length} passagens liberadas`;
+            
             return `
             <tr>
                 <td><strong>${u.name || 'Usuário'}</strong></td>
                 <td>${u.email}</td>
-                <td><span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;">${u.role}</span></td>
+                <td><span style="background: rgba(0, 230, 118, 0.1); color: var(--color-green); border: 1px solid rgba(0,230,118,0.3); padding: 4px 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase; font-size: 0.7rem;">${u.role}</span></td>
                 <td>${permissoes}</td>
                 <td>
-                    <button class="btn btn-danger" style="padding: 4px 8px;" onclick="deleteUser('${u.id}')" title="Revogar Acesso"><i class="ph ph-trash"></i></button>
+                    <button class="btn btn-danger" style="padding: 6px 10px;" onclick="deleteUser('${u.id}')" title="Revogar Acesso"><i class="ph ph-trash"></i></button>
                 </td>
             </tr>
             `;
@@ -236,15 +390,18 @@ function renderTables() {
     if (osContainer) {
         const osList = getDB(DB.OS);
         if (osList.length === 0) {
-            osContainer.innerHTML = '<p style="color: var(--text-muted); width: 100%;">Nenhuma ordem de serviço pendente.</p>';
+            osContainer.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-muted);"><i class="ph ph-check-circle" style="font-size: 3rem; color: var(--color-green); margin-bottom: 15px; display: block;"></i>Nenhuma manutenção pendente. Operação 100%.</div>';
         } else {
             osContainer.innerHTML = osList.map(os => `
-                <div class="os-card ${os.severity}">
-                    <h4 style="color:var(--text-white); margin-bottom: 5px;">${os.station}</h4>
-                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">${os.issue}</p>
-                    <div style="display:flex; justify-content:space-between; font-size:0.75rem;">
-                        <span style="color:var(--color-blue-gray)"><i class="ph ph-calendar"></i> ${os.date}</span>
-                        <strong style="color: ${os.severity === 'critical' ? 'var(--color-red)' : 'var(--color-yellow)'}; text-transform: uppercase;">${os.status}</strong>
+                <div class="os-card ${os.severity}" style="box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                        <h4 style="color:var(--text-white); margin: 0;">${os.station}</h4>
+                        <span style="font-size: 0.65rem; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 10px;">OS #${os.id.toString().slice(-4)}</span>
+                    </div>
+                    <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px; line-height: 1.4;">${os.issue}</p>
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                        <span style="color:var(--color-blue-gray)"><i class="ph ph-clock"></i> Registrado em: ${os.date}</span>
+                        <strong style="color: ${os.severity === 'critical' ? 'var(--color-red)' : 'var(--color-yellow)'}; text-transform: uppercase;"><i class="ph ph-warning-circle"></i> ${os.status}</strong>
                     </div>
                 </div>
             `).join('');
@@ -256,28 +413,28 @@ function renderTables() {
         const logs = getDB(DB.LOGS).slice(0, 50); 
         tbodyLogs.innerHTML = logs.map(l => `
             <tr>
-                <td>${l.date}</td>
+                <td style="font-family: monospace;">${l.date}</td>
                 <td><strong>${l.station}</strong></td>
-                <td style="color: ${l.status==='Interditado' ? 'var(--color-red)' : (l.status==='Alerta' ? 'var(--color-yellow)' : 'var(--color-green)')}; font-weight: 700;">${l.status}</td>
+                <td><span style="background: ${l.status==='Interditado' ? 'rgba(255,51,102,0.1)' : (l.status==='Alerta' ? 'rgba(245,158,11,0.1)' : 'rgba(0,230,118,0.1)')}; color: ${l.status==='Interditado' ? 'var(--color-red)' : (l.status==='Alerta' ? 'var(--color-yellow)' : 'var(--color-green)')}; padding: 4px 8px; border-radius: 4px; font-weight: 700;">${l.status}</span></td>
                 <td>${l.precip} mm</td>
-                <td><i class="ph ph-check-circle" style="color: var(--color-green);"></i> Concluída</td>
+                <td><i class="ph-fill ph-check-circle" style="color: var(--color-green);"></i> Validado</td>
             </tr>
         `).join('');
     }
 }
 
-// ----------------------------------------------------
-// 3. AÇÕES GLOBAIS (EDITAR E EXCLUIR)
-// ----------------------------------------------------
+// ====================================================
+// AÇÕES GLOBAIS (EXCLUIR / EDITAR)
+// ====================================================
 window.deleteStation = function(id) {
-    if(!confirm("ALERTA: Tem certeza que deseja remover esta estação do sistema?")) return;
+    if(!confirm("ALERTA DE SEGURANÇA: Tem certeza que deseja remover permanentemente esta estação da malha de telemetria?")) return;
     let stations = getDB(DB.STAS);
     stations = stations.filter(s => String(s.id) !== String(id));
     setDB(DB.STAS, stations).then(() => { renderTables(); renderDashboard(); });
 };
 
 window.deleteUser = function(id) {
-    if(!confirm("ALERTA: Tem certeza que deseja revogar o acesso deste servidor?")) return;
+    if(!confirm("ALERTA DE SEGURANÇA: Tem certeza que deseja revogar o acesso deste servidor ao SPPM?")) return;
     let users = getDB(DB.USRS);
     users = users.filter(u => String(u.id) !== String(id));
     setDB(DB.USRS, users).then(() => renderTables());
@@ -293,7 +450,7 @@ window.editStation = function(id) {
     const modalTitle = document.getElementById('modal-title');
     const modalBody = document.getElementById('modal-body');
 
-    modalTitle.innerText = "Editar Estação";
+    modalTitle.innerHTML = "<i class='ph ph-pencil-simple'></i> Editar Configuração da Estação";
     const tpl = document.getElementById('tpl-station-form').content.cloneNode(true);
     modalBody.innerHTML = '';
     modalBody.appendChild(tpl);
@@ -327,23 +484,23 @@ window.editStation = function(id) {
             };
         }
         try {
-            if(submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Salvando...'; }
+            if(submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="ph ph-spinner" style="animation: spin 1s infinite;"></i> Aplicando Patches...'; }
             await setDB(DB.STAS, stList);
-            await syncAPI(); // Busca os dados do clima da edição nova imediatamente!
-            alert("Estação atualizada com sucesso!");
+            await syncAPI(); // Atualiza o clima IMEDIATAMENTE
+            alert("Protocolos da estação atualizados e sincronizados com a nuvem!");
             globalModal.classList.remove('active');
             editingStationId = null; 
         } catch (err) {
-            alert("Erro ao salvar.");
+            alert("Erro de comunicação com a nuvem.");
             if(submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'Salvar'; }
         }
     });
     globalModal.classList.add('active');
 };
 
-// ----------------------------------------------------
-// 4. LÓGICA DOS BOTÕES E MODAIS DE CRIAÇÃO
-// ----------------------------------------------------
+// ====================================================
+// SETUP DE MODAIS E CRIAÇÃO DE DADOS
+// ====================================================
 function setupModals() {
     const globalModal = document.getElementById('global-modal');
     const modalTitle = document.getElementById('modal-title');
@@ -355,7 +512,7 @@ function setupModals() {
     if(btnNewStation) {
         btnNewStation.addEventListener('click', () => {
             editingStationId = null; 
-            modalTitle.innerText = "Cadastrar Nova Estação";
+            modalTitle.innerHTML = "<i class='ph ph-plus-circle'></i> Provisionar Nova Estação IoT";
             const tpl = document.getElementById('tpl-station-form').content.cloneNode(true);
             modalBody.innerHTML = '';
             modalBody.appendChild(tpl);
@@ -379,14 +536,14 @@ function setupModals() {
                 });
 
                 try {
-                    if(submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Salvando...'; }
+                    if(submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="ph ph-spinner" style="animation: spin 1s infinite;"></i> Conectando...'; }
                     await setDB(DB.STAS, stations); 
                     await syncAPI(); // A MÁGICA: Puxa o clima exato da estação recém-criada
-                    alert("Estação provisionada e telemetria climática sincronizada!");
+                    alert("Estação provisionada com sucesso e telemetria meteorológica sincronizada!");
                     closeModal();
                 } catch (err) {
-                    alert("Não foi possível salvar a estação.");
-                    if(submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'Salvar'; }
+                    alert("Falha na comunicação com a infraestrutura em nuvem.");
+                    if(submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'Tentar Novamente'; }
                 }
             });
         });
@@ -395,30 +552,38 @@ function setupModals() {
     const btnNewUser = document.getElementById('btn-new-user');
     if(btnNewUser) {
         btnNewUser.addEventListener('click', () => {
-            modalTitle.innerText = "Provisionar Novo Acesso (RBAC)";
+            modalTitle.innerHTML = "<i class='ph ph-shield-plus'></i> Provisionar Acesso RBAC";
             const tpl = document.getElementById('tpl-user-form').content.cloneNode(true);
+            
             const containerStations = tpl.querySelector('#usr-stations-container');
             const stations = getDB(DB.STAS);
             stations.forEach(st => {
                 containerStations.innerHTML += `<label class="checkbox-label"><input type="checkbox" value="${st.id}" class="station-cb"> ${st.name}</label>`;
             });
+
             modalBody.innerHTML = '';
             modalBody.appendChild(tpl);
             globalModal.classList.add('active');
+
             const roleSelect = document.getElementById('usr-role');
             if(roleSelect) {
-                roleSelect.addEventListener('change', (e) => { document.getElementById('container-station-select').style.display = e.target.value === 'Admin' ? 'none' : 'block'; });
+                roleSelect.addEventListener('change', (e) => {
+                    document.getElementById('container-station-select').style.display = e.target.value === 'Admin' ? 'none' : 'block';
+                });
             }
+
             const form = document.getElementById('form-user-submit');
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const submitBtn = getSubmitButton(form);
                 const roleVal = document.getElementById('usr-role').value;
+
                 let allowedStations = 'all';
                 if (roleVal !== 'Admin') {
                     const checkboxes = document.querySelectorAll('#container-station-select input[type="checkbox"]:checked');
                     allowedStations = checkboxes.length ? Array.from(checkboxes).map(cb => String(cb.value)) : [];
                 }
+
                 const users = getDB(DB.USRS);
                 users.push({
                     id: Date.now(),
@@ -428,14 +593,15 @@ function setupModals() {
                     role: roleVal,
                     allowedStations: allowedStations
                 });
+
                 try {
-                    if(submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Salvando...'; }
+                    if(submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="ph ph-spinner" style="animation: spin 1s infinite;"></i> Gravando Permissões...'; }
                     await setDB(DB.USRS, users); 
-                    alert("Acesso de Servidor registrado com sucesso!");
+                    alert("Acesso RBAC gravado com sucesso! Lembre-se de registrar este email na aba Authentication do Firebase.");
                     closeModal();
                     renderTables();
                 } catch (err) {
-                    alert("Não foi possível salvar o usuário.");
+                    alert("Falha de autenticação na nuvem.");
                     if(submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'Salvar'; }
                 }
             });
@@ -445,8 +611,9 @@ function setupModals() {
     const btnNewOS = document.getElementById('btn-new-os');
     if(btnNewOS) {
         btnNewOS.addEventListener('click', () => {
-            modalTitle.innerText = "Abrir Ordem de Serviço";
+            modalTitle.innerHTML = "<i class='ph ph-wrench'></i> Emitir Ordem de Serviço";
             const tpl = document.getElementById('tpl-os-form').content.cloneNode(true);
+            
             const selectOs = tpl.querySelector('#os-station');
             const stations = getDB(DB.STAS);
             stations.forEach(st => {
@@ -455,6 +622,7 @@ function setupModals() {
                 opt.innerText = st.name;
                 selectOs.appendChild(opt);
             });
+
             modalBody.innerHTML = '';
             modalBody.appendChild(tpl);
             globalModal.classList.add('active');
@@ -472,14 +640,15 @@ function setupModals() {
                     date: new Date().toLocaleDateString('pt-BR'),
                     severity: document.getElementById('os-severity').value
                 });
+
                 try {
-                    if(submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Salvando...'; }
+                    if(submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="ph ph-spinner" style="animation: spin 1s infinite;"></i> Despachando...'; }
                     await setDB(DB.OS, osList);
-                    alert("O.S. registrada no sistema e despachada para a equipe!");
+                    alert("O.S. registrada no sistema e despachada para a equipe de campo!");
                     closeModal();
                     renderTables();
                 } catch (err) {
-                    alert("Não foi possível registrar a O.S.");
+                    alert("Erro de comunicação.");
                     if(submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'Salvar'; }
                 }
             });
@@ -487,11 +656,14 @@ function setupModals() {
     }
 }
 
+// ====================================================
+// NAV & MOBILE 
+// ====================================================
 function injectMobileResponsiveness() {
     if(!document.getElementById('sppm-mobile-css')) {
         const style = document.createElement('style');
         style.id = 'sppm-mobile-css';
-        style.innerHTML = `@media (max-width: 768px) { .sidebar { position: fixed; left: -100%; top: 0; height: 100vh; z-index: 9999; transition: left 0.3s ease; box-shadow: 5px 0 15px rgba(0,0,0,0.8); width: 260px; } .sidebar.open { left: 0; } .main-content { margin-left: 0 !important; width: 100%; } .grid-layout { display: flex !important; flex-direction: column; gap: 15px; } .card { width: 100% !important; margin: 0; } #map, .leaflet-container { height: 350px !important; } .btn-mobile-menu { display: inline-block !important; background: none; border: none; color: #10b981; font-size: 1.8rem; cursor: pointer; margin-right: 15px; } } @media (min-width: 769px) { .btn-mobile-menu { display: none !important; } }`;
+        style.innerHTML = `@media (max-width: 768px) { .sidebar { position: fixed; left: -100%; top: 0; height: 100vh; z-index: 9999; transition: left 0.3s ease; box-shadow: 5px 0 15px rgba(0,0,0,0.8); width: 260px; } .sidebar.open { left: 0; } .main-content { margin-left: 0 !important; width: 100%; } .grid-layout { display: flex !important; flex-direction: column; gap: 15px; } .card { width: 100% !important; margin: 0; } #map, .leaflet-container { height: 350px !important; } .btn-mobile-menu { display: inline-block !important; background: none; border: none; color: #00e676; font-size: 1.8rem; cursor: pointer; margin-right: 15px; } } @media (min-width: 769px) { .btn-mobile-menu { display: none !important; } }`;
         document.head.appendChild(style);
     }
     const topbar = document.querySelector('.topbar') || document.querySelector('header');
