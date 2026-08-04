@@ -128,13 +128,17 @@ function renderCharts(logs) {
 }
 
 // ----------------------------------------------------
-// 2. LÓGICA DOS BOTÕES E MODAIS
+// 2. LÓGICA DOS BOTÕES E SALVAMENTO NO BANCO
 // ----------------------------------------------------
 function setupModals() {
     const globalModal = document.getElementById('global-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalBody = document.getElementById('modal-body');
 
+    // Função para fechar o modal
+    const closeModal = () => globalModal.classList.remove('active');
+
+    // 1. Botão e Formulário de NOVA ESTAÇÃO
     const btnNewStation = document.getElementById('btn-new-station');
     if(btnNewStation) {
         btnNewStation.addEventListener('click', () => {
@@ -143,9 +147,33 @@ function setupModals() {
             modalBody.innerHTML = '';
             modalBody.appendChild(tpl);
             globalModal.classList.add('active');
+
+            // Cérebro de salvamento:
+            document.getElementById('form-station-submit').addEventListener('submit', (e) => {
+                e.preventDefault(); // Impede a página de recarregar
+                
+                const stations = getDB(DB.STAS);
+                stations.push({
+                    id: Date.now(),
+                    name: document.getElementById('st-name').value,
+                    region: document.getElementById('st-region').value,
+                    lat: parseFloat(document.getElementById('st-lat').value),
+                    lon: parseFloat(document.getElementById('st-lon').value),
+                    quota: parseInt(document.getElementById('st-quota').value),
+                    mac: document.getElementById('st-mac').value || '',
+                    calib: document.getElementById('st-calib').value || '',
+                    cam: document.getElementById('st-cam').value || ''
+                });
+                
+                setDB(DB.STAS, stations); // Salva no banco
+                alert("Estação provisionada com sucesso!");
+                closeModal();
+                window.dispatchEvent(new Event('telemetryUpdated')); // Atualiza o mapa na mesma hora
+            });
         });
     }
 
+    // 2. Botão e Formulário de NOVO USUÁRIO
     const btnNewUser = document.getElementById('btn-new-user');
     if(btnNewUser) {
         btnNewUser.addEventListener('click', () => {
@@ -161,17 +189,67 @@ function setupModals() {
                     document.getElementById('container-station-select').style.display = e.target.value === 'Admin' ? 'none' : 'block';
                 });
             }
+
+            // Cérebro de salvamento:
+            document.getElementById('form-user-submit').addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const users = getDB(DB.USRS);
+                users.push({
+                    id: Date.now(),
+                    name: document.getElementById('usr-name').value,
+                    email: document.getElementById('usr-email').value,
+                    pass: document.getElementById('usr-pass').value,
+                    role: document.getElementById('usr-role').value,
+                    allowedStations: document.getElementById('usr-role').value === 'Admin' ? 'all' : []
+                });
+                
+                setDB(DB.USRS, users);
+                alert("Acesso de Servidor registrado com sucesso!");
+                closeModal();
+            });
         });
     }
 
+    // 3. Botão e Formulário de NOVA ORDEM DE SERVIÇO
     const btnNewOS = document.getElementById('btn-new-os');
     if(btnNewOS) {
         btnNewOS.addEventListener('click', () => {
             modalTitle.innerText = "Abrir Ordem de Serviço";
             const tpl = document.getElementById('tpl-os-form').content.cloneNode(true);
+            
+            // Popula a caixinha de escolher as estações com as estações reais
+            const selectOs = tpl.querySelector('#os-station');
+            const stations = getDB(DB.STAS);
+            stations.forEach(st => {
+                const opt = document.createElement('option');
+                opt.value = st.name;
+                opt.innerText = st.name;
+                selectOs.appendChild(opt);
+            });
+
             modalBody.innerHTML = '';
             modalBody.appendChild(tpl);
             globalModal.classList.add('active');
+
+            // Cérebro de salvamento:
+            document.getElementById('form-os-submit').addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const osList = getDB(DB.OS);
+                osList.push({
+                    id: Date.now(),
+                    station: document.getElementById('os-station').value,
+                    issue: document.getElementById('os-issue').value,
+                    status: 'Open',
+                    date: new Date().toLocaleDateString('pt-BR'),
+                    severity: document.getElementById('os-severity').value
+                });
+                
+                setDB(DB.OS, osList);
+                alert("O.S. registrada no sistema e despachada para a equipe!");
+                closeModal();
+            });
         });
     }
 }
