@@ -1,6 +1,6 @@
 // app/js/app.js
 import { initAuth } from './auth.js';
-import './ui.js'; 
+import './ui.js';
 import { initLocalFallback, syncCloudToLocal } from './firebase.js';
 import { syncAPI } from './telemetry.js';
 
@@ -17,8 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingOverlay.style.display = 'none';
     }
 
-    // 4. Faz as buscas pesadas na nuvem e na API de forma invisível no fundo
+    // 4. Conecta o listener em tempo real com a nuvem (não sobrescreve mais
+    //    dados salvos localmente enquanto o fetch inicial está em andamento —
+    //    ver comentário em firebase.js) e, assim que o primeiro snapshot
+    //    chegar, dispara a busca pesada na API do clima.
     syncCloudToLocal().then(() => {
-        syncAPI(); 
-    }).catch(err => console.log("Carregando em modo offline."));
+        syncAPI();
+    }).catch(err => console.log("Carregando em modo offline.", err));
 });
