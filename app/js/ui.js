@@ -19,6 +19,7 @@ window.setupUI = function() {
     setupModals();
     setupDashboard(); 
     renderTables(); 
+    setupSmartFilters(); // ATIVA O MOTOR DE BUSCA NAS TABELAS
 };
 
 // ====================================================
@@ -37,16 +38,14 @@ function injectCustomCSS() {
             .marker-normal { box-shadow: 0 0 10px var(--theme-color); border: 2px solid white; }
             .marker-alert { box-shadow: 0 0 15px #f59e0b; border: 2px solid white; }
             
-            .kpi-card { background: linear-gradient(145deg, rgba(9,15,26,0.9), rgba(2,5,10,0.9)); border-left: 4px solid var(--theme-color); border-radius: 8px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); display: flex; flex-direction: column; justify-content: center; transition: all 0.3s ease; }
+            .kpi-card { background: linear-gradient(145deg, rgba(9,15,26,0.9), rgba(2,5,10,0.9)); border-left: 4px solid var(--theme-color); border-radius: 8px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); display: flex; flex-direction: column; justify-content: center; transition: all 0.3s ease; cursor: pointer; }
             .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.7); border-left-color: #fff;}
             .kpi-title { font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 5px; }
             .kpi-value { font-size: 2rem; font-weight: 900; color: #fff; display: flex; align-items: baseline; gap: 5px;}
             .kpi-value span { font-size: 0.9rem; color: var(--theme-color); font-weight: 500;}
 
-            /* Efeito HUD de Câmera */
             .hud-overlay { position: absolute; z-index: 5; pointer-events: none; width: 100%; height: 100%; background: linear-gradient(rgba(0,230,118,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,230,118,0.05) 1px, transparent 1px); background-size: 20px 20px; opacity: 0.3;}
 
-            /* LIGHT MODE */
             body.light-mode { background-color: #f1f5f9 !important; color: #0f172a !important; }
             body.light-mode .sidebar, body.light-mode .topbar { background-color: #ffffff !important; border-color: #cbd5e1 !important; }
             body.light-mode .panel, body.light-mode .kpi-card, body.light-mode .os-card { background: #ffffff !important; border-color: #cbd5e1 !important; box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important; }
@@ -113,6 +112,29 @@ function setupConfigTab() {
 }
 
 // ====================================================
+// MOTOR DE FILTROS INTELIGENTE (SMART FILTERS)
+// ====================================================
+function setupSmartFilters() {
+    document.addEventListener('input', (e) => {
+        // Se o usuário digitar em qualquer campo de texto na tela...
+        if(e.target.tagName === 'INPUT' && (e.target.type === 'text' || e.target.type === 'search')) {
+            const section = e.target.closest('.view-section');
+            if(section) {
+                const table = section.querySelector('table tbody');
+                if(table) {
+                    const term = e.target.value.toLowerCase();
+                    const rows = table.querySelectorAll('tr');
+                    rows.forEach(row => {
+                        // Esconde a linha da tabela se não tiver a palavra pesquisada
+                        row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
+                    });
+                }
+            }
+        }
+    });
+}
+
+// ====================================================
 // 1. LÓGICA DO DASHBOARD (POWER BI LEVEL)
 // ====================================================
 function setupDashboard() {
@@ -175,20 +197,22 @@ function renderDashboard() {
         resumoGrid.style.display = 'grid';
         resumoGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
         resumoGrid.style.gap = '15px';
+        
+        // OS CARDS AGORA SÃO BOTÕES DE NAVEGAÇÃO
         resumoGrid.innerHTML = `
-            <div class="kpi-card" style="border-left-color: var(--theme-color);">
+            <div class="kpi-card" style="border-left-color: var(--theme-color);" onclick="document.querySelector('.nav-item[data-target*=\\'system\\']')?.click()">
                 <div class="kpi-title">Infraestrutura Ativa</div>
                 <div class="kpi-value">${op} <span>/ ${stations.length}</span></div>
             </div>
-            <div class="kpi-card" style="border-left-color: #ff3366;">
+            <div class="kpi-card" style="border-left-color: #ff3366;" onclick="document.querySelector('.nav-item[data-target*=\\'os\\']')?.click() || document.querySelector('.nav-item[data-target*=\\'maint\\']')?.click()">
                 <div class="kpi-title">Interdições / Risco</div>
                 <div class="kpi-value">${inT} <span>locais</span></div>
             </div>
-            <div class="kpi-card" style="border-left-color: #0ea5e9;">
+            <div class="kpi-card" style="border-left-color: #0ea5e9;" onclick="document.querySelector('.nav-item[data-target*=\\'dashboard\\']')?.click()">
                 <div class="kpi-title">Acúmulo Hídrico Médio</div>
                 <div class="kpi-value">${(totalRain / (stations.length || 1)).toFixed(1)} <span>mm</span></div>
             </div>
-            <div class="kpi-card" style="border-left-color: #f59e0b;">
+            <div class="kpi-card" style="border-left-color: #f59e0b;" onclick="document.querySelector('.nav-item[data-target*=\\'log\\']')?.click()">
                 <div class="kpi-title">Alertas Preventivos</div>
                 <div class="kpi-value">${al} <span>notificações</span></div>
             </div>
@@ -214,7 +238,6 @@ function renderMap(stations, logs) {
         window.mapInstance = mapInstance;
         L.control.layers({"Satélite Alta Resolução": satelliteMap, "Mapa Tático": darkMap}).addTo(mapInstance);
         
-        // BOTÃO DO RADAR WINDY NO MAPA
         const ClimaControl = L.Control.extend({
             options: { position: 'topleft' },
             onAdd: function () {
@@ -280,7 +303,6 @@ function populateMapData(mapObj, stations, logs) {
             iconSize: [20, 20], iconAnchor: [10, 10]
         });
 
-        // BOTÃO DA CÂMERA IA RESTAURADO DENTRO DO BALÃO
         const popupContent = `
             <div style="text-align: center; color: black; font-family: 'Inter', sans-serif;">
                 <b style="font-size: 1.1rem;">${st.name}</b><br>
@@ -296,7 +318,6 @@ function populateMapData(mapObj, stations, logs) {
     });
 }
 
-// A CÂMERA DE VÍDEO (YOUTUBE LIVE COM YOLOv8 OVERLAY) BLINDADA
 window.openAICamera = function() {
     let aiModal = document.getElementById('ai-modal-dynamic');
     if(!aiModal) {
@@ -329,7 +350,6 @@ window.openAICamera = function() {
     }
 };
 
-// O RADAR METEOROLÓGICO (WINDY) BLINDADO
 window.openWindyRadar = function() {
     let wModal = document.getElementById('windy-modal');
     if(!wModal) {
@@ -405,7 +425,7 @@ function renderCharts(logs, op, al, inT) {
 }
 
 // ====================================================
-// RENDERIZAÇÃO DAS TABELAS
+// RENDERIZAÇÃO DAS TABELAS E CARDS DE O.S.
 // ====================================================
 function renderTables() {
     const tbodyStas = document.querySelector('#table-stations tbody');
@@ -441,16 +461,23 @@ function renderTables() {
         `).join('');
     }
 
+    // LISTAGEM DAS ORDENS DE SERVIÇO COM BOTÃO DE EXCLUIR/ENCERRAR
     const osContainer = document.getElementById('os-container');
     if (osContainer) {
         const osList = getDB(DB.OS);
         if (osList.length === 0) {
-            osContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="ph ph-check-circle" style="font-size: 3rem; color: var(--theme-color);"></i><br>Nenhuma manutenção pendente.</div>';
+            osContainer.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);"><i class="ph ph-check-circle" style="font-size: 3rem; color: var(--theme-color);"></i><br>Nenhuma manutenção pendente.</div>';
         } else {
             osContainer.innerHTML = osList.map(os => `
-                <div class="os-card ${os.severity}" style="box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-                    <h4 style="color:var(--text-white); margin: 0 0 10px 0;">${os.station}</h4>
-                    <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">${os.issue}</p>
+                <div class="os-card ${os.severity}" style="box-shadow: 0 4px 15px rgba(0,0,0,0.5); position: relative;">
+                    
+                    <!-- BOTÃO MÁGICO DE EXCLUIR O.S -->
+                    <button onclick="deleteOS('${os.id}')" class="btn btn-danger" style="position: absolute; top: 15px; right: 15px; padding: 4px 8px;" title="Encerrar Ordem de Serviço">
+                        <i class="ph ph-check-square-offset"></i> Concluir
+                    </button>
+
+                    <h4 style="color:var(--text-white); margin: 0 0 10px 0; max-width: 75%;">${os.station}</h4>
+                    <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px; padding-right: 15px;">${os.issue}</p>
                     <div style="display:flex; justify-content:space-between; font-size:0.75rem; border-top: 1px solid var(--border-color); padding-top: 10px;">
                         <span><i class="ph ph-clock"></i> ${os.date}</span>
                         <strong style="color: ${os.severity === 'critical' ? '#ff3366' : '#f59e0b'}; text-transform: uppercase;">${os.status}</strong>
@@ -476,6 +503,16 @@ window.deleteUser = function(id) {
     let users = getDB(DB.USRS);
     users = users.filter(u => String(u.id) !== String(id));
     setDB(DB.USRS, users).then(() => renderTables());
+};
+
+// NOVA FUNÇÃO: APAGAR ORDEM DE SERVIÇO
+window.deleteOS = function(id) {
+    if(!confirm("Tem certeza que deseja encerrar e excluir esta Ordem de Serviço?")) return;
+    let osList = getDB(DB.OS) || [];
+    osList = osList.filter(o => String(o.id) !== String(id));
+    setDB(DB.OS, osList).then(() => {
+        renderTables(); // Atualiza a tela instantaneamente
+    });
 };
 
 window.editStation = function(id) {
@@ -526,7 +563,6 @@ window.editStation = function(id) {
 
         try {
             if(submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Salvando...'; }
-            // FAXINA: Limpa lixos fantasmas antes de salvar
             stList = stList.filter(item => item !== null && item !== undefined && item.id);
             await setDB(DB.STAS, stList);
             alert("Estação atualizada com sucesso!");
@@ -588,7 +624,6 @@ function setupModals() {
                     if(submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="ph ph-spinner" style="animation: spin 1s infinite;"></i> Conectando...'; }
                     
                     let stations = getDB(DB.STAS) || [];
-                    // FAXINA: Destrói qualquer dado fantasma antes de enviar
                     stations = stations.filter(item => item !== null && item !== undefined && item.id);
                     stations.push(novaEstacao);
 
@@ -654,7 +689,6 @@ function setupModals() {
                     if(submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = 'Gravando...'; }
                     
                     let users = getDB(DB.USRS) || [];
-                    // FAXINA: Destrói qualquer dado fantasma antes de enviar
                     users = users.filter(item => item !== null && item !== undefined && item.id);
                     users.push(novoUsuario);
 
@@ -715,10 +749,7 @@ function setupModals() {
                     };
 
                     let osList = getDB(DB.OS) || [];
-                    
-                    // O SEGREDO ESTÁ AQUI: Limpa todo e qualquer lixo antes de tentar salvar
                     osList = osList.filter(item => item !== null && item !== undefined && item.id);
-                    
                     osList.push(novaOS);
 
                     await setDB(DB.OS, osList);
@@ -773,7 +804,6 @@ export function setupNavigation() {
             
             if(window.mapInstance) { setTimeout(() => window.mapInstance.invalidateSize(), 300); }
             
-            // A MÁGICA DO MAPA FULLSCREEN 
             if(targetID.includes('fullscreen') || targetID.includes('map')) {
                 setTimeout(() => renderFullscreenMap(), 100);
             }
