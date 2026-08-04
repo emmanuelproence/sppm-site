@@ -38,7 +38,7 @@ const defaultStations = [
 
 export function initLocalFallback() {
     if(!localStorage.getItem(DB.USRS)) localStorage.setItem(DB.USRS, JSON.stringify([{ id:1, email: 'emanu.spb@gmail.com', pass: '1234', role: 'Admin', name: 'Comando Central', allowedStations: 'all' }]));
-    
+
     if(!localStorage.getItem(DB.STAS)) localStorage.setItem(DB.STAS, JSON.stringify(defaultStations));
     if(!localStorage.getItem(DB.LOGS)) localStorage.setItem(DB.LOGS, JSON.stringify([]));
     if(!localStorage.getItem(DB.CONF)) localStorage.setItem(DB.CONF, JSON.stringify({ syncInterval: 5 }));
@@ -51,26 +51,83 @@ export const getDB = (key) => {
     return Array.isArray(data) ? data : Object.values(data);
 };
 
+/**
+ * Salva local (instantâneo) E na nuvem.
+ * Agora retorna uma Promise real: se a escrita no Firebase falhar
+ * (permissão negada, offline, etc.) o chamador FICA SABENDO — antes
+ * o erro era engolido e o app mentia dizendo "sucesso".
+ */
 export const setDB = (key, val) => {
     localStorage.setItem(key, JSON.stringify(val));
-    if(database) {
-        let cKey = "";
-        if(key===DB.USRS) cKey="users"; if(key===DB.STAS) cKey="stations"; if(key===DB.LOGS) cKey="logs"; if(key===DB.CONF) cKey="config"; if(key===DB.OS) cKey="os";
-        database.ref('sppm/' + cKey).set(val);
-    }
+
+    if (!database) return Promise.resolve();
+
+    let cKey = "";
+    if (key === DB.USRS) cKey = "users";
+    else if (key === DB.STAS) cKey = "stations";
+    else if (key === DB.LOGS) cKey = "logs";
+    else if (key === DB.CONF) cKey = "config";
+    else if (key === DB.OS) cKey = "os";
+
+    if (!cKey) return Promise.resolve();
+
+    return database.ref('sppm/' + cKey).set(val).catch(err => {
+        console.error(`Falha ao salvar "${cKey}" na nuvem:`, err);
+        // Re-lança para quem chamou (ui.js) poder avisar o usuário de verdade.
+        throw err;
+    });
 };
 
-export async function syncCloudToLocal() {
-    if(!database) return initLocalFallback();
-    try {
-        const snap = await database.ref('sppm').once('value');
-        const d = snap.val();
-        if(d) {
-            if(d.users) localStorage.setItem(DB.USRS, JSON.stringify(Array.isArray(d.users) ? d.users : Object.values(d.users)));
-            if(d.stations) localStorage.setItem(DB.STAS, JSON.stringify(Array.isArray(d.stations) ? d.stations : Object.values(d.stations)));
-            if(d.logs) localStorage.setItem(DB.LOGS, JSON.stringify(Array.isArray(d.logs) ? d.logs : Object.values(d.logs)));
-            if(d.config) localStorage.setItem(DB.CONF, JSON.stringify(d.config));
-            if(d.os) localStorage.setItem(DB.OS, JSON.stringify(Array.isArray(d.os) ? d.os : Object.values(d.os)));
-        } else { initLocalFallback(); }
-    } catch(e) { initLocalFallback(); }
+/**
+ * ANTES: usava .once('value') uma única vez, no boot do app.
+ * Isso criava uma race condition: se o usuário salvasse uma estação/usuário
+ * ENQUANTO esse fetch inicial ainda estava em voo, quando o fetch resolvia
+ * (com dados antigos) ele SOBRESCREVIA o localStorage e apagava o que acabou
+ * de ser salvo — por isso "aparecia no mapa" (render imediato, local) mas
+ * "sumia" da gestão (assim que a sincronização da nuvem rodava de novo).
+ *
+ * AGORA: usa um listener em tempo real (.on('value', ...)). Isso elimina a
+ * race condition (a própria escrita que você faz já dispara a atualização
+ * do listener com o dado novo) e, de brinde, sincroniza em tempo real entre
+ * dispositivos/abas diferentes. A Promise resolve no primeiro snapshot,
+ * então quem chama `await syncCloudToLocal()` continua funcionando igual.
+ */
+export function syncCloudToLocal() {
+    return new Promise((resolve) => {
+        if (!database) {
+            initLocalFallback();
+            resolve();
+            return;
+        }
+
+        let firstLoad = true;
+
+        database.ref('sppm').on('value', (snap) => {
+            const d = snap.val();
+            if (d) {
+                if (d.users) localStorage.setItem(DB.USRS, JSON.stringify(Array.isArray(d.users) ? d.users : Object.values(d.users)));
+                if (d.stations) localStorage.setItem(DB.STAS, JSON.stringify(Array.isArray(d.stations) ? d.stations : Object.values(d.stations)));
+                if (d.logs) localStorage.setItem(DB.LOGS, JSON.stringify(Array.isArray(d.logs) ? d.logs : Object.values(d.logs)));
+                if (d.config) localStorage.setItem(DB.CONF, JSON.stringify(d.config));
+                if (d.os) localStorage.setItem(DB.OS, JSON.stringify(Array.isArray(d.os) ? d.os : Object.values(d.os)));
+            } else if (firstLoad) {
+                initLocalFallback();
+            }
+
+            // Avisa o resto do app (mapa, tabelas de gestão, etc.) que há dados novos.
+            window.dispatchEvent(new Event('cloudDataUpdated'));
+
+            if (firstLoad) {
+                firstLoad = false;
+                resolve();
+            }
+        }, (err) => {
+            console.warn("Nuvem inacessível, usando cache local.", err);
+            if (firstLoad) {
+                firstLoad = false;
+                initLocalFallback();
+                resolve();
+            }
+        });
+    });
 }
