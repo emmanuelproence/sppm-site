@@ -4,20 +4,16 @@ import { syncAPI } from './telemetry.js';
 
 let mapInstance = null;
 let charts = {};
-let editingStationId = null; // Variável para controlar se estamos criando ou editando
+let editingStationId = null; 
 
-// Função central chamada após o Login
 window.setupUI = function() {
     injectMobileResponsiveness();
     setupNavigation();
     setupModals();
     setupDashboard(); 
-    renderTables(); // Carrega as Tabelas IMEDIATAMENTE
+    renderTables(); 
 };
 
-// ----------------------------------------------------
-// 1. LÓGICA DO DASHBOARD (MAPAS E GRÁFICOS)
-// ----------------------------------------------------
 function setupDashboard() {
     renderDashboard();
     
@@ -130,9 +126,6 @@ function renderCharts(logs) {
     }
 }
 
-// ----------------------------------------------------
-// 2. RENDERIZAÇÃO DAS TABELAS
-// ----------------------------------------------------
 function renderTables() {
     const tbodyStas = document.querySelector('#table-stations tbody');
     if (tbodyStas) {
@@ -232,7 +225,7 @@ window.deleteUser = function(id) {
 };
 
 window.editStation = function(id) {
-    editingStationId = id; // Marca que estamos editando
+    editingStationId = id; 
     const stations = getDB(DB.STAS);
     const station = stations.find(s => s.id === id);
     if(!station) return;
@@ -246,7 +239,6 @@ window.editStation = function(id) {
     modalBody.innerHTML = '';
     modalBody.appendChild(tpl);
 
-    // Preenche os campos com os dados existentes
     document.getElementById('st-name').value = station.name;
     document.getElementById('st-region').value = station.region;
     document.getElementById('st-lat').value = station.lat;
@@ -256,7 +248,6 @@ window.editStation = function(id) {
     document.getElementById('st-calib').value = station.calib || '';
     document.getElementById('st-cam').value = station.cam || '';
 
-    // Adiciona o evento de salvar edição
     document.getElementById('form-station-submit').addEventListener('submit', async (e) => {
         e.preventDefault();
         const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -267,14 +258,14 @@ window.editStation = function(id) {
         if (index !== -1) {
             stList[index] = {
                 ...stList[index],
-                name: document.getElementById('st-name').value,
+                name: document.getElementById('st-name').value.trim(),
                 region: document.getElementById('st-region').value,
                 lat: parseFloat(document.getElementById('st-lat').value),
                 lon: parseFloat(document.getElementById('st-lon').value),
                 quota: parseInt(document.getElementById('st-quota').value),
-                mac: document.getElementById('st-mac').value || '',
-                calib: document.getElementById('st-calib').value || '',
-                cam: document.getElementById('st-cam').value || ''
+                mac: document.getElementById('st-mac').value.trim(),
+                calib: document.getElementById('st-calib').value.trim(),
+                cam: document.getElementById('st-cam').value.trim()
             };
         }
 
@@ -283,7 +274,7 @@ window.editStation = function(id) {
             await setDB(DB.STAS, stList);
             alert("Estação atualizada com sucesso!");
             globalModal.classList.remove('active');
-            editingStationId = null; // Reseta o estado
+            editingStationId = null; 
             window.dispatchEvent(new Event('telemetryUpdated'));
         } catch (err) {
             alert("Erro ao salvar.");
@@ -303,13 +294,12 @@ function setupModals() {
     const modalBody = document.getElementById('modal-body');
 
     const closeModal = () => globalModal.classList.remove('active');
-
     const getSubmitButton = (form) => form.querySelector('button[type="submit"]');
 
     const btnNewStation = document.getElementById('btn-new-station');
     if(btnNewStation) {
         btnNewStation.addEventListener('click', () => {
-            editingStationId = null; // Garante que é criação nova
+            editingStationId = null; 
             modalTitle.innerText = "Cadastrar Nova Estação";
             const tpl = document.getElementById('tpl-station-form').content.cloneNode(true);
             modalBody.innerHTML = '';
@@ -323,14 +313,14 @@ function setupModals() {
                 const stations = getDB(DB.STAS);
                 stations.push({
                     id: Date.now(),
-                    name: document.getElementById('st-name').value,
+                    name: document.getElementById('st-name').value.trim(),
                     region: document.getElementById('st-region').value,
                     lat: parseFloat(document.getElementById('st-lat').value),
                     lon: parseFloat(document.getElementById('st-lon').value),
                     quota: parseInt(document.getElementById('st-quota').value),
-                    mac: document.getElementById('st-mac').value || '',
-                    calib: document.getElementById('st-calib').value || '',
-                    cam: document.getElementById('st-cam').value || ''
+                    mac: document.getElementById('st-mac').value.trim(),
+                    calib: document.getElementById('st-calib').value.trim(),
+                    cam: document.getElementById('st-cam').value.trim()
                 });
 
                 try {
@@ -353,6 +343,16 @@ function setupModals() {
             modalTitle.innerText = "Provisionar Novo Acesso (RBAC)";
             const tpl = document.getElementById('tpl-user-form').content.cloneNode(true);
             
+            const containerStations = tpl.querySelector('#usr-stations-container');
+            const stations = getDB(DB.STAS);
+            stations.forEach(st => {
+                containerStations.innerHTML += `
+                    <label class="checkbox-label">
+                        <input type="checkbox" value="${st.id}" class="station-cb"> ${st.name}
+                    </label>
+                `;
+            });
+
             modalBody.innerHTML = '';
             modalBody.appendChild(tpl);
             globalModal.classList.add('active');
@@ -373,16 +373,17 @@ function setupModals() {
 
                 let allowedStations = 'all';
                 if (roleVal !== 'Admin') {
-                    // Se precisar escolher estações depois, a lógica entra aqui
-                    allowedStations = [];
+                    const checkboxes = document.querySelectorAll('#container-station-select input[type="checkbox"]:checked');
+                    allowedStations = checkboxes.length ? Array.from(checkboxes).map(cb => parseInt(cb.value)) : [];
                 }
 
                 const users = getDB(DB.USRS);
                 users.push({
                     id: Date.now(),
-                    name: document.getElementById('usr-name').value,
-                    email: document.getElementById('usr-email').value,
-                    pass: document.getElementById('usr-pass').value,
+                    name: document.getElementById('usr-name').value.trim(),
+                    // A BLINDAGEM DO EMAIL ESTÁ AQUI (Tira espaços e letras maiúsculas):
+                    email: document.getElementById('usr-email').value.trim().toLowerCase(),
+                    pass: document.getElementById('usr-pass').value.trim(),
                     role: roleVal,
                     allowedStations: allowedStations
                 });
@@ -390,7 +391,7 @@ function setupModals() {
                 try {
                     if(submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Salvando...'; }
                     await setDB(DB.USRS, users); 
-                    alert("Acesso de Servidor registrado com sucesso! Lembre-se de registrar este email/senha na aba 'Authentication' do Firebase.");
+                    alert("Acesso de Servidor registrado com sucesso! (Lembre-se de adicioná-lo no Firebase Auth)");
                     closeModal();
                     renderTables();
                 } catch (err) {
@@ -450,9 +451,6 @@ function setupModals() {
     }
 }
 
-// ----------------------------------------------------
-// 5. RESPONSIVIDADE E NAVEGAÇÃO
-// ----------------------------------------------------
 function injectMobileResponsiveness() {
     if(!document.getElementById('sppm-mobile-css')) {
         const style = document.createElement('style');
