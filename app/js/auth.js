@@ -45,25 +45,29 @@ export function initAuth() {
 }
 
 function checkUserRole(email) {
+    // Limpa espaços invisíveis e joga pra minúsculo (A MÁGICA ESTÁ AQUI)
+    const cleanEmail = email.trim().toLowerCase();
+
     database.ref('sppm/users').once('value').then(snap => {
         const users = snap.val();
         let foundUser = null;
         
         if (users) {
             const usersArray = Array.isArray(users) ? users : Object.values(users);
-            foundUser = usersArray.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+            // Procura o usuário blindando contra espaços em branco e letras maiúsculas
+            foundUser = usersArray.find(u => u.email && u.email.trim().toLowerCase() === cleanEmail);
         }
 
         if (foundUser) {
             applyLoginUI(foundUser);
         } else {
             auth.signOut();
-            alert("Acesso Negado: Usuário sem permissões no SPPM OS.");
+            alert("Acesso Negado: O e-mail '" + cleanEmail + "' não possui permissões no SPPM OS.");
         }
     }).catch(err => {
         console.warn("Nuvem inacessível, tentando cache...", err);
         const localUsers = getDB(DB.USRS);
-        const foundLocal = localUsers.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+        const foundLocal = localUsers.find(u => u.email && u.email.trim().toLowerCase() === cleanEmail);
         if (foundLocal) applyLoginUI(foundLocal);
     });
 }
