@@ -11,7 +11,6 @@ window.setupUI = function() {
     setupNavigation();
     setupModals();
     setupDashboard(); // Carrega Mapa e Gráficos
-    renderTables();   // Carrega as Tabelas Ocultas (O BUG ESTAVA AQUI)
 };
 
 // ----------------------------------------------------
@@ -19,11 +18,19 @@ window.setupUI = function() {
 // ----------------------------------------------------
 function setupDashboard() {
     renderDashboard();
-    
+
     // Atualiza a tela automaticamente quando a telemetria baixar dados novos
     window.addEventListener('telemetryUpdated', () => {
         renderDashboard();
-        renderTables(); // Atualiza as tabelas junto com o mapa
+    });
+
+    // NOVO: atualiza a tela também quando a nuvem sincroniza em tempo real
+    // (inclui as próprias gravações do usuário e mudanças feitas em outro
+    // dispositivo/aba). Antes só existia o listener acima, então uma
+    // gravação nova só refletia no mapa até a próxima sync sobrescrever
+    // o localStorage com dados desatualizados.
+    window.addEventListener('cloudDataUpdated', () => {
+        renderDashboard();
     });
 
     const syncBtn = document.getElementById('btn-sync-api');
@@ -39,7 +46,7 @@ function setupDashboard() {
 function renderDashboard() {
     const stations = getDB(DB.STAS);
     const logs = getDB(DB.LOGS);
-    
+
     // Atualiza os contadores Operando/Alerta/Interditado
     let op = 0, al = 0, inT = 0;
     stations.forEach(st => {
@@ -74,7 +81,7 @@ function renderMap(stations, logs) {
             attribution: '&copy; OpenStreetMap'
         }).addTo(mapInstance);
         window.mapInstance = mapInstance;
-        
+
         setTimeout(() => mapInstance.invalidateSize(), 500);
     }
 
@@ -89,9 +96,9 @@ function renderMap(stations, logs) {
     stations.forEach(st => {
         const lastLog = logs.find(l => l.station === st.name);
         const status = lastLog ? lastLog.status : 'Normal';
-        let color = '#10b981'; 
-        if(status === 'Alerta') color = '#f59e0b'; 
-        if(status === 'Interditado') color = '#ef4444'; 
+        let color = '#10b981';
+        if(status === 'Alerta') color = '#f59e0b';
+        if(status === 'Interditado') color = '#ef4444';
 
         const circleIcon = L.divIcon({
             className: 'custom-div-icon',
@@ -130,110 +137,21 @@ function renderCharts(logs) {
 }
 
 // ----------------------------------------------------
-// 2. RENDERIZAÇÃO DAS TABELAS (A SOLUÇÃO DO BUG)
-// ----------------------------------------------------
-function renderTables() {
-    // 2.1 Tabela de Estações (Gestão de Sistemas)
-    const tbodyStas = document.querySelector('#table-stations tbody');
-    if (tbodyStas) {
-        const stations = getDB(DB.STAS);
-        tbodyStas.innerHTML = stations.map(st => `
-            <tr>
-                <td>${st.id}</td>
-                <td><strong>${st.name}</strong></td>
-                <td>${st.region}</td>
-                <td style="font-family: monospace;">${st.mac || 'N/A'}</td>
-                <td>${st.quota} mm</td>
-                <td>${st.cam ? '<span style="color: var(--color-green)">Ativa</span>' : '<span style="color: var(--text-muted)">Inativa</span>'}</td>
-                <td class="admin-only">
-                    <button class="btn btn-danger" style="padding: 4px 8px;" onclick="deleteStation(${st.id})" title="Excluir Estação"><i class="ph ph-trash"></i></button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    // 2.2 Tabela de Usuários (Controle RBAC)
-    const tbodyUsers = document.querySelector('#table-users tbody');
-    if (tbodyUsers) {
-        const users = getDB(DB.USRS);
-        tbodyUsers.innerHTML = users.map(u => `
-            <tr>
-                <td><strong>${u.name}</strong></td>
-                <td>${u.email}</td>
-                <td><span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;">${u.role}</span></td>
-                <td>${u.allowedStations === 'all' ? 'Acesso Total (Admin)' : (u.allowedStations.length + ' estações permitidas')}</td>
-                <td>
-                    <button class="btn btn-danger" style="padding: 4px 8px;" onclick="deleteUser(${u.id})" title="Revogar Acesso"><i class="ph ph-trash"></i></button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    // 2.3 Grid de Ordens de Serviço (Manutenção)
-    const osContainer = document.getElementById('os-container');
-    if (osContainer) {
-        const osList = getDB(DB.OS);
-        if (osList.length === 0) {
-            osContainer.innerHTML = '<p style="color: var(--text-muted); width: 100%;">Nenhuma ordem de serviço pendente.</p>';
-        } else {
-            osContainer.innerHTML = osList.map(os => `
-                <div class="os-card ${os.severity}">
-                    <h4 style="color:var(--text-white); margin-bottom: 5px;">${os.station}</h4>
-                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">${os.issue}</p>
-                    <div style="display:flex; justify-content:space-between; font-size:0.75rem;">
-                        <span style="color:var(--color-blue-gray)"><i class="ph ph-calendar"></i> ${os.date}</span>
-                        <strong style="color: ${os.severity === 'critical' ? 'var(--color-red)' : 'var(--color-yellow)'}; text-transform: uppercase;">${os.status}</strong>
-                    </div>
-                </div>
-            `).join('');
-        }
-    }
-
-    // 2.4 Tabela de Histórico / Alertas
-    const tbodyLogs = document.querySelector('#table-logs tbody');
-    if (tbodyLogs) {
-        const logs = getDB(DB.LOGS).slice(0, 50); // Mostra só os 50 mais recentes
-        tbodyLogs.innerHTML = logs.map(l => `
-            <tr>
-                <td>${l.date}</td>
-                <td><strong>${l.station}</strong></td>
-                <td style="color: ${l.status==='Interditado' ? 'var(--color-red)' : (l.status==='Alerta' ? 'var(--color-yellow)' : 'var(--color-green)')}; font-weight: 700;">${l.status}</td>
-                <td>${l.precip} mm</td>
-                <td><i class="ph ph-check-circle" style="color: var(--color-green);"></i> Concluída</td>
-            </tr>
-        `).join('');
-    }
-}
-
-// Funções globais para os botões de excluir funcionarem
-window.deleteStation = function(id) {
-    if(!confirm("ALERTA: Tem certeza que deseja remover esta estação do sistema?")) return;
-    let stations = getDB(DB.STAS);
-    stations = stations.filter(s => s.id !== id);
-    setDB(DB.STAS, stations);
-    renderTables();
-    renderDashboard(); 
-};
-
-window.deleteUser = function(id) {
-    if(!confirm("ALERTA: Tem certeza que deseja revogar o acesso deste servidor?")) return;
-    let users = getDB(DB.USRS);
-    users = users.filter(u => u.id !== id);
-    setDB(DB.USRS, users);
-    renderTables();
-};
-
-// ----------------------------------------------------
-// 3. LÓGICA DOS BOTÕES E MODAIS
+// 2. LÓGICA DOS BOTÕES E SALVAMENTO NO BANCO
 // ----------------------------------------------------
 function setupModals() {
     const globalModal = document.getElementById('global-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalBody = document.getElementById('modal-body');
 
+    // Função para fechar o modal
     const closeModal = () => globalModal.classList.remove('active');
 
-    // Botão Nova Estação
+    // Helper: pega o botão de submit de um form pra poder travar/destravar
+    // durante o salvamento e evitar duplo-clique / clique com gravação em voo.
+    const getSubmitButton = (form) => form.querySelector('button[type="submit"], input[type="submit"]');
+
+    // 1. Botão e Formulário de NOVA ESTAÇÃO
     const btnNewStation = document.getElementById('btn-new-station');
     if(btnNewStation) {
         btnNewStation.addEventListener('click', () => {
@@ -243,8 +161,12 @@ function setupModals() {
             modalBody.appendChild(tpl);
             globalModal.classList.add('active');
 
-            document.getElementById('form-station-submit').addEventListener('submit', (e) => {
-                e.preventDefault();
+            // Cérebro de salvamento:
+            const form = document.getElementById('form-station-submit');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault(); // Impede a página de recarregar
+
+                const submitBtn = getSubmitButton(form);
                 const stations = getDB(DB.STAS);
                 stations.push({
                     id: Date.now(),
@@ -257,37 +179,32 @@ function setupModals() {
                     calib: document.getElementById('st-calib').value || '',
                     cam: document.getElementById('st-cam').value || ''
                 });
-                
-                setDB(DB.STAS, stations);
-                alert("Estação provisionada com sucesso!");
-                closeModal();
-                window.dispatchEvent(new Event('telemetryUpdated'));
+
+                try {
+                    if(submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Salvando...'; }
+                    await setDB(DB.STAS, stations); // Salva local + nuvem, agora com confirmação real
+                    alert("Estação provisionada com sucesso!");
+                    closeModal();
+                    window.dispatchEvent(new Event('telemetryUpdated')); // Atualiza o mapa na mesma hora
+                } catch (err) {
+                    alert("Não foi possível salvar a estação na nuvem. Verifique sua conexão/permissões do Firebase e tente novamente.");
+                    console.error(err);
+                    if(submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'Salvar'; }
+                }
             });
         });
     }
 
-    // Botão Novo Usuário
+    // 2. Botão e Formulário de NOVO USUÁRIO
     const btnNewUser = document.getElementById('btn-new-user');
     if(btnNewUser) {
         btnNewUser.addEventListener('click', () => {
             modalTitle.innerText = "Provisionar Novo Acesso (RBAC)";
             const tpl = document.getElementById('tpl-user-form').content.cloneNode(true);
-            
-            // Popula os checkboxes de permissões de estações
-            const containerStations = tpl.querySelector('#usr-stations-container');
-            const stations = getDB(DB.STAS);
-            stations.forEach(st => {
-                containerStations.innerHTML += `
-                    <label class="checkbox-label">
-                        <input type="checkbox" value="${st.id}" class="station-cb"> ${st.name}
-                    </label>
-                `;
-            });
-
             modalBody.innerHTML = '';
             modalBody.appendChild(tpl);
             globalModal.classList.add('active');
-            
+
             const roleSelect = document.getElementById('usr-role');
             if(roleSelect) {
                 roleSelect.addEventListener('change', (e) => {
@@ -295,16 +212,24 @@ function setupModals() {
                 });
             }
 
-            document.getElementById('form-user-submit').addEventListener('submit', (e) => {
+            // Cérebro de salvamento:
+            const form = document.getElementById('form-user-submit');
+            form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
-                // Pega as estações marcadas
-                let allowed = [];
-                if (document.getElementById('usr-role').value === 'Admin') {
-                    allowed = 'all';
-                } else {
-                    const cbs = document.querySelectorAll('.station-cb:checked');
-                    cbs.forEach(cb => allowed.push(parseInt(cb.value)));
+
+                const submitBtn = getSubmitButton(form);
+                const roleVal = document.getElementById('usr-role').value;
+
+                // ANTES: sempre salvava allowedStations como [] para não-admin,
+                // ignorando qualquer checkbox marcado — usuário ficava sem
+                // acesso a estação nenhuma. Agora lê os checkboxes marcados,
+                // se existirem no template; senão cai em 'all' como antes.
+                let allowedStations = 'all';
+                if (roleVal !== 'Admin') {
+                    const checkboxes = document.querySelectorAll('#container-station-select input[type="checkbox"]:checked');
+                    allowedStations = checkboxes.length
+                        ? Array.from(checkboxes).map(cb => parseInt(cb.value))
+                        : [];
                 }
 
                 const users = getDB(DB.USRS);
@@ -313,25 +238,32 @@ function setupModals() {
                     name: document.getElementById('usr-name').value,
                     email: document.getElementById('usr-email').value,
                     pass: document.getElementById('usr-pass').value,
-                    role: document.getElementById('usr-role').value,
-                    allowedStations: allowed
+                    role: roleVal,
+                    allowedStations: allowedStations
                 });
-                
-                setDB(DB.USRS, users);
-                alert("Acesso de Servidor registrado com sucesso!");
-                closeModal();
-                renderTables(); // Atualiza a tabela na hora
+
+                try {
+                    if(submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Salvando...'; }
+                    await setDB(DB.USRS, users); // Salva local + nuvem, agora com confirmação real
+                    alert("Acesso de Servidor registrado com sucesso!");
+                    closeModal();
+                } catch (err) {
+                    alert("Não foi possível salvar o usuário na nuvem. Verifique sua conexão/permissões do Firebase e tente novamente.");
+                    console.error(err);
+                    if(submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'Salvar'; }
+                }
             });
         });
     }
 
-    // Botão Nova OS
+    // 3. Botão e Formulário de NOVA ORDEM DE SERVIÇO
     const btnNewOS = document.getElementById('btn-new-os');
     if(btnNewOS) {
         btnNewOS.addEventListener('click', () => {
             modalTitle.innerText = "Abrir Ordem de Serviço";
             const tpl = document.getElementById('tpl-os-form').content.cloneNode(true);
-            
+
+            // Popula a caixinha de escolher as estações com as estações reais
             const selectOs = tpl.querySelector('#os-station');
             const stations = getDB(DB.STAS);
             stations.forEach(st => {
@@ -345,9 +277,12 @@ function setupModals() {
             modalBody.appendChild(tpl);
             globalModal.classList.add('active');
 
-            document.getElementById('form-os-submit').addEventListener('submit', (e) => {
+            // Cérebro de salvamento:
+            const form = document.getElementById('form-os-submit');
+            form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
+
+                const submitBtn = getSubmitButton(form);
                 const osList = getDB(DB.OS);
                 osList.push({
                     id: Date.now(),
@@ -357,18 +292,24 @@ function setupModals() {
                     date: new Date().toLocaleDateString('pt-BR'),
                     severity: document.getElementById('os-severity').value
                 });
-                
-                setDB(DB.OS, osList);
-                alert("O.S. registrada no sistema e despachada para a equipe!");
-                closeModal();
-                renderTables(); // Atualiza a tabela na hora
+
+                try {
+                    if(submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Salvando...'; }
+                    await setDB(DB.OS, osList);
+                    alert("O.S. registrada no sistema e despachada para a equipe!");
+                    closeModal();
+                } catch (err) {
+                    alert("Não foi possível registrar a O.S. na nuvem. Verifique sua conexão/permissões do Firebase e tente novamente.");
+                    console.error(err);
+                    if(submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'Salvar'; }
+                }
             });
         });
     }
 }
 
 // ----------------------------------------------------
-// 4. RESPONSIVIDADE E NAVEGAÇÃO
+// 3. RESPONSIVIDADE E NAVEGAÇÃO
 // ----------------------------------------------------
 function injectMobileResponsiveness() {
     if(!document.getElementById('sppm-mobile-css')) {
@@ -412,7 +353,7 @@ export function setupNavigation() {
         item.addEventListener('click', () => {
             const targetID = item.getAttribute('data-target');
             if(!targetID) return;
-            
+
             navItems.forEach(nav => nav.classList.remove('active'));
             item.classList.add('active');
 
@@ -425,7 +366,7 @@ export function setupNavigation() {
             if(window.innerWidth <= 768 && sidebar) {
                 sidebar.classList.remove('open');
             }
-            
+
             if(window.mapInstance) {
                 setTimeout(() => window.mapInstance.invalidateSize(), 300);
             }
