@@ -139,8 +139,8 @@ function renderTables() {
                 <td>${st.quota} mm</td>
                 <td>${st.cam ? '<span style="color: var(--color-green)">Ativa</span>' : '<span style="color: var(--text-muted)">Inativa</span>'}</td>
                 <td class="admin-only" style="display:flex; gap:5px;">
-                    <button class="btn btn-outline" style="padding: 4px 8px;" onclick="editStation(${st.id})" title="Editar Estação"><i class="ph ph-pencil"></i></button>
-                    <button class="btn btn-danger" style="padding: 4px 8px;" onclick="deleteStation(${st.id})" title="Excluir Estação"><i class="ph ph-trash"></i></button>
+                    <button class="btn btn-outline" style="padding: 4px 8px;" onclick="editStation('${st.id}')" title="Editar Estação"><i class="ph ph-pencil"></i></button>
+                    <button class="btn btn-danger" style="padding: 4px 8px;" onclick="deleteStation('${st.id}')" title="Excluir Estação"><i class="ph ph-trash"></i></button>
                 </td>
             </tr>
         `).join('');
@@ -161,7 +161,7 @@ function renderTables() {
                 <td><span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;">${u.role}</span></td>
                 <td>${permissoes}</td>
                 <td>
-                    <button class="btn btn-danger" style="padding: 4px 8px;" onclick="deleteUser(${u.id})" title="Revogar Acesso"><i class="ph ph-trash"></i></button>
+                    <button class="btn btn-danger" style="padding: 4px 8px;" onclick="deleteUser('${u.id}')" title="Revogar Acesso"><i class="ph ph-trash"></i></button>
                 </td>
             </tr>
             `;
@@ -208,7 +208,7 @@ function renderTables() {
 window.deleteStation = function(id) {
     if(!confirm("ALERTA: Tem certeza que deseja remover esta estação do sistema?")) return;
     let stations = getDB(DB.STAS);
-    stations = stations.filter(s => s.id !== id);
+    stations = stations.filter(s => String(s.id) !== String(id));
     setDB(DB.STAS, stations).then(() => {
         renderTables();
         renderDashboard(); 
@@ -218,7 +218,7 @@ window.deleteStation = function(id) {
 window.deleteUser = function(id) {
     if(!confirm("ALERTA: Tem certeza que deseja revogar o acesso deste servidor?")) return;
     let users = getDB(DB.USRS);
-    users = users.filter(u => u.id !== id);
+    users = users.filter(u => String(u.id) !== String(id));
     setDB(DB.USRS, users).then(() => {
         renderTables();
     });
@@ -227,8 +227,13 @@ window.deleteUser = function(id) {
 window.editStation = function(id) {
     editingStationId = id; 
     const stations = getDB(DB.STAS);
-    const station = stations.find(s => s.id === id);
-    if(!station) return;
+    // Solução do Bug: Converte os dois lados para texto para garantir a checagem
+    const station = stations.find(s => String(s.id) === String(id));
+    
+    if(!station) {
+        alert("Erro: Estação não encontrada no banco local.");
+        return;
+    }
 
     const globalModal = document.getElementById('global-modal');
     const modalTitle = document.getElementById('modal-title');
@@ -253,7 +258,7 @@ window.editStation = function(id) {
         const submitBtn = e.target.querySelector('button[type="submit"]');
         
         let stList = getDB(DB.STAS);
-        const index = stList.findIndex(s => s.id === editingStationId);
+        const index = stList.findIndex(s => String(s.id) === String(editingStationId));
         
         if (index !== -1) {
             stList[index] = {
@@ -277,7 +282,7 @@ window.editStation = function(id) {
             editingStationId = null; 
             window.dispatchEvent(new Event('telemetryUpdated'));
         } catch (err) {
-            alert("Erro ao salvar.");
+            alert("Erro ao salvar a estação atualizada na nuvem.");
             if(submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'Salvar'; }
         }
     });
@@ -374,14 +379,13 @@ function setupModals() {
                 let allowedStations = 'all';
                 if (roleVal !== 'Admin') {
                     const checkboxes = document.querySelectorAll('#container-station-select input[type="checkbox"]:checked');
-                    allowedStations = checkboxes.length ? Array.from(checkboxes).map(cb => parseInt(cb.value)) : [];
+                    allowedStations = checkboxes.length ? Array.from(checkboxes).map(cb => String(cb.value)) : [];
                 }
 
                 const users = getDB(DB.USRS);
                 users.push({
                     id: Date.now(),
                     name: document.getElementById('usr-name').value.trim(),
-                    // A BLINDAGEM DO EMAIL ESTÁ AQUI (Tira espaços e letras maiúsculas):
                     email: document.getElementById('usr-email').value.trim().toLowerCase(),
                     pass: document.getElementById('usr-pass').value.trim(),
                     role: roleVal,
@@ -391,7 +395,7 @@ function setupModals() {
                 try {
                     if(submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Salvando...'; }
                     await setDB(DB.USRS, users); 
-                    alert("Acesso de Servidor registrado com sucesso! (Lembre-se de adicioná-lo no Firebase Auth)");
+                    alert("Acesso de Servidor registrado com sucesso! Lembre-se de adicionar no Firebase Auth.");
                     closeModal();
                     renderTables();
                 } catch (err) {
