@@ -526,6 +526,8 @@ window.editStation = function(id) {
 
         try {
             if(submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'Salvando...'; }
+            // FAXINA: Limpa lixos fantasmas antes de salvar
+            stList = stList.filter(item => item !== null && item !== undefined && item.id);
             await setDB(DB.STAS, stList);
             alert("Estação atualizada com sucesso!");
             globalModal.classList.remove('active');
@@ -541,7 +543,7 @@ window.editStation = function(id) {
 };
 
 // ====================================================
-// O CÉREBRO DE SALVAMENTO DE FORMULÁRIOS
+// O CÉREBRO DE SALVAMENTO (COM VACINA CONTRA DADOS FANTASMAS)
 // ====================================================
 function setupModals() {
     const globalModal = document.getElementById('global-modal');
@@ -550,7 +552,7 @@ function setupModals() {
     const closeModal = () => globalModal.classList.remove('active');
     const getSubmitButton = (form) => form.querySelector('button[type="submit"]');
 
-    // NOVA ESTAÇÃO
+    // 1. BOTÃO NOVA ESTAÇÃO
     const btnNewStation = document.getElementById('btn-new-station');
     if(btnNewStation) {
         btnNewStation.addEventListener('click', () => {
@@ -565,13 +567,12 @@ function setupModals() {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const submitBtn = getSubmitButton(form);
-                const stations = getDB(DB.STAS);
                 
                 const latVal = document.getElementById('st-lat') ? parseFloat(document.getElementById('st-lat').value) : 0;
                 const lonVal = document.getElementById('st-lon') ? parseFloat(document.getElementById('st-lon').value) : 0;
                 const quotaVal = document.getElementById('st-quota') ? parseInt(document.getElementById('st-quota').value) : 10;
                 
-                stations.push({
+                const novaEstacao = {
                     id: Date.now(),
                     name: (document.getElementById('st-name') ? document.getElementById('st-name').value.trim() : 'Estação Desconhecida'),
                     region: (document.getElementById('st-region') ? document.getElementById('st-region').value : 'Geral'),
@@ -581,23 +582,29 @@ function setupModals() {
                     mac: (document.getElementById('st-mac') ? document.getElementById('st-mac').value.trim() : ''),
                     calib: (document.getElementById('st-calib') ? document.getElementById('st-calib').value.trim() : ''),
                     cam: (document.getElementById('st-cam') ? document.getElementById('st-cam').value.trim() : '')
-                });
+                };
 
                 try {
                     if(submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="ph ph-spinner" style="animation: spin 1s infinite;"></i> Conectando...'; }
+                    
+                    let stations = getDB(DB.STAS) || [];
+                    // FAXINA: Destrói qualquer dado fantasma antes de enviar
+                    stations = stations.filter(item => item !== null && item !== undefined && item.id);
+                    stations.push(novaEstacao);
+
                     await setDB(DB.STAS, stations); 
                     await syncAPI(); 
-                    alert("Estação provisionada com sucesso!");
+                    alert("Estação provisionada com sucesso e telemetria meteorológica sincronizada!");
                     closeModal();
                 } catch (err) {
-                    alert("Falha ao salvar estação.");
+                    alert("Falha ao salvar estação. O banco de dados recusou a conexão.");
                     if(submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'Tentar Novamente'; }
                 }
             });
         });
     }
 
-    // NOVO USUÁRIO
+    // 2. BOTÃO NOVO USUÁRIO
     const btnNewUser = document.getElementById('btn-new-user');
     if(btnNewUser) {
         btnNewUser.addEventListener('click', () => {
@@ -634,18 +641,23 @@ function setupModals() {
                     allowedStations = checkboxes.length ? Array.from(checkboxes).map(cb => String(cb.value)) : [];
                 }
 
-                const users = getDB(DB.USRS);
-                users.push({
+                const novoUsuario = {
                     id: Date.now(),
                     name: (document.getElementById('usr-name') ? document.getElementById('usr-name').value.trim() : 'Novo Usuário'),
                     email: (document.getElementById('usr-email') ? document.getElementById('usr-email').value.trim().toLowerCase() : ''),
                     pass: (document.getElementById('usr-pass') ? document.getElementById('usr-pass').value.trim() : ''),
                     role: roleVal,
                     allowedStations: allowedStations
-                });
+                };
 
                 try {
                     if(submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = 'Gravando...'; }
+                    
+                    let users = getDB(DB.USRS) || [];
+                    // FAXINA: Destrói qualquer dado fantasma antes de enviar
+                    users = users.filter(item => item !== null && item !== undefined && item.id);
+                    users.push(novoUsuario);
+
                     await setDB(DB.USRS, users); 
                     alert("Acesso RBAC gravado com sucesso! Adicione o email no Firebase Auth.");
                     closeModal();
@@ -658,7 +670,7 @@ function setupModals() {
         });
     }
 
-    // NOVA ORDEM DE SERVIÇO
+    // 3. BOTÃO NOVA O.S. (A CORREÇÃO DEFINITIVA)
     const btnNewOS = document.getElementById('btn-new-os');
     if(btnNewOS) {
         btnNewOS.addEventListener('click', () => {
@@ -666,12 +678,14 @@ function setupModals() {
             const tpl = document.getElementById('tpl-os-form').content.cloneNode(true);
             
             const selectOs = tpl.querySelector('#os-station');
-            const stations = getDB(DB.STAS);
+            const stations = getDB(DB.STAS) || [];
             if(selectOs) {
                 stations.forEach(st => {
-                    const opt = document.createElement('option');
-                    opt.value = st.name; opt.innerText = st.name;
-                    selectOs.appendChild(opt);
+                    if (st && st.name) {
+                        const opt = document.createElement('option');
+                        opt.value = st.name; opt.innerText = st.name;
+                        selectOs.appendChild(opt);
+                    }
                 });
             }
 
@@ -687,19 +701,25 @@ function setupModals() {
                 try {
                     if(btnSubmit) { btnSubmit.disabled = true; btnSubmit.innerHTML = 'Gravando O.S...'; }
                     
-                    const stationVal = document.getElementById('os-station') ? document.getElementById('os-station').value : 'Geral';
-                    const issueVal = document.getElementById('os-issue') ? document.getElementById('os-issue').value.trim() : 'Sem descrição';
-                    const severityVal = document.getElementById('os-severity') ? document.getElementById('os-severity').value : 'warning';
+                    const stEl = document.getElementById('os-station');
+                    const isEl = document.getElementById('os-issue');
+                    const svEl = document.getElementById('os-severity');
                     
-                    const osList = getDB(DB.OS) || [];
-                    osList.push({
+                    const novaOS = {
                         id: Date.now(),
-                        station: stationVal,
-                        issue: issueVal || 'Inspeção solicitada',
+                        station: stEl && stEl.value ? String(stEl.value) : 'Geral',
+                        issue: isEl && isEl.value ? String(isEl.value).trim() : 'Manutenção',
                         status: 'Aberta',
                         date: new Date().toLocaleDateString('pt-BR'),
-                        severity: severityVal
-                    });
+                        severity: svEl && svEl.value ? String(svEl.value) : 'warning'
+                    };
+
+                    let osList = getDB(DB.OS) || [];
+                    
+                    // O SEGREDO ESTÁ AQUI: Limpa todo e qualquer lixo antes de tentar salvar
+                    osList = osList.filter(item => item !== null && item !== undefined && item.id);
+                    
+                    osList.push(novaOS);
 
                     await setDB(DB.OS, osList);
                     alert("O.S. registrada no sistema e despachada para a equipe!");
@@ -707,8 +727,8 @@ function setupModals() {
                     renderTables(); 
                     
                 } catch (err) {
-                    console.error("ERRO:", err);
-                    alert("Erro ao gravar O.S.");
+                    console.error("ERRO FIREBASE OS:", err);
+                    alert("Erro ao gravar O.S (Firebase recusou a conexão por dados fantasmas passados).");
                     if(btnSubmit) { btnSubmit.disabled = false; btnSubmit.innerText = 'Salvar O.S.'; }
                 }
             });
@@ -753,6 +773,7 @@ export function setupNavigation() {
             
             if(window.mapInstance) { setTimeout(() => window.mapInstance.invalidateSize(), 300); }
             
+            // A MÁGICA DO MAPA FULLSCREEN 
             if(targetID.includes('fullscreen') || targetID.includes('map')) {
                 setTimeout(() => renderFullscreenMap(), 100);
             }
