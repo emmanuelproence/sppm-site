@@ -11,6 +11,7 @@ window.setupUI = function() {
     setupNavigation();
     setupModals();
     setupDashboard(); // Carrega Mapa e Gráficos
+    renderTables();   // Carrega as Tabelas Ocultas (O BUG ESTAVA AQUI)
 };
 
 // ----------------------------------------------------
@@ -22,6 +23,7 @@ function setupDashboard() {
     // Atualiza a tela automaticamente quando a telemetria baixar dados novos
     window.addEventListener('telemetryUpdated', () => {
         renderDashboard();
+        renderTables(); // Atualiza as tabelas junto com o mapa
     });
 
     const syncBtn = document.getElementById('btn-sync-api');
@@ -128,17 +130,110 @@ function renderCharts(logs) {
 }
 
 // ----------------------------------------------------
-// 2. LÓGICA DOS BOTÕES E SALVAMENTO NO BANCO
+// 2. RENDERIZAÇÃO DAS TABELAS (A SOLUÇÃO DO BUG)
+// ----------------------------------------------------
+function renderTables() {
+    // 2.1 Tabela de Estações (Gestão de Sistemas)
+    const tbodyStas = document.querySelector('#table-stations tbody');
+    if (tbodyStas) {
+        const stations = getDB(DB.STAS);
+        tbodyStas.innerHTML = stations.map(st => `
+            <tr>
+                <td>${st.id}</td>
+                <td><strong>${st.name}</strong></td>
+                <td>${st.region}</td>
+                <td style="font-family: monospace;">${st.mac || 'N/A'}</td>
+                <td>${st.quota} mm</td>
+                <td>${st.cam ? '<span style="color: var(--color-green)">Ativa</span>' : '<span style="color: var(--text-muted)">Inativa</span>'}</td>
+                <td class="admin-only">
+                    <button class="btn btn-danger" style="padding: 4px 8px;" onclick="deleteStation(${st.id})" title="Excluir Estação"><i class="ph ph-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // 2.2 Tabela de Usuários (Controle RBAC)
+    const tbodyUsers = document.querySelector('#table-users tbody');
+    if (tbodyUsers) {
+        const users = getDB(DB.USRS);
+        tbodyUsers.innerHTML = users.map(u => `
+            <tr>
+                <td><strong>${u.name}</strong></td>
+                <td>${u.email}</td>
+                <td><span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;">${u.role}</span></td>
+                <td>${u.allowedStations === 'all' ? 'Acesso Total (Admin)' : (u.allowedStations.length + ' estações permitidas')}</td>
+                <td>
+                    <button class="btn btn-danger" style="padding: 4px 8px;" onclick="deleteUser(${u.id})" title="Revogar Acesso"><i class="ph ph-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // 2.3 Grid de Ordens de Serviço (Manutenção)
+    const osContainer = document.getElementById('os-container');
+    if (osContainer) {
+        const osList = getDB(DB.OS);
+        if (osList.length === 0) {
+            osContainer.innerHTML = '<p style="color: var(--text-muted); width: 100%;">Nenhuma ordem de serviço pendente.</p>';
+        } else {
+            osContainer.innerHTML = osList.map(os => `
+                <div class="os-card ${os.severity}">
+                    <h4 style="color:var(--text-white); margin-bottom: 5px;">${os.station}</h4>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">${os.issue}</p>
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem;">
+                        <span style="color:var(--color-blue-gray)"><i class="ph ph-calendar"></i> ${os.date}</span>
+                        <strong style="color: ${os.severity === 'critical' ? 'var(--color-red)' : 'var(--color-yellow)'}; text-transform: uppercase;">${os.status}</strong>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    // 2.4 Tabela de Histórico / Alertas
+    const tbodyLogs = document.querySelector('#table-logs tbody');
+    if (tbodyLogs) {
+        const logs = getDB(DB.LOGS).slice(0, 50); // Mostra só os 50 mais recentes
+        tbodyLogs.innerHTML = logs.map(l => `
+            <tr>
+                <td>${l.date}</td>
+                <td><strong>${l.station}</strong></td>
+                <td style="color: ${l.status==='Interditado' ? 'var(--color-red)' : (l.status==='Alerta' ? 'var(--color-yellow)' : 'var(--color-green)')}; font-weight: 700;">${l.status}</td>
+                <td>${l.precip} mm</td>
+                <td><i class="ph ph-check-circle" style="color: var(--color-green);"></i> Concluída</td>
+            </tr>
+        `).join('');
+    }
+}
+
+// Funções globais para os botões de excluir funcionarem
+window.deleteStation = function(id) {
+    if(!confirm("ALERTA: Tem certeza que deseja remover esta estação do sistema?")) return;
+    let stations = getDB(DB.STAS);
+    stations = stations.filter(s => s.id !== id);
+    setDB(DB.STAS, stations);
+    renderTables();
+    renderDashboard(); 
+};
+
+window.deleteUser = function(id) {
+    if(!confirm("ALERTA: Tem certeza que deseja revogar o acesso deste servidor?")) return;
+    let users = getDB(DB.USRS);
+    users = users.filter(u => u.id !== id);
+    setDB(DB.USRS, users);
+    renderTables();
+};
+
+// ----------------------------------------------------
+// 3. LÓGICA DOS BOTÕES E MODAIS
 // ----------------------------------------------------
 function setupModals() {
     const globalModal = document.getElementById('global-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalBody = document.getElementById('modal-body');
 
-    // Função para fechar o modal
     const closeModal = () => globalModal.classList.remove('active');
 
-    // 1. Botão e Formulário de NOVA ESTAÇÃO
+    // Botão Nova Estação
     const btnNewStation = document.getElementById('btn-new-station');
     if(btnNewStation) {
         btnNewStation.addEventListener('click', () => {
@@ -148,10 +243,8 @@ function setupModals() {
             modalBody.appendChild(tpl);
             globalModal.classList.add('active');
 
-            // Cérebro de salvamento:
             document.getElementById('form-station-submit').addEventListener('submit', (e) => {
-                e.preventDefault(); // Impede a página de recarregar
-                
+                e.preventDefault();
                 const stations = getDB(DB.STAS);
                 stations.push({
                     id: Date.now(),
@@ -165,20 +258,32 @@ function setupModals() {
                     cam: document.getElementById('st-cam').value || ''
                 });
                 
-                setDB(DB.STAS, stations); // Salva no banco
+                setDB(DB.STAS, stations);
                 alert("Estação provisionada com sucesso!");
                 closeModal();
-                window.dispatchEvent(new Event('telemetryUpdated')); // Atualiza o mapa na mesma hora
+                window.dispatchEvent(new Event('telemetryUpdated'));
             });
         });
     }
 
-    // 2. Botão e Formulário de NOVO USUÁRIO
+    // Botão Novo Usuário
     const btnNewUser = document.getElementById('btn-new-user');
     if(btnNewUser) {
         btnNewUser.addEventListener('click', () => {
             modalTitle.innerText = "Provisionar Novo Acesso (RBAC)";
             const tpl = document.getElementById('tpl-user-form').content.cloneNode(true);
+            
+            // Popula os checkboxes de permissões de estações
+            const containerStations = tpl.querySelector('#usr-stations-container');
+            const stations = getDB(DB.STAS);
+            stations.forEach(st => {
+                containerStations.innerHTML += `
+                    <label class="checkbox-label">
+                        <input type="checkbox" value="${st.id}" class="station-cb"> ${st.name}
+                    </label>
+                `;
+            });
+
             modalBody.innerHTML = '';
             modalBody.appendChild(tpl);
             globalModal.classList.add('active');
@@ -190,10 +295,18 @@ function setupModals() {
                 });
             }
 
-            // Cérebro de salvamento:
             document.getElementById('form-user-submit').addEventListener('submit', (e) => {
                 e.preventDefault();
                 
+                // Pega as estações marcadas
+                let allowed = [];
+                if (document.getElementById('usr-role').value === 'Admin') {
+                    allowed = 'all';
+                } else {
+                    const cbs = document.querySelectorAll('.station-cb:checked');
+                    cbs.forEach(cb => allowed.push(parseInt(cb.value)));
+                }
+
                 const users = getDB(DB.USRS);
                 users.push({
                     id: Date.now(),
@@ -201,24 +314,24 @@ function setupModals() {
                     email: document.getElementById('usr-email').value,
                     pass: document.getElementById('usr-pass').value,
                     role: document.getElementById('usr-role').value,
-                    allowedStations: document.getElementById('usr-role').value === 'Admin' ? 'all' : []
+                    allowedStations: allowed
                 });
                 
                 setDB(DB.USRS, users);
                 alert("Acesso de Servidor registrado com sucesso!");
                 closeModal();
+                renderTables(); // Atualiza a tabela na hora
             });
         });
     }
 
-    // 3. Botão e Formulário de NOVA ORDEM DE SERVIÇO
+    // Botão Nova OS
     const btnNewOS = document.getElementById('btn-new-os');
     if(btnNewOS) {
         btnNewOS.addEventListener('click', () => {
             modalTitle.innerText = "Abrir Ordem de Serviço";
             const tpl = document.getElementById('tpl-os-form').content.cloneNode(true);
             
-            // Popula a caixinha de escolher as estações com as estações reais
             const selectOs = tpl.querySelector('#os-station');
             const stations = getDB(DB.STAS);
             stations.forEach(st => {
@@ -232,7 +345,6 @@ function setupModals() {
             modalBody.appendChild(tpl);
             globalModal.classList.add('active');
 
-            // Cérebro de salvamento:
             document.getElementById('form-os-submit').addEventListener('submit', (e) => {
                 e.preventDefault();
                 
@@ -249,13 +361,14 @@ function setupModals() {
                 setDB(DB.OS, osList);
                 alert("O.S. registrada no sistema e despachada para a equipe!");
                 closeModal();
+                renderTables(); // Atualiza a tabela na hora
             });
         });
     }
 }
 
 // ----------------------------------------------------
-// 3. RESPONSIVIDADE E NAVEGAÇÃO
+// 4. RESPONSIVIDADE E NAVEGAÇÃO
 // ----------------------------------------------------
 function injectMobileResponsiveness() {
     if(!document.getElementById('sppm-mobile-css')) {
