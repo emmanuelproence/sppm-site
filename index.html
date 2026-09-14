@@ -4,267 +4,172 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SPPM | Sistema Inteligente de Proteção</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
+        /* Premium CSS Reset and Variables */
         :root {
-            --primary-color: #0f172a;
-            --accent-color: #fbbf24;
-            --text-light: #f8fafc;
-            --text-dark: #334155;
+            --primary: #0A192F;
+            --secondary: #112240;
+            --accent: #FBBF24;
+            --text-main: #CCD6F6;
+            --text-muted: #8892B0;
+            --white: #FFFFFF;
         }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--primary); color: var(--text-main); line-height: 1.6; overflow-x: hidden; }
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Montserrat', sans-serif;
-        }
-
-        body {
-            background-color: var(--text-light);
-            color: var(--text-dark);
-            line-height: 1.6;
-        }
-
         /* Navbar */
-        header {
-            background-color: var(--primary-color);
-            padding: 15px 5%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: var(--text-light);
-            font-weight: 800;
-            font-size: 1.5rem;
-            text-decoration: none;
-        }
-
-        .logo img {
-            height: 40px; /* Usa o Logo.jpeg do seu GitHub */
-            border-radius: 4px;
-        }
-
-        .btn-contato {
-            background-color: var(--accent-color);
-            color: var(--primary-color);
-            padding: 10px 24px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: 0.3s;
-        }
-
-        .btn-contato:hover {
-            background-color: #f59e0b;
-        }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 5%; background: rgba(10, 25, 47, 0.9); backdrop-filter: blur(10px); position: fixed; width: 100%; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .logo-container { display: flex; align-items: center; gap: 15px; text-decoration: none; color: var(--white); font-weight: 800; font-size: 1.5rem; letter-spacing: 1px; }
+        .logo-container img { height: 45px; border-radius: 6px; }
+        .btn-primary { background-color: var(--accent); color: var(--primary); padding: 12px 28px; border-radius: 4px; text-decoration: none; font-weight: 600; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.9rem; }
+        .btn-primary:hover { background-color: #F59E0B; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(251, 191, 36, 0.2); }
 
         /* Hero Section */
-        .hero {
-            height: 100vh;
-            background: linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.8)), url('hero.jpg') center/cover;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 0 20px;
-            color: var(--text-light);
-            margin-top: 60px;
-        }
+        .hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding: 0 5%; background-color: var(--primary); overflow: hidden; }
+        .hero-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('hero.jpg') center/cover no-repeat; opacity: 0.4; z-index: 0; }
+        .hero-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, var(--primary) 0%, rgba(10,25,47,0.85) 50%, rgba(10,25,47,0.4) 100%); z-index: 1; }
+        .hero-content { position: relative; z-index: 2; max-width: 800px; animation: fadeInUp 1s ease-out; }
+        .hero h1 { font-size: 3.5rem; color: var(--white); line-height: 1.1; margin-bottom: 25px; letter-spacing: -1px; }
+        .hero h1 span { color: var(--accent); }
+        .hero p { font-size: 1.25rem; color: var(--text-muted); margin-bottom: 40px; max-width: 600px; }
 
-        .hero h1 {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            max-width: 800px;
-        }
+        /* Section: Solution (Rio) */
+        .section { padding: 100px 5%; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+        .text-block h2 { font-size: 2.5rem; color: var(--white); margin-bottom: 20px; line-height: 1.2; }
+        .text-block p { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
+        .feature-list { list-style: none; }
+        .feature-list li { margin-bottom: 20px; display: flex; align-items: flex-start; gap: 15px; }
+        .feature-list h4 { color: var(--white); font-size: 1.2rem; margin-bottom: 5px; }
+        .feature-list p { font-size: 1rem; margin-bottom: 0; }
+        .image-wrapper { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
+        .image-wrapper img { width: 100%; height: auto; display: block; transition: transform 0.5s ease; }
+        .image-wrapper:hover img { transform: scale(1.03); }
 
-        .hero p {
-            font-size: 1.2rem;
-            margin-bottom: 40px;
-            max-width: 600px;
-        }
-
-        /* Como Funciona */
-        .como-funciona {
-            display: flex;
-            flex-wrap: wrap;
-            padding: 80px 5%;
-            gap: 40px;
-            align-items: center;
-            background-color: #ffffff;
-        }
-
-        .como-funciona-img {
-            flex: 1;
-            min-width: 300px;
-        }
-
-        .como-funciona-img img {
-            width: 100%;
-            border-radius: 8px;
-            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
-        }
-
-        .como-funciona-text {
-            flex: 1;
-            min-width: 300px;
-        }
-
-        .como-funciona-text h2 {
-            font-size: 2.2rem;
-            color: var(--primary-color);
-            margin-bottom: 25px;
-        }
-
-        .bullet-point {
-            margin-bottom: 20px;
-        }
-
-        .bullet-point h4 {
-            color: var(--primary-color);
-            font-size: 1.1rem;
-            margin-bottom: 5px;
-        }
-
-        /* Centro de Comando */
-        .comando {
-            padding: 80px 5%;
-            background-color: #f1f5f9;
-            text-align: center;
-        }
-
-        .comando h2 {
-            font-size: 2.2rem;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-        }
-
-        .comando p {
-            font-size: 1.1rem;
-            max-width: 800px;
-            margin: 0 auto 40px auto;
-        }
-
-        .comando img {
-            width: 100%;
-            max-width: 1100px;
-            border-radius: 8px;
-            box-shadow: 0 20px 25px rgba(0,0,0,0.15);
-        }
+        /* Section: Command Center */
+        .bg-secondary { background-color: var(--secondary); }
+        .center-text { text-align: center; max-width: 800px; margin: 0 auto 50px; }
+        .dashboard-showcase { width: 100%; max-width: 1200px; margin: 0 auto; border-radius: 16px; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); }
+        .dashboard-showcase img { width: 100%; display: block; }
 
         /* Footer */
-        footer {
-            background-color: var(--primary-color);
-            color: var(--text-light);
-            padding: 60px 5% 30px;
-            text-align: center;
+        footer { padding: 80px 5% 40px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .footer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 60px; }
+        .footer-info h3 { font-size: 1.5rem; color: var(--white); margin-bottom: 20px; }
+        .footer-info p { margin-bottom: 10px; color: var(--text-muted); }
+        .footer-info strong { color: var(--text-main); }
+        .partners { display: flex; gap: 40px; align-items: center; justify-content: flex-end; }
+        .partners img { height: 70px; filter: grayscale(100%) opacity(0.6); transition: all 0.3s ease; }
+        .partners img:hover { filter: grayscale(0%) opacity(1); }
+        .copyright { text-align: center; color: var(--text-muted); font-size: 0.9rem; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .footer-content {
-            max-width: 600px;
-            margin: 0 auto 40px;
+        /* Responsive */
+        @media (max-width: 992px) {
+            .grid-2 { grid-template-columns: 1fr; gap: 40px; }
+            .hero h1 { font-size: 2.8rem; }
+            .footer-grid { grid-template-columns: 1fr; text-align: center; }
+            .partners { justify-content: center; }
+            .hero-overlay { background: linear-gradient(0deg, var(--primary) 0%, rgba(10,25,47,0.85) 100%); }
         }
-
-        .footer-content h3 {
-            margin-bottom: 15px;
-            color: var(--accent-color);
-        }
-
-        .logos-parceiros {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-top: 40px;
-            align-items: center;
-        }
-
-        /* Corrige os nomes com espaço usando %20 para ler os arquivos que já estão no seu GitHub */
-        .logos-parceiros img {
-            height: 60px;
-            filter: grayscale(100%) brightness(200%);
-            opacity: 0.8;
-            transition: 0.3s;
-        }
-
-        .logos-parceiros img:hover {
-            filter: none;
-            opacity: 1;
-        }
-
         @media (max-width: 768px) {
-            .hero h1 { font-size: 2rem; }
-            header { flex-direction: column; gap: 15px; padding: 15px; }
-            .hero { margin-top: 100px; }
+            .hero h1 { font-size: 2.2rem; }
+            header { padding: 15px 5%; }
         }
     </style>
 </head>
 <body>
 
+    <!-- Header -->
     <header>
-        <a href="#" class="logo">
-            <img src="Logo.jpeg" alt="Logo SPPM" onerror="this.style.display='none'">
+        <a href="#" class="logo-container">
+            <img src="Logo.jpeg" alt="SPPM Logo" onerror="this.style.display='none'">
             SPPM
         </a>
-        <a href="#contato" class="btn-contato">Seja um Parceiro</a>
+        <a href="#contato" class="btn-primary">Seja um Parceiro</a>
     </header>
 
+    <!-- Hero Section -->
     <section class="hero">
-        <h1>Tecnologia a Serviço da Vida em Passagens Molhadas</h1>
-        <p>Sistemas autônomos de contenção e monitoramento com Inteligência Artificial e IoT para infraestrutura pública.</p>
-        <a href="#contato" class="btn-contato" style="padding: 15px 30px; font-size: 1.1rem;">Fale com Especialistas</a>
-    </section>
-
-    <section class="como-funciona">
-        <div class="como-funciona-img">
-            <img src="rio.png" alt="Passagem molhada operando">
-        </div>
-        <div class="como-funciona-text">
-            <h2>A Solução em Ação</h2>
-            <div class="bullet-point">
-                <h4>Detecção Autônoma</h4>
-                <p>Sensores industriais e IA monitoram o nível e a vazão da água 24 horas por dia, 7 dias por semana.</p>
-            </div>
-            <div class="bullet-point">
-                <h4>Bloqueio Físico Imediato</h4>
-                <p>Cancelas e semáforos são acionados automaticamente em níveis críticos de inundação, impedindo fisicamente a travessia de veículos.</p>
-            </div>
-            <div class="bullet-point">
-                <h4>Operação Independente</h4>
-                <p>Alimentação 100% solar, garantindo que o sistema continue salvando vidas mesmo durante quedas de energia causadas por tempestades.</p>
-            </div>
+        <div class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1>Tecnologia a Serviço da Vida em <span>Passagens Molhadas</span></h1>
+            <p>Sistemas autônomos de contenção e monitoramento com Inteligência Artificial e IoT para infraestrutura pública.</p>
+            <a href="#solucao" class="btn-primary">Conheça a Tecnologia</a>
         </div>
     </section>
 
-    <section class="comando">
-        <h2>Visão Operacional B2G</h2>
-        <p>Mapa de operação, alertas automáticos de subida de nível, histórico de interdições e rastreabilidade total de todas as unidades instaladas, diretamente na palma da mão da Defesa Civil.</p>
-        <img src="painel.png" alt="Centro de Comando SPPM">
+    <!-- Solução na Prática -->
+    <section id="solucao" class="section">
+        <div class="grid-2">
+            <div class="image-wrapper">
+                <img src="rio.png" alt="Sistema SPPM operando no rio">
+            </div>
+            <div class="text-block">
+                <h2>Segurança Autônoma de Ponta a Ponta</h2>
+                <p>O SPPM atua na prevenção de acidentes e preservação de vidas através de um hardware robusto integrado a uma lógica inteligente de detecção.</p>
+                <ul class="feature-list">
+                    <li>
+                        <div>
+                            <h4>Detecção IoT Precisa</h4>
+                            <p>Sensores industriais medem o nível e a vazão da água em tempo real, sem depender de operadores humanos.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <div>
+                            <h4>Bloqueio Físico Imediato</h4>
+                            <p>Ao atingir níveis críticos, o sistema aciona semáforos e abaixa as cancelas automaticamente, impedindo a travessia.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <div>
+                            <h4>Alta Disponibilidade</h4>
+                            <p>Alimentação 100% solar com baterias de longa duração, garantindo operação contínua durante tempestades.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </section>
 
+    <!-- Centro de Comando -->
+    <section class="section bg-secondary">
+        <div class="center-text">
+            <div class="text-block">
+                <h2>Centro de Comando B2G</h2>
+                <p>Visão operacional em tempo real para a tomada de decisão da Defesa Civil e Gestão Pública. Monitore todas as unidades do estado em uma única tela.</p>
+            </div>
+        </div>
+        <div class="dashboard-showcase">
+            <img src="painel.png" alt="Dashboard do Centro de Comando SPPM">
+        </div>
+    </section>
+
+    <!-- Footer -->
     <footer id="contato">
-        <div class="footer-content">
-            <h3>Construa a Segurança Viária Conosco</h3>
-            <p>A SPPM busca parceiros industriais e governamentais para escalar a infraestrutura inteligente no Nordeste.</p>
-            <br>
-            <p><strong>Responsável Técnico:</strong> Jaderson Araújo</p>
-            <p><strong>Email:</strong> contato@sppm.com.br</p>
-            <p><strong>Base Acadêmica:</strong> Universidade Federal do Ceará (UFC) - Parque Tecnológico (Partec)</p>
+        <div class="footer-grid">
+            <div class="footer-info">
+                <h3>Construa o Futuro da Segurança Viária</h3>
+                <p>A SPPM busca parceiros industriais para escalar a manufatura e atender a demanda de infraestrutura inteligente no Brasil.</p>
+                <br>
+                <p><strong>Responsável Técnico:</strong> Jaderson Araújo</p>
+                <p><strong>Base Operacional:</strong> Universidade Federal do Ceará (UFC)</p>
+                <p><strong>Incubação:</strong> Parque de Desenvolvimento Tecnológico (PADETEC)</p>
+            </div>
+            <div class="partners">
+                <img src="ufc%20logo.png" alt="UFC">
+                <img src="partec%20logo.png" alt="Partec">
+            </div>
         </div>
-
-        <div class="logos-parceiros">
-            <img src="ufc%20logo.png" alt="UFC">
-            <img src="partec%20logo.png" alt="Partec">
+        <div class="copyright">
+            &copy; 2026 SPPM - Sistema de Proteção de Passagem Molhada. Todos os direitos reservados.
         </div>
     </footer>
 
