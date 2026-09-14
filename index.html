@@ -1,177 +1,1048 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPPM | Sistema Inteligente de Proteção</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <style>
-        /* Premium CSS Reset and Variables */
-        :root {
-            --primary: #0A192F;
-            --secondary: #112240;
-            --accent: #FBBF24;
-            --text-main: #CCD6F6;
-            --text-muted: #8892B0;
-            --white: #FFFFFF;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--primary); color: var(--text-main); line-height: 1.6; overflow-x: hidden; }
-        
-        /* Navbar */
-        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 5%; background: rgba(10, 25, 47, 0.9); backdrop-filter: blur(10px); position: fixed; width: 100%; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .logo-container { display: flex; align-items: center; gap: 15px; text-decoration: none; color: var(--white); font-weight: 800; font-size: 1.5rem; letter-spacing: 1px; }
-        .logo-container img { height: 45px; border-radius: 6px; }
-        .btn-primary { background-color: var(--accent); color: var(--primary); padding: 12px 28px; border-radius: 4px; text-decoration: none; font-weight: 600; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.9rem; }
-        .btn-primary:hover { background-color: #F59E0B; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(251, 191, 36, 0.2); }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPPM — Sistema de Proteção de Passagens Molhadas</title>
+<meta name="description" content="Contenção e monitoramento autônomo para passagens molhadas, com IA, IoT e energia solar. Infraestrutura de segurança viária para Defesa Civil e municípios.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1F35;
+    --ink-2:#132C49;
+    --steel:#4C596C;
+    --steel-light:#8592A3;
+    --paper:#F3F5F7;
+    --panel:#FFFFFF;
+    --line:#DCE1E7;
+    --amber:#E1993C;
+    --amber-dark:#B9782A;
+    --teal:#0E7490;
+    --danger:#B23A2A;
+    --radius-sm:3px;
+    --radius-md:6px;
+    --maxw:1180px;
+  }
 
-        /* Hero Section */
-        .hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding: 0 5%; background-color: var(--primary); overflow: hidden; }
-        .hero-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('hero.jpg') center/cover no-repeat; opacity: 0.4; z-index: 0; }
-        .hero-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, var(--primary) 0%, rgba(10,25,47,0.85) 50%, rgba(10,25,47,0.4) 100%); z-index: 1; }
-        .hero-content { position: relative; z-index: 2; max-width: 800px; animation: fadeInUp 1s ease-out; }
-        .hero h1 { font-size: 3.5rem; color: var(--white); line-height: 1.1; margin-bottom: 25px; letter-spacing: -1px; }
-        .hero h1 span { color: var(--accent); }
-        .hero p { font-size: 1.25rem; color: var(--text-muted); margin-bottom: 40px; max-width: 600px; }
+  *{ margin:0; padding:0; box-sizing:border-box; }
 
-        /* Section: Solution (Rio) */
-        .section { padding: 100px 5%; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
-        .text-block h2 { font-size: 2.5rem; color: var(--white); margin-bottom: 20px; line-height: 1.2; }
-        .text-block p { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; }
-        .feature-list { list-style: none; }
-        .feature-list li { margin-bottom: 20px; display: flex; align-items: flex-start; gap: 15px; }
-        .feature-list h4 { color: var(--white); font-size: 1.2rem; margin-bottom: 5px; }
-        .feature-list p { font-size: 1rem; margin-bottom: 0; }
-        .image-wrapper { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
-        .image-wrapper img { width: 100%; height: auto; display: block; transition: transform 0.5s ease; }
-        .image-wrapper:hover img { transform: scale(1.03); }
+  html{ scroll-behavior:smooth; }
 
-        /* Section: Command Center */
-        .bg-secondary { background-color: var(--secondary); }
-        .center-text { text-align: center; max-width: 800px; margin: 0 auto 50px; }
-        .dashboard-showcase { width: 100%; max-width: 1200px; margin: 0 auto; border-radius: 16px; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); }
-        .dashboard-showcase img { width: 100%; display: block; }
+  body{
+    background:var(--paper);
+    color:var(--steel);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:16px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
 
-        /* Footer */
-        footer { padding: 80px 5% 40px; border-top: 1px solid rgba(255,255,255,0.05); }
-        .footer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 60px; }
-        .footer-info h3 { font-size: 1.5rem; color: var(--white); margin-bottom: 20px; }
-        .footer-info p { margin-bottom: 10px; color: var(--text-muted); }
-        .footer-info strong { color: var(--text-main); }
-        .partners { display: flex; gap: 40px; align-items: center; justify-content: flex-end; }
-        .partners img { height: 70px; filter: grayscale(100%) opacity(0.6); transition: all 0.3s ease; }
-        .partners img:hover { filter: grayscale(0%) opacity(1); }
-        .copyright { text-align: center; color: var(--text-muted); font-size: 0.9rem; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); }
+  h1,h2,h3,h4{
+    font-family:'IBM Plex Serif', serif;
+    color:var(--ink);
+    font-weight:600;
+    line-height:1.25;
+  }
 
-        /* Animations */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+  .mono{
+    font-family:'IBM Plex Mono', monospace;
+  }
 
-        /* Responsive */
-        @media (max-width: 992px) {
-            .grid-2 { grid-template-columns: 1fr; gap: 40px; }
-            .hero h1 { font-size: 2.8rem; }
-            .footer-grid { grid-template-columns: 1fr; text-align: center; }
-            .partners { justify-content: center; }
-            .hero-overlay { background: linear-gradient(0deg, var(--primary) 0%, rgba(10,25,47,0.85) 100%); }
-        }
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 2.2rem; }
-            header { padding: 15px 5%; }
-        }
-    </style>
+  a{ color:inherit; }
+
+  img{ max-width:100%; display:block; }
+
+  .wrap{
+    max-width:var(--maxw);
+    margin:0 auto;
+    padding:0 32px;
+  }
+
+  :focus-visible{
+    outline:2px solid var(--amber);
+    outline-offset:3px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    position:fixed;
+    top:0; left:0; right:0;
+    z-index:1000;
+    background:rgba(11,31,53,0.96);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+
+  .nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    height:72px;
+    max-width:var(--maxw);
+    margin:0 auto;
+    padding:0 32px;
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    text-decoration:none;
+    color:#fff;
+  }
+
+  .brand img{
+    height:34px;
+    width:34px;
+    object-fit:cover;
+    border-radius:4px;
+  }
+
+  .brand-name{
+    font-family:'IBM Plex Serif', serif;
+    font-weight:600;
+    font-size:1.15rem;
+    letter-spacing:0.3px;
+  }
+
+  .brand-sub{
+    display:block;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:0.68rem;
+    color:var(--steel-light);
+    font-weight:400;
+    margin-top:1px;
+  }
+
+  .nav-links{
+    display:flex;
+    align-items:center;
+    gap:36px;
+    list-style:none;
+  }
+
+  .nav-links a{
+    color:#D7DEE7;
+    text-decoration:none;
+    font-size:0.92rem;
+    font-weight:500;
+    transition:color 0.2s;
+  }
+
+  .nav-links a:hover{ color:#fff; }
+
+  .status-pill{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    color:#A9E0C4;
+    border:1px solid rgba(169,224,196,0.35);
+    padding:5px 11px;
+    border-radius:20px;
+  }
+
+  .status-dot{
+    width:7px; height:7px;
+    border-radius:50%;
+    background:#4ADE80;
+    box-shadow:0 0 0 0 rgba(74,222,128,0.6);
+    animation:pulse 2.2s infinite;
+  }
+
+  @keyframes pulse{
+    0%{ box-shadow:0 0 0 0 rgba(74,222,128,0.5); }
+    70%{ box-shadow:0 0 0 7px rgba(74,222,128,0); }
+    100%{ box-shadow:0 0 0 0 rgba(74,222,128,0); }
+  }
+
+  .btn{
+    display:inline-block;
+    padding:11px 22px;
+    border-radius:var(--radius-sm);
+    font-weight:600;
+    font-size:0.92rem;
+    text-decoration:none;
+    border:1px solid transparent;
+    cursor:pointer;
+    transition:all 0.2s ease;
+  }
+
+  .btn-primary{
+    background:var(--amber);
+    color:var(--ink);
+  }
+  .btn-primary:hover{ background:#eaa957; }
+
+  .btn-ghost{
+    background:transparent;
+    border-color:rgba(255,255,255,0.3);
+    color:#fff;
+  }
+  .btn-ghost:hover{ border-color:#fff; }
+
+  .nav-toggle{
+    display:none;
+    background:none;
+    border:none;
+    color:#fff;
+    font-size:1.6rem;
+    cursor:pointer;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    background:
+      radial-gradient(ellipse 900px 500px at 85% -10%, rgba(14,116,144,0.35), transparent 60%),
+      linear-gradient(180deg, var(--ink) 0%, var(--ink-2) 100%);
+    padding:168px 0 96px;
+    color:#fff;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .hero-grid{
+    display:grid;
+    grid-template-columns:1.05fr 0.95fr;
+    gap:56px;
+    align-items:center;
+  }
+
+  .eyebrow-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:22px;
+  }
+
+  .eyebrow-line{
+    width:28px; height:2px;
+    background:var(--amber);
+  }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    color:#C7D3E0;
+    letter-spacing:0.02em;
+  }
+
+  .hero h1{
+    color:#fff;
+    font-size:2.85rem;
+    max-width:600px;
+    margin-bottom:22px;
+  }
+
+  .hero-lede{
+    font-size:1.08rem;
+    color:#C7D3E0;
+    max-width:520px;
+    margin-bottom:36px;
+  }
+
+  .hero-actions{
+    display:flex;
+    gap:14px;
+    margin-bottom:52px;
+    flex-wrap:wrap;
+  }
+
+  .hero-meta{
+    display:flex;
+    gap:38px;
+    flex-wrap:wrap;
+    border-top:1px solid rgba(255,255,255,0.14);
+    padding-top:26px;
+  }
+
+  .hero-meta-item .num{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:1.5rem;
+    color:var(--amber);
+    font-weight:600;
+    display:block;
+  }
+
+  .hero-meta-item .label{
+    font-size:0.82rem;
+    color:#9FB0C3;
+    margin-top:2px;
+  }
+
+  /* Hero diagram */
+  .hero-panel{
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:var(--radius-md);
+    padding:22px;
+    backdrop-filter:blur(2px);
+  }
+
+  .hero-panel-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    color:#9FB0C3;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+    padding-bottom:12px;
+  }
+
+  .hero-panel-head .tag{
+    color:var(--amber);
+    font-weight:600;
+  }
+
+  .readout{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.74rem;
+    color:#C7D3E0;
+    display:flex;
+    justify-content:space-between;
+    padding-top:14px;
+  }
+
+  .readout strong{
+    color:#fff;
+    font-size:0.95rem;
+  }
+
+  .readout.critical strong{ color:#F0A784; }
+
+  /* ---------- Sections general ---------- */
+  section{
+    padding:88px 0;
+  }
+
+  .section-head{
+    max-width:640px;
+    margin-bottom:52px;
+  }
+
+  .section-tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    color:var(--teal);
+    margin-bottom:12px;
+    display:block;
+  }
+
+  .section-head h2{
+    font-size:2rem;
+    margin-bottom:14px;
+  }
+
+  .section-head p{
+    font-size:1.03rem;
+    color:var(--steel);
+  }
+
+  /* ---------- Contexto / problema ---------- */
+  .contexto{
+    background:var(--panel);
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+
+  .contexto-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:64px;
+    align-items:start;
+  }
+
+  .contexto-grid h3{
+    font-size:1.5rem;
+    margin-bottom:16px;
+  }
+
+  .contexto-grid p{
+    margin-bottom:16px;
+  }
+
+  .fact-list{
+    list-style:none;
+    border-top:1px solid var(--line);
+  }
+
+  .fact-list li{
+    display:flex;
+    gap:16px;
+    padding:18px 0;
+    border-bottom:1px solid var(--line);
+  }
+
+  .fact-list .fig{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    color:var(--danger);
+    min-width:64px;
+    font-size:0.95rem;
+  }
+
+  .fact-list .desc{
+    font-size:0.94rem;
+    color:var(--steel);
+  }
+
+  /* ---------- Como funciona ---------- */
+  .steps{
+    counter-reset:step;
+  }
+
+  .step-row{
+    display:grid;
+    grid-template-columns:88px 1fr;
+    gap:28px;
+    padding:32px 0;
+    border-top:1px solid var(--line);
+  }
+
+  .steps .step-row:last-child{
+    border-bottom:1px solid var(--line);
+  }
+
+  .step-num{
+    counter-increment:step;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.85rem;
+    color:var(--teal);
+    padding-top:4px;
+  }
+
+  .step-num::before{
+    content:"0" counter(step);
+  }
+
+  .step-body h4{
+    font-size:1.2rem;
+    color:var(--ink);
+    margin-bottom:8px;
+  }
+
+  .step-body p{
+    max-width:620px;
+    color:var(--steel);
+  }
+
+  .como-media{
+    margin-top:56px;
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    overflow:hidden;
+  }
+
+  .como-media img{ width:100%; }
+
+  .como-media-caption{
+    padding:14px 20px;
+    font-size:0.86rem;
+    color:var(--steel-light);
+    background:var(--panel);
+    border-top:1px solid var(--line);
+    font-family:'IBM Plex Mono', monospace;
+  }
+
+  /* ---------- Especificações técnicas ---------- */
+  .tecnologia{
+    background:var(--ink);
+    color:#fff;
+  }
+
+  .tecnologia .section-head h2,
+  .tecnologia .section-head p{
+    color:#fff;
+  }
+  .tecnologia .section-head p{ color:#B9C6D6; }
+
+  .spec-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:1px;
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.12);
+  }
+
+  .spec-card{
+    background:var(--ink-2);
+    padding:30px 26px;
+  }
+
+  .spec-card .idx{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.75rem;
+    color:var(--amber);
+    display:block;
+    margin-bottom:14px;
+  }
+
+  .spec-card h4{
+    color:#fff;
+    font-size:1.05rem;
+    margin-bottom:10px;
+  }
+
+  .spec-card p{
+    color:#AEBBCC;
+    font-size:0.92rem;
+  }
+
+  /* ---------- Painel / comando ---------- */
+  .comando{
+    background:var(--paper);
+  }
+
+  .comando-layout{
+    display:grid;
+    grid-template-columns:0.9fr 1.4fr;
+    gap:48px;
+    align-items:center;
+  }
+
+  .comando-feature{
+    display:flex;
+    gap:14px;
+    padding:16px 0;
+    border-top:1px solid var(--line);
+  }
+
+  .comando-feature:last-child{ border-bottom:1px solid var(--line); }
+
+  .comando-feature .dot{
+    width:8px; height:8px;
+    border-radius:50%;
+    background:var(--teal);
+    margin-top:8px;
+    flex-shrink:0;
+  }
+
+  .comando-feature h5{
+    color:var(--ink);
+    font-size:1rem;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-weight:600;
+    margin-bottom:4px;
+  }
+
+  .comando-feature p{
+    font-size:0.9rem;
+    color:var(--steel);
+  }
+
+  .painel-frame{
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    overflow:hidden;
+    background:var(--panel);
+    box-shadow:0 24px 48px -24px rgba(11,31,53,0.25);
+  }
+
+  .painel-frame-bar{
+    display:flex;
+    gap:6px;
+    padding:12px 14px;
+    background:#EDEFF2;
+    border-bottom:1px solid var(--line);
+  }
+
+  .painel-frame-bar span{
+    width:9px; height:9px;
+    border-radius:50%;
+    background:#CBD2DA;
+  }
+
+  /* ---------- Parceiros ---------- */
+  .parceiros{
+    border-top:1px solid var(--line);
+    background:var(--panel);
+  }
+
+  .parceiros-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:24px;
+    margin-bottom:44px;
+    flex-wrap:wrap;
+  }
+
+  .parceiros-head h2{ font-size:1.6rem; }
+
+  .base-academica{
+    display:flex;
+    align-items:center;
+    gap:28px;
+    padding:28px;
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    flex-wrap:wrap;
+  }
+
+  .base-academica img{
+    height:52px;
+    filter:grayscale(100%);
+    opacity:0.75;
+  }
+
+  .base-academica p{
+    font-size:0.92rem;
+    color:var(--steel);
+    max-width:520px;
+  }
+
+  /* ---------- CTA final ---------- */
+  .cta-final{
+    background:linear-gradient(120deg, var(--ink) 0%, #0C2A44 100%);
+    color:#fff;
+    text-align:left;
+  }
+
+  .cta-final-inner{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:40px;
+    flex-wrap:wrap;
+  }
+
+  .cta-final h2{
+    color:#fff;
+    font-size:1.9rem;
+    max-width:480px;
+    margin-bottom:10px;
+  }
+
+  .cta-final p{
+    color:#B9C6D6;
+    max-width:480px;
+  }
+
+  /* ---------- Footer ---------- */
+  footer{
+    background:var(--ink);
+    color:#B9C6D6;
+    padding:64px 0 28px;
+  }
+
+  .footer-grid{
+    display:grid;
+    grid-template-columns:1.3fr 1fr 1fr;
+    gap:48px;
+    padding-bottom:40px;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+  }
+
+  .footer-grid h5{
+    color:#fff;
+    font-size:0.95rem;
+    margin-bottom:16px;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-weight:600;
+  }
+
+  .footer-grid p, .footer-grid a{
+    font-size:0.9rem;
+    color:#9FB0C3;
+    text-decoration:none;
+    display:block;
+    margin-bottom:10px;
+  }
+
+  .footer-grid a:hover{ color:#fff; }
+
+  .footer-bottom{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding-top:26px;
+    flex-wrap:wrap;
+    gap:16px;
+    font-size:0.82rem;
+    color:#7C8CA0;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 900px){
+    .nav-links{
+      position:fixed;
+      top:72px; left:0; right:0;
+      background:var(--ink);
+      flex-direction:column;
+      align-items:flex-start;
+      padding:24px 32px;
+      gap:20px;
+      border-bottom:1px solid rgba(255,255,255,0.1);
+      display:none;
+    }
+    .nav-links.open{ display:flex; }
+    .nav-toggle{ display:block; }
+    .status-pill{ display:none; }
+
+    .hero-grid,
+    .contexto-grid,
+    .comando-layout{
+      grid-template-columns:1fr;
+    }
+    .hero{ padding-top:132px; }
+    .hero h1{ font-size:2.1rem; }
+    .spec-grid{ grid-template-columns:1fr; }
+    .footer-grid{ grid-template-columns:1fr; gap:32px; }
+    .cta-final-inner{ flex-direction:column; align-items:flex-start; }
+    section{ padding:64px 0; }
+  }
+</style>
 </head>
 <body>
 
-    <!-- Header -->
-    <header>
-        <a href="#" class="logo-container">
-            <img src="Logo.jpeg" alt="SPPM Logo" onerror="this.style.display='none'">
-            SPPM
-        </a>
-        <a href="#contato" class="btn-primary">Seja um Parceiro</a>
-    </header>
+<header>
+  <nav class="nav">
+    <a href="#" class="brand">
+      <img src="Logo.jpeg" alt="Logo SPPM" onerror="this.style.display='none'">
+      <span>
+        <span class="brand-name">SPPM</span>
+        <span class="brand-sub">Passagens Molhadas Seguras</span>
+      </span>
+    </a>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-bg"></div>
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <h1>Tecnologia a Serviço da Vida em <span>Passagens Molhadas</span></h1>
-            <p>Sistemas autônomos de contenção e monitoramento com Inteligência Artificial e IoT para infraestrutura pública.</p>
-            <a href="#solucao" class="btn-primary">Conheça a Tecnologia</a>
-        </div>
-    </section>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#funciona">Como funciona</a></li>
+      <li><a href="#tecnologia">Tecnologia</a></li>
+      <li><a href="#painel">Painel de comando</a></li>
+      <li><a href="#parceiros">Parceiros</a></li>
+      <li><a href="#contato" class="btn btn-primary">Seja um parceiro</a></li>
+    </ul>
 
-    <!-- Solução na Prática -->
-    <section id="solucao" class="section">
-        <div class="grid-2">
-            <div class="image-wrapper">
-                <img src="rio.png" alt="Sistema SPPM operando no rio">
-            </div>
-            <div class="text-block">
-                <h2>Segurança Autônoma de Ponta a Ponta</h2>
-                <p>O SPPM atua na prevenção de acidentes e preservação de vidas através de um hardware robusto integrado a uma lógica inteligente de detecção.</p>
-                <ul class="feature-list">
-                    <li>
-                        <div>
-                            <h4>Detecção IoT Precisa</h4>
-                            <p>Sensores industriais medem o nível e a vazão da água em tempo real, sem depender de operadores humanos.</p>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <h4>Bloqueio Físico Imediato</h4>
-                            <p>Ao atingir níveis críticos, o sistema aciona semáforos e abaixa as cancelas automaticamente, impedindo a travessia.</p>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <h4>Alta Disponibilidade</h4>
-                            <p>Alimentação 100% solar com baterias de longa duração, garantindo operação contínua durante tempestades.</p>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </section>
+    <div style="display:flex; align-items:center; gap:16px;">
+      <span class="status-pill"><span class="status-dot"></span>Rede ativa · monitoramento contínuo</span>
+      <button class="nav-toggle" id="navToggle" aria-label="Abrir menu" aria-expanded="false">☰</button>
+    </div>
+  </nav>
+</header>
 
-    <!-- Centro de Comando -->
-    <section class="section bg-secondary">
-        <div class="center-text">
-            <div class="text-block">
-                <h2>Centro de Comando B2G</h2>
-                <p>Visão operacional em tempo real para a tomada de decisão da Defesa Civil e Gestão Pública. Monitore todas as unidades do estado em uma única tela.</p>
-            </div>
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow-row">
+        <span class="eyebrow-line"></span>
+        <span class="eyebrow">Infraestrutura de segurança viária · B2G</span>
+      </div>
+      <h1>Passagens molhadas não precisam custar vidas.</h1>
+      <p class="hero-lede">
+        A SPPM projeta e opera sistemas autônomos de contenção que detectam a subida do nível da água
+        e bloqueiam fisicamente a travessia antes que ela se torne uma tragédia — sem depender de
+        rede elétrica, sinal ou intervenção humana no momento crítico.
+      </p>
+      <div class="hero-actions">
+        <a href="#contato" class="btn btn-primary">Falar com especialistas</a>
+        <a href="#funciona" class="btn btn-ghost">Ver como funciona</a>
+      </div>
+      <div class="hero-meta">
+        <div class="hero-meta-item">
+          <span class="num mono">24/7</span>
+          <span class="label">monitoramento do nível da água</span>
         </div>
-        <div class="dashboard-showcase">
-            <img src="painel.png" alt="Dashboard do Centro de Comando SPPM">
+        <div class="hero-meta-item">
+          <span class="num mono">100%</span>
+          <span class="label">operação a energia solar</span>
         </div>
-    </section>
+        <div class="hero-meta-item">
+          <span class="num mono">&lt;30s</span>
+          <span class="label">do alerta ao bloqueio físico</span>
+        </div>
+      </div>
+    </div>
 
-    <!-- Footer -->
-    <footer id="contato">
-        <div class="footer-grid">
-            <div class="footer-info">
-                <h3>Construa o Futuro da Segurança Viária</h3>
-                <p>A SPPM busca parceiros industriais para escalar a manufatura e atender a demanda de infraestrutura inteligente no Brasil.</p>
-                <br>
-                <p><strong>Responsável Técnico:</strong> Jaderson Araújo</p>
-                <p><strong>Base Operacional:</strong> Universidade Federal do Ceará (UFC)</p>
-                <p><strong>Incubação:</strong> Parque de Desenvolvimento Tecnológico (PADETEC)</p>
-            </div>
-            <div class="partners">
-                <img src="ufc%20logo.png" alt="UFC">
-                <img src="partec%20logo.png" alt="Partec">
-            </div>
-        </div>
-        <div class="copyright">
-            &copy; 2026 SPPM - Sistema de Proteção de Passagem Molhada. Todos os direitos reservados.
-        </div>
-    </footer>
+    <div class="hero-panel">
+      <div class="hero-panel-head">
+        <span>UNIDADE SPPM-04 · RIACHO DO CÓRREGO SECO</span>
+        <span class="tag">● CRÍTICO</span>
+      </div>
+      <svg viewBox="0 0 460 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagrama esquemático de sensor de nível e cancela automática sobre uma passagem molhada">
+        <defs>
+          <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1B7A93" stop-opacity="0.85"/>
+            <stop offset="100%" stop-color="#0E5C70" stop-opacity="0.95"/>
+          </linearGradient>
+        </defs>
+
+        <!-- road -->
+        <rect x="0" y="230" width="460" height="70" fill="#22364F"/>
+        <rect x="0" y="230" width="460" height="4" fill="#3A4F6A"/>
+
+        <!-- water rising, animated -->
+        <rect x="0" y="150" width="460" height="80" fill="url(#waterGrad)">
+          <animate attributeName="y" values="170;150;170" dur="6s" repeatCount="indefinite"/>
+          <animate attributeName="height" values="60;80;60" dur="6s" repeatCount="indefinite"/>
+        </rect>
+        <path d="M0 150 Q 20 145 40 150 T 80 150 T 120 150 T 160 150 T 200 150 T 240 150 T 280 150 T 320 150 T 360 150 T 400 150 T 440 150 T 460 150" stroke="#4FB6CE" stroke-width="2" fill="none" opacity="0.6">
+          <animate attributeName="d" dur="6s" repeatCount="indefinite"
+            values="
+            M0 150 Q 20 145 40 150 T 80 150 T 120 150 T 160 150 T 200 150 T 240 150 T 280 150 T 320 150 T 360 150 T 400 150 T 440 150 T 460 150;
+            M0 130 Q 20 125 40 130 T 80 130 T 120 130 T 160 130 T 200 130 T 240 130 T 280 130 T 320 130 T 360 130 T 400 130 T 440 130 T 460 130;
+            M0 150 Q 20 145 40 150 T 80 150 T 120 150 T 160 150 T 200 150 T 240 150 T 280 150 T 320 150 T 360 150 T 400 150 T 440 150 T 460 150"/>
+        </path>
+
+        <!-- sensor pole -->
+        <rect x="60" y="60" width="6" height="175" fill="#8592A3"/>
+        <circle cx="63" cy="60" r="9" fill="#E1993C"/>
+        <circle cx="63" cy="60" r="16" fill="none" stroke="#E1993C" stroke-width="1.5" opacity="0.6">
+          <animate attributeName="r" values="10;24;10" dur="2.4s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.7;0;0.7" dur="2.4s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- barrier gate -->
+        <rect x="330" y="175" width="14" height="60" fill="#8592A3"/>
+        <g transform="rotate(-28 337 178)">
+          <rect x="337" y="172" width="95" height="10" fill="#E1993C"/>
+          <rect x="337" y="172" width="18" height="10" fill="#22364F"/>
+          <rect x="373" y="172" width="18" height="10" fill="#22364F"/>
+          <rect x="409" y="172" width="18" height="10" fill="#22364F"/>
+        </g>
+
+        <!-- signal line to command center -->
+        <path d="M63 60 C 150 20, 300 20, 400 55" stroke="#4FB6CE" stroke-width="1.5" stroke-dasharray="4 5" fill="none" opacity="0.7"/>
+        <rect x="392" y="30" width="52" height="34" rx="3" fill="#0F2740" stroke="#4FB6CE" stroke-opacity="0.5"/>
+        <text x="418" y="51" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="9" fill="#4FB6CE">CDC</text>
+      </svg>
+      <div class="readout critical">
+        <span>Nível atual<br><strong>1,84 m</strong></span>
+        <span>Limiar crítico<br><strong>1,50 m</strong></span>
+        <span>Status da cancela<br><strong>Acionada</strong></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="contexto">
+  <div class="wrap contexto-grid">
+    <div>
+      <span class="section-tag mono">O problema</span>
+      <h3>Um risco previsível, mas raramente monitorado em tempo real.</h3>
+      <p>
+        Passagens molhadas fazem parte da malha viária de centenas de municípios no Nordeste, ligando
+        comunidades a serviços essenciais durante boa parte do ano. O risco aparece justamente quando
+        elas mais importam: em períodos de chuva forte, quando o nível da água sobe rápido, a visibilidade
+        cai e motoristas seguem em frente por falta de um sinal físico e imediato de que a travessia
+        não é segura.
+      </p>
+      <p>
+        Sinalização estática e boletins de alerta ajudam, mas não impedem fisicamente a travessia no
+        momento em que ela se torna perigosa. É essa lacuna — entre o alerta e a ação — que o sistema
+        da SPPM foi desenhado para fechar.
+      </p>
+    </div>
+    <ul class="fact-list">
+      <li>
+        <span class="fig mono">01</span>
+        <span class="desc">Nível da água pode subir de forma abrupta durante chuvas intensas, sem tempo hábil para intervenção manual.</span>
+      </li>
+      <li>
+        <span class="fig mono">02</span>
+        <span class="desc">Grande parte das passagens molhadas do interior não possui monitoramento remoto nem histórico digital de ocorrências.</span>
+      </li>
+      <li>
+        <span class="fig mono">03</span>
+        <span class="desc">Equipes de Defesa Civil frequentemente ficam sabendo de uma travessia perigosa depois que o risco já se concretizou.</span>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<section id="funciona" class="wrap">
+  <div class="section-head">
+    <span class="section-tag mono">Como funciona</span>
+    <h2>Do sensor à cancela, sem depender de rede elétrica ou humana.</h2>
+    <p>O sistema opera em três camadas que trabalham de forma contínua e independente, mesmo em condições de tempestade.</p>
+  </div>
+
+  <div class="steps">
+    <div class="step-row">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Detecção autônoma</h4>
+        <p>Sensores industriais medem o nível e a vazão da água continuamente. Os dados são processados
+        por um modelo de IA embarcado que reconhece padrões de subida e antecipa o momento crítico,
+        em vez de reagir apenas a um limiar fixo.</p>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Bloqueio físico imediato</h4>
+        <p>Ao atingir um nível crítico, cancelas e semáforos são acionados automaticamente, impedindo
+        fisicamente a travessia de veículos — o alerta se torna uma barreira, não apenas um aviso.</p>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-num"></div>
+      <div class="step-body">
+        <h4>Operação independente</h4>
+        <p>Alimentação 100% solar com baterias de reserva garante que o sistema continue funcionando
+        durante quedas de energia causadas por tempestades — justamente quando mais é necessário.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="como-media">
+    <img src="rio.png" alt="Passagem molhada com sistema SPPM instalado, em operação">
+    <div class="como-media-caption">FIG. 01 — Unidade SPPM instalada em passagem molhada, Ceará</div>
+  </div>
+</section>
+
+<section id="tecnologia" class="tecnologia">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="section-tag mono" style="color:#7FD4E8;">Especificações</span>
+      <h2>Construído para operar sem manutenção constante, em campo.</h2>
+      <p>Cada unidade é projetada para resistir às condições de instalação remota: sol intenso, chuva forte e conectividade limitada.</p>
+    </div>
+
+    <div class="spec-grid">
+      <div class="spec-card">
+        <span class="idx mono">01 · SENSORIAMENTO</span>
+        <h4>Medição contínua de nível e vazão</h4>
+        <p>Sensores industriais com leitura a cada poucos segundos, calibrados para água turva e detritos.</p>
+      </div>
+      <div class="spec-card">
+        <span class="idx mono">02 · ENERGIA</span>
+        <h4>Autonomia 100% solar</h4>
+        <p>Painéis fotovoltaicos com banco de baterias dimensionado para dias seguidos sem sol direto.</p>
+      </div>
+      <div class="spec-card">
+        <span class="idx mono">03 · CONECTIVIDADE</span>
+        <h4>Comunicação redundante</h4>
+        <p>Transmissão de dados para o centro de comando com rota alternativa quando o sinal principal falha.</p>
+      </div>
+      <div class="spec-card">
+        <span class="idx mono">04 · ATUAÇÃO</span>
+        <h4>Bloqueio mecânico robusto</h4>
+        <p>Cancelas e sinalização luminosa dimensionadas para operação sob chuva e vento intensos.</p>
+      </div>
+      <div class="spec-card">
+        <span class="idx mono">05 · INTELIGÊNCIA</span>
+        <h4>Modelo preditivo embarcado</h4>
+        <p>Reconhece a velocidade de subida da água, não apenas o nível — reduzindo falsos negativos.</p>
+      </div>
+      <div class="spec-card">
+        <span class="idx mono">06 · INSTALAÇÃO</span>
+        <h4>Estrutura modular</h4>
+        <p>Montagem adaptável ao formato de cada passagem, sem obras civis de grande porte.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="painel" class="comando">
+  <div class="wrap comando-layout">
+    <div>
+      <span class="section-tag mono">Centro de comando</span>
+      <h2 style="font-size:1.9rem; margin-bottom:18px;">Visibilidade total, direto na mão da Defesa Civil.</h2>
+      <p style="margin-bottom:8px; color:var(--steel);">Um painel único para acompanhar todas as unidades instaladas, sem depender de visitas de campo para saber o que está acontecendo.</p>
+
+      <div class="comando-feature">
+        <span class="dot"></span>
+        <div><h5>Mapa de operação em tempo real</h5><p>Status de cada unidade — normal, atenção ou bloqueio ativo — visível de forma imediata.</p></div>
+      </div>
+      <div class="comando-feature">
+        <span class="dot"></span>
+        <div><h5>Alertas automáticos de subida de nível</h5><p>Notificações antes do bloqueio físico, para acionamento preventivo de equipes.</p></div>
+      </div>
+      <div class="comando-feature">
+        <span class="dot"></span>
+        <div><h5>Histórico de interdições</h5><p>Registro completo de cada acionamento, com data, duração e nível registrado.</p></div>
+      </div>
+      <div class="comando-feature">
+        <span class="dot"></span>
+        <div><h5>Rastreabilidade das unidades</h5><p>Status de bateria, conectividade e manutenção de todo o parque instalado.</p></div>
+      </div>
+    </div>
+
+    <div class="painel-frame">
+      <div class="painel-frame-bar"><span></span><span></span><span></span></div>
+      <img src="painel.png" alt="Painel de comando SPPM mostrando mapa de unidades e alertas">
+    </div>
+  </div>
+</section>
+
+<section id="parceiros" class="parceiros">
+  <div class="wrap">
+    <div class="parceiros-head">
+      <div>
+        <span class="section-tag mono">Base institucional</span>
+        <h2>Desenvolvido com rigor acadêmico, pronto para escala industrial.</h2>
+      </div>
+    </div>
+
+    <div class="base-academica">
+      <img src="ufc%20logo.png" alt="Universidade Federal do Ceará">
+      <img src="partec%20logo.png" alt="Parque Tecnológico Partec">
+      <p>
+        A SPPM nasceu na Universidade Federal do Ceará, com apoio do Parque Tecnológico (Partec),
+        e busca agora parceiros industriais e governamentais para escalar a infraestrutura de segurança
+        viária inteligente no Nordeste.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="cta-final">
+  <div class="wrap cta-final-inner">
+    <div>
+      <h2>Vamos levar essa infraestrutura ao seu município?</h2>
+      <p>Conversamos com equipes técnicas de Defesa Civil, prefeituras e parceiros industriais sobre projetos-piloto e escala.</p>
+    </div>
+    <a href="#contato" class="btn btn-primary">Agendar conversa técnica</a>
+  </div>
+</section>
+
+<footer id="contato">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <h5>SPPM</h5>
+        <p>Sistemas autônomos de contenção e monitoramento para passagens molhadas, com IA, IoT e energia solar.</p>
+      </div>
+      <div>
+        <h5>Contato</h5>
+        <p><strong style="color:#fff;">Responsável técnico</strong><br>Jaderson Araújo</p>
+        <a href="mailto:contato@sppm.com.br">contato@sppm.com.br</a>
+      </div>
+      <div>
+        <h5>Base acadêmica</h5>
+        <p>Universidade Federal do Ceará (UFC)<br>Parque Tecnológico — Partec</p>
+      </div>
+    </div>
+    <div class="footer-bottom wrap" style="padding-left:0; padding-right:0;">
+      <span>© <span id="year"></span> SPPM — Sistema de Proteção de Passagens Molhadas.</span>
+      <span>Fortaleza, Ceará — Brasil</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  const toggle = document.getElementById('navToggle');
+  const links = document.getElementById('navLinks');
+  toggle.addEventListener('click', () => {
+    const isOpen = links.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', isOpen);
+  });
+  links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    links.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+  }));
+</script>
 
 </body>
 </html>
