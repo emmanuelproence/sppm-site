@@ -1,838 +1,272 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="SPPM — Sistema de Proteção em Passagens Molhadas. Monitoramento hidrológico, visão computacional e interdição automatizada para infraestrutura viária de risco." />
-  <meta name="theme-color" content="#050A0F" />
-  <title>SPPM | Infraestrutura inteligente para passagens molhadas</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPPM | Sistema Inteligente de Proteção</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0f172a;
+            --accent-color: #fbbf24;
+            --text-light: #f8fafc;
+            --text-dark: #334155;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+        body {
+            background-color: var(--text-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
 
-  <style>
-    :root {
-      --bg: #050a0f;
-      --bg-soft: #081019;
-      --panel: #0b141e;
-      --panel-2: #0d1824;
-      --line: rgba(255,255,255,.10);
-      --line-strong: rgba(255,255,255,.16);
-      --text: #f4f7fa;
-      --muted: #9aabba;
-      --muted-2: #718392;
-      --green: #32d583;
-      --green-soft: rgba(50,213,131,.11);
-      --blue: #42a5f5;
-      --blue-soft: rgba(66,165,245,.10);
-      --danger: #ff6b6b;
-      --shadow: 0 30px 80px rgba(0,0,0,.34);
-      --radius: 18px;
-      --container: 1180px;
-      --transition: 220ms ease;
-    }
+        /* Navbar */
+        header {
+            background-color: var(--primary-color);
+            padding: 15px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      min-height: 100vh;
-      background:
-        radial-gradient(circle at 72% 0%, rgba(66,165,245,.09), transparent 32rem),
-        radial-gradient(circle at 20% 15%, rgba(50,213,131,.06), transparent 28rem),
-        var(--bg);
-      color: var(--text);
-      font-family: "Inter", sans-serif;
-      line-height: 1.6;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--text-light);
+            font-weight: 800;
+            font-size: 1.5rem;
+            text-decoration: none;
+        }
 
-    a { color: inherit; text-decoration: none; }
-    button { font: inherit; }
-    img { max-width: 100%; display: block; }
-    .container { width: min(var(--container), calc(100% - 40px)); margin: 0 auto; }
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      color: #b8c8d5;
-      font-size: .73rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .16em;
-    }
-    .eyebrow::before { content: ""; width: 24px; height: 1px; background: var(--green); }
-    .section { padding: 110px 0; position: relative; }
-    .section-head { display: grid; grid-template-columns: 1.15fr .85fr; gap: 48px; align-items: end; margin-bottom: 54px; }
-    .section-title {
-      font-family: "Space Grotesk", sans-serif;
-      font-size: clamp(2.15rem, 4vw, 4rem);
-      letter-spacing: -.045em;
-      line-height: 1.02;
-      margin-top: 15px;
-      max-width: 780px;
-    }
-    .section-copy { color: var(--muted); font-size: 1.02rem; max-width: 560px; }
+        .logo img {
+            height: 40px; /* Usa o Logo.jpeg do seu GitHub */
+            border-radius: 4px;
+        }
 
-    /* HEADER */
-    .site-header {
-      position: fixed;
-      inset: 0 0 auto;
-      z-index: 1000;
-      border-bottom: 1px solid rgba(255,255,255,.07);
-      background: rgba(5,10,15,.76);
-      backdrop-filter: blur(18px);
-    }
-    .nav-wrap { height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 30px; }
-    .brand { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
-    .brand-mark {
-      width: 36px; height: 36px; border-radius: 10px;
-      display: grid; place-items: center;
-      border: 1px solid rgba(50,213,131,.28);
-      background: linear-gradient(145deg, rgba(50,213,131,.16), rgba(66,165,245,.04));
-      box-shadow: inset 0 0 26px rgba(50,213,131,.06);
-    }
-    .brand-mark::before {
-      content: "S";
-      font-family: "Space Grotesk", sans-serif;
-      font-weight: 700;
-      color: var(--green);
-      font-size: 1.05rem;
-    }
-    .brand-name { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 1.2rem; letter-spacing: -.03em; }
-    .brand-name span { color: var(--green); }
-    .brand-tag { padding-left: 12px; border-left: 1px solid var(--line); color: var(--muted-2); font-size: .61rem; line-height: 1.2; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; }
+        .btn-contato {
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+            padding: 10px 24px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+        }
 
-    .nav-links { display: flex; align-items: center; gap: 28px; margin-left: auto; }
-    .nav-links a { color: #a7b6c2; font-size: .87rem; font-weight: 600; transition: color var(--transition); }
-    .nav-links a:hover { color: #fff; }
-    .nav-actions { display: flex; align-items: center; gap: 10px; }
-    .mobile-toggle { display: none; background: transparent; color: white; border: 0; font-size: 1.6rem; cursor: pointer; }
+        .btn-contato:hover {
+            background-color: #f59e0b;
+        }
 
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 9px;
-      min-height: 46px;
-      padding: 0 20px;
-      border: 1px solid transparent;
-      border-radius: 10px;
-      font-size: .88rem;
-      font-weight: 700;
-      transition: transform var(--transition), background var(--transition), border-color var(--transition), color var(--transition);
-      cursor: pointer;
-    }
-    .btn:hover { transform: translateY(-2px); }
-    .btn-primary { background: var(--green); color: #03100a; }
-    .btn-primary:hover { background: #58e59a; }
-    .btn-secondary { border-color: var(--line-strong); background: rgba(255,255,255,.025); color: var(--text); }
-    .btn-secondary:hover { border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.055); }
-    .btn-small { min-height: 40px; padding: 0 15px; font-size: .81rem; }
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            background: linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.8)), url('hero.jpg') center/cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+            color: var(--text-light);
+            margin-top: 60px;
+        }
 
-    /* HERO */
-    .hero { min-height: 100vh; padding: 145px 0 86px; display: flex; align-items: center; position: relative; }
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      opacity: .26;
-      pointer-events: none;
-      background-image:
-        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
-      background-size: 54px 54px;
-      mask-image: linear-gradient(to bottom, #000, transparent 88%);
-    }
-    .hero-grid { position: relative; display: grid; grid-template-columns: 1.03fr .97fr; gap: 72px; align-items: center; }
-    .hero-kicker {
-      display: inline-flex; align-items: center; gap: 10px;
-      padding: 7px 11px 7px 9px;
-      border: 1px solid rgba(50,213,131,.22);
-      border-radius: 999px;
-      background: rgba(50,213,131,.07);
-      color: #b8e9cf;
-      font-size: .71rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .12em;
-      margin-bottom: 25px;
-    }
-    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 6px rgba(50,213,131,.08); animation: pulse 1.8s infinite; }
-    @keyframes pulse { 50% { box-shadow: 0 0 0 11px rgba(50,213,131,0); } }
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            max-width: 800px;
+        }
 
-    .hero h1 {
-      font-family: "Space Grotesk", sans-serif;
-      font-size: clamp(3.2rem, 6.2vw, 6.15rem);
-      line-height: .93;
-      letter-spacing: -.063em;
-      max-width: 760px;
-      margin-bottom: 28px;
-    }
-    .hero h1 .accent { color: var(--green); }
-    .hero-copy { color: #aab8c4; font-size: clamp(1rem, 1.55vw, 1.16rem); max-width: 690px; margin-bottom: 34px; }
-    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
-    .hero-proof { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 38px; color: var(--muted-2); font-size: .77rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
-    .hero-proof span { display: inline-flex; align-items: center; gap: 7px; }
-    .hero-proof i { color: var(--green); font-size: 1rem; }
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            max-width: 600px;
+        }
 
-    /* HERO SYSTEM VISUAL */
-    .system-visual {
-      position: relative;
-      min-height: 560px;
-      border: 1px solid var(--line);
-      border-radius: 26px;
-      background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012));
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      isolation: isolate;
-    }
-    .system-visual::before {
-      content: ""; position: absolute; inset: 0;
-      background:
-        radial-gradient(circle at 76% 24%, rgba(66,165,245,.17), transparent 30%),
-        radial-gradient(circle at 30% 72%, rgba(50,213,131,.12), transparent 28%);
-      z-index: -1;
-    }
-    .visual-top { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--line); background: rgba(3,7,11,.42); }
-    .visual-label { font-size: .71rem; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; font-weight: 700; }
-    .status-pill { display: inline-flex; align-items: center; gap: 7px; font-size: .67rem; font-weight: 700; color: #bcebd2; }
-    .status-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
-    .scene { position: relative; height: 360px; overflow: hidden; }
-    .sky { position: absolute; inset: 0 0 48%; background: linear-gradient(180deg, rgba(18,40,58,.82), rgba(16,35,49,.25)); }
-    .hill { position: absolute; bottom: 42%; width: 70%; height: 120px; border-radius: 50% 50% 0 0; background: #0d1a21; filter: blur(.2px); }
-    .hill.one { left: -20%; transform: rotate(4deg); }
-    .hill.two { right: -30%; height: 150px; background: #0a161c; transform: rotate(-3deg); }
-    .road { position: absolute; left: 0; right: 0; bottom: 0; height: 48%; background: linear-gradient(175deg, #222c33, #10171d); border-top: 1px solid rgba(255,255,255,.08); }
-    .road::after { content: ""; position: absolute; left: 5%; right: 5%; top: 48%; height: 2px; background: repeating-linear-gradient(90deg, #c7b67a 0 34px, transparent 34px 62px); opacity: .55; }
-    .water { position: absolute; left: 0; right: 0; bottom: 20%; height: 83px; background: linear-gradient(180deg, rgba(66,165,245,.68), rgba(18,92,144,.86)); border-top: 1px solid rgba(184,226,255,.45); transform: skewY(-2deg); box-shadow: 0 -10px 34px rgba(66,165,245,.07); }
-    .water::after { content: ""; position: absolute; inset: 10px 0; opacity: .24; background: repeating-linear-gradient(0deg, transparent 0 11px, rgba(255,255,255,.2) 12px 13px); }
-    .barrier { position: absolute; left: 18%; bottom: 31%; width: 120px; height: 8px; border-radius: 4px; background: repeating-linear-gradient(135deg, #f2f2f2 0 16px, #e05252 16px 32px); transform-origin: left center; transform: rotate(-19deg); box-shadow: 0 6px 10px rgba(0,0,0,.28); }
-    .barrier-post { position: absolute; left: 17.3%; bottom: 20%; width: 10px; height: 63px; border-radius: 3px; background: #697a86; }
-    .sensor-pole { position: absolute; right: 18%; bottom: 24%; width: 7px; height: 112px; background: #6e7d87; border-radius: 4px; }
-    .sensor-box { position: absolute; right: 14.8%; bottom: 42%; width: 50px; height: 38px; border-radius: 7px; border: 1px solid rgba(50,213,131,.42); background: #0d1b1c; box-shadow: 0 0 20px rgba(50,213,131,.10); }
-    .sensor-box::after { content: ""; position: absolute; width: 7px; height: 7px; border-radius: 50%; right: 7px; top: 7px; background: var(--green); box-shadow: 0 0 11px rgba(50,213,131,.8); }
-    .camera { position: absolute; right: 15%; bottom: 52%; width: 30px; height: 18px; border-radius: 4px; background: #c9d3d9; transform: rotate(-6deg); box-shadow: 0 3px 12px rgba(0,0,0,.3); }
-    .camera::after { content: ""; position: absolute; right: -5px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: #1f2a31; border: 2px solid #8e9ba3; }
-    .signal { position: absolute; right: 11%; bottom: 59%; color: var(--green); font-size: 1.3rem; opacity: .82; }
-    .water-label { position: absolute; left: 49%; bottom: 27%; transform: translateX(-50%); padding: 6px 9px; border-radius: 8px; background: rgba(3,9,14,.72); border: 1px solid rgba(66,165,245,.32); color: #bbddfa; font-size: .66rem; font-weight: 700; letter-spacing: .06em; }
-    .telemetry { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; border-top: 1px solid var(--line); background: var(--line); }
-    .metric { padding: 18px; background: rgba(7,14,21,.88); }
-    .metric small { display: block; color: var(--muted-2); font-size: .63rem; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; margin-bottom: 5px; }
-    .metric strong { font-family: "Space Grotesk"; font-size: 1rem; font-weight: 600; }
-    .metric strong.good { color: var(--green); }
-    .metric strong.blue { color: #88c7f7; }
+        /* Como Funciona */
+        .como-funciona {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 80px 5%;
+            gap: 40px;
+            align-items: center;
+            background-color: #ffffff;
+        }
 
-    /* TRUST */
-    .trust-strip { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: rgba(255,255,255,.012); }
-    .trust-inner { min-height: 92px; display: grid; grid-template-columns: 230px 1fr; align-items: center; gap: 28px; }
-    .trust-label { color: var(--muted-2); font-size: .67rem; text-transform: uppercase; letter-spacing: .13em; font-weight: 700; }
-    .trust-items { display: flex; gap: 14px; flex-wrap: wrap; }
-    .trust-item { min-height: 45px; display: inline-flex; align-items: center; gap: 10px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; color: #bdc8d1; font-size: .77rem; font-weight: 700; background: rgba(255,255,255,.018); }
-    .trust-item i { color: var(--green); font-size: 1.05rem; }
+        .como-funciona-img {
+            flex: 1;
+            min-width: 300px;
+        }
 
-    /* PROBLEM / VALUE */
-    .problem-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: 72px; align-items: start; }
-    .quote-panel { position: sticky; top: 120px; }
-    .quote-panel blockquote { font-family: "Space Grotesk"; font-size: clamp(2rem, 3.3vw, 3.5rem); line-height: 1.04; letter-spacing: -.045em; }
-    .quote-panel blockquote span { color: var(--green); }
-    .quote-panel p { margin-top: 24px; color: var(--muted); max-width: 470px; }
-    .value-stack { display: grid; gap: 14px; }
-    .value-card { display: grid; grid-template-columns: 52px 1fr; gap: 18px; padding: 24px; border: 1px solid var(--line); border-radius: var(--radius); background: linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.012)); transition: transform var(--transition), border-color var(--transition); }
-    .value-card:hover { transform: translateX(4px); border-color: rgba(50,213,131,.25); }
-    .icon-box { width: 52px; height: 52px; border-radius: 12px; display: grid; place-items: center; background: var(--green-soft); border: 1px solid rgba(50,213,131,.18); color: var(--green); font-size: 1.35rem; }
-    .value-card h3 { font-family: "Space Grotesk"; font-size: 1.05rem; margin-bottom: 5px; }
-    .value-card p { color: var(--muted); font-size: .9rem; }
+        .como-funciona-img img {
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+        }
 
-    /* FLOW */
-    .flow { background: linear-gradient(180deg, rgba(255,255,255,.012), transparent); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-    .flow-grid { display: grid; grid-template-columns: repeat(5, 1fr); position: relative; }
-    .flow-grid::before { content: ""; position: absolute; top: 30px; left: 7%; right: 7%; height: 1px; background: linear-gradient(90deg, var(--green), rgba(66,165,245,.7)); opacity: .35; }
-    .flow-step { position: relative; padding: 0 18px 4px; }
-    .flow-step:first-child { padding-left: 0; }
-    .flow-step:last-child { padding-right: 0; }
-    .step-num { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; position: relative; z-index: 1; margin-bottom: 23px; background: #08121a; border: 1px solid rgba(50,213,131,.25); color: var(--green); font-family: "Space Grotesk"; font-weight: 700; }
-    .flow-step h3 { font-family: "Space Grotesk"; font-size: .98rem; margin-bottom: 8px; }
-    .flow-step p { color: var(--muted); font-size: .84rem; line-height: 1.55; }
+        .como-funciona-text {
+            flex: 1;
+            min-width: 300px;
+        }
 
-    /* ARCHITECTURE */
-    .arch-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 50px; align-items: stretch; }
-    .arch-diagram { padding: 26px; border: 1px solid var(--line); border-radius: 24px; background: linear-gradient(180deg, rgba(255,255,255,.027), rgba(255,255,255,.01)); min-height: 480px; }
-    .arch-label { color: var(--muted-2); font-size: .66rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 17px; }
-    .arch-node { padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: rgba(7,14,21,.7); }
-    .arch-node + .arch-node { margin-top: 14px; }
-    .arch-node h4 { display: flex; align-items: center; gap: 9px; font-family: "Space Grotesk"; font-size: .96rem; }
-    .arch-node h4 i { color: var(--green); }
-    .arch-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-    .arch-tag { border: 1px solid var(--line); border-radius: 999px; padding: 5px 9px; color: var(--muted); font-size: .69rem; }
-    .arch-arrow { height: 34px; display: grid; place-items: center; color: var(--muted-2); }
-    .tech-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .tech-card { padding: 22px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,.016); }
-    .tech-card i { color: var(--green); font-size: 1.5rem; margin-bottom: 12px; display: block; }
-    .tech-card h4 { font-family: "Space Grotesk"; font-size: .96rem; margin-bottom: 7px; }
-    .tech-card p { color: var(--muted); font-size: .8rem; line-height: 1.55; }
+        .como-funciona-text h2 {
+            font-size: 2.2rem;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+        }
 
-    /* CCO */
-    .cco-section { overflow: hidden; }
-    .cco-shell { display: grid; grid-template-columns: .75fr 1.25fr; border: 1px solid var(--line); border-radius: 26px; overflow: hidden; background: #081018; box-shadow: var(--shadow); }
-    .cco-copy { padding: 52px; background: linear-gradient(180deg, rgba(50,213,131,.055), rgba(255,255,255,.01)); border-right: 1px solid var(--line); }
-    .cco-copy h3 { font-family: "Space Grotesk"; font-size: clamp(2rem, 3vw, 3.15rem); line-height: 1; letter-spacing: -.045em; margin: 14px 0 18px; }
-    .cco-copy p { color: var(--muted); margin-bottom: 28px; }
-    .cco-points { display: grid; gap: 11px; margin-bottom: 28px; }
-    .cco-points li { list-style: none; display: flex; gap: 9px; align-items: flex-start; color: #b7c4ce; font-size: .85rem; }
-    .cco-points i { color: var(--green); margin-top: 3px; }
+        .bullet-point {
+            margin-bottom: 20px;
+        }
 
-    .dashboard { padding: 18px; background: #050b10; min-height: 510px; }
-    .dash-top { height: 46px; border: 1px solid var(--line); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; background: #0b141d; }
-    .dash-brand { font-family: "Space Grotesk"; font-size: .82rem; font-weight: 700; }
-    .dash-brand span { color: var(--green); }
-    .dash-status { display: flex; align-items: center; gap: 7px; color: #9db4a8; font-size: .63rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
-    .dash-status::before { content: ""; width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
-    .dash-grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: 10px; margin-top: 10px; }
-    .dash-card { border: 1px solid var(--line); border-radius: 12px; background: #0a131c; min-height: 130px; padding: 14px; }
-    .dash-card h5 { color: #8fa1ae; font-size: .61rem; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 11px; }
-    .dash-map { min-height: 280px; grid-row: span 2; position: relative; overflow: hidden; background:
-      radial-gradient(circle at 30% 45%, rgba(50,213,131,.1), transparent 11%),
-      radial-gradient(circle at 72% 30%, rgba(66,165,245,.10), transparent 10%),
-      linear-gradient(145deg, #101d26, #0c161f); }
-    .dash-map::before { content: ""; position: absolute; inset: 0; opacity: .25; background-image: linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px); background-size: 26px 26px; transform: rotate(6deg) scale(1.2); }
-    .map-road { position: absolute; width: 120%; height: 10px; background: rgba(153,174,188,.3); left: -10%; top: 55%; transform: rotate(-17deg); border-radius: 10px; }
-    .map-river { position: absolute; width: 120%; height: 38px; background: rgba(66,165,245,.28); left: -10%; top: 46%; transform: rotate(24deg); border: 1px solid rgba(66,165,245,.25); }
-    .map-pin { position: absolute; left: 54%; top: 51%; width: 16px; height: 16px; background: var(--green); border: 4px solid #0a131c; border-radius: 50%; box-shadow: 0 0 0 5px rgba(50,213,131,.12); }
-    .dash-number { font-family: "Space Grotesk"; font-size: 2rem; letter-spacing: -.05em; }
-    .dash-number.green { color: var(--green); }
-    .mini-chart { height: 45px; margin-top: 12px; border-bottom: 1px solid var(--line); position: relative; overflow: hidden; }
-    .mini-chart::before { content: ""; position: absolute; left: 0; right: 0; bottom: 12px; height: 2px; background: linear-gradient(90deg, rgba(66,165,245,.3), #73bffc 25%, #42a5f5 60%, var(--green)); transform: skewY(-7deg); box-shadow: 0 0 16px rgba(66,165,245,.18); }
-    .dash-list { display: grid; gap: 8px; }
-    .dash-row { display: flex; justify-content: space-between; gap: 12px; color: #a8b6c1; font-size: .72rem; padding-bottom: 7px; border-bottom: 1px solid rgba(255,255,255,.05); }
-    .dash-row span:last-child { color: var(--green); font-weight: 700; }
+        .bullet-point h4 {
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
 
-    /* PILOT */
-    .pilot { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: linear-gradient(180deg, rgba(50,213,131,.03), rgba(255,255,255,.006)); }
-    .pilot-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: 54px; align-items: center; }
-    .pilot-card { border: 1px solid var(--line); border-radius: 24px; overflow: hidden; background: #08111a; }
-    .pilot-card-top { height: 230px; position: relative; background:
-      linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.55)),
-      radial-gradient(circle at 72% 24%, rgba(66,165,245,.18), transparent 28%),
-      linear-gradient(155deg, #14252e, #0c171f 58%, #101a1f); }
-    .pilot-card-top::before { content: ""; position: absolute; left: -8%; right: -8%; bottom: 44px; height: 74px; background: rgba(66,165,245,.44); transform: rotate(-3deg); border-top: 1px solid rgba(255,255,255,.16); }
-    .pilot-road { position: absolute; left: -10%; right: -10%; bottom: 62px; height: 35px; background: #293238; transform: rotate(5deg); box-shadow: 0 3px 0 rgba(255,255,255,.08); }
-    .pilot-badge { position: absolute; top: 18px; left: 18px; padding: 7px 10px; border-radius: 999px; background: rgba(5,10,15,.72); border: 1px solid var(--line); color: #c7d3dc; font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; }
-    .pilot-card-body { padding: 22px; }
-    .pilot-card-body h4 { font-family: "Space Grotesk"; font-size: 1.2rem; margin-bottom: 8px; }
-    .pilot-card-body p { color: var(--muted); font-size: .85rem; }
-    .pilot-copy h3 { font-family: "Space Grotesk"; font-size: clamp(2.2rem, 4vw, 4.1rem); letter-spacing: -.05em; line-height: 1.02; margin: 14px 0 20px; }
-    .pilot-copy p { color: var(--muted); font-size: 1rem; max-width: 610px; }
-    .pilot-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 30px 0; }
-    .pilot-item { padding: 16px; border: 1px solid var(--line); border-radius: 13px; background: rgba(255,255,255,.014); }
-    .pilot-item strong { display: block; font-family: "Space Grotesk"; font-size: .85rem; margin-bottom: 4px; }
-    .pilot-item span { color: var(--muted-2); font-size: .74rem; }
+        /* Centro de Comando */
+        .comando {
+            padding: 80px 5%;
+            background-color: #f1f5f9;
+            text-align: center;
+        }
 
-    /* ECOSYSTEM */
-    .ecosystem { text-align: center; }
-    .ecosystem .section-title { margin-left: auto; margin-right: auto; }
-    .ecosystem .section-copy { margin: 20px auto 42px; }
-    .logos { display: flex; justify-content: center; align-items: stretch; gap: 14px; flex-wrap: wrap; }
-    .logo-card { min-width: 270px; min-height: 112px; display: flex; align-items: center; justify-content: center; gap: 16px; padding: 20px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,.014); }
-    .logo-card img { max-height: 46px; max-width: 110px; object-fit: contain; }
-    .logo-card .logo-fallback { text-align: left; }
-    .logo-card strong { display: block; font-family: "Space Grotesk"; font-size: .92rem; }
-    .logo-card small { color: var(--muted-2); font-size: .7rem; }
+        .comando h2 {
+            font-size: 2.2rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
 
-    /* CTA */
-    .final-cta { padding: 90px 0 110px; }
-    .cta-box { position: relative; overflow: hidden; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 40px; padding: 48px; border: 1px solid rgba(50,213,131,.22); border-radius: 26px; background: linear-gradient(135deg, rgba(50,213,131,.10), rgba(66,165,245,.055) 50%, rgba(255,255,255,.018)); }
-    .cta-box::after { content: ""; position: absolute; width: 320px; height: 320px; border-radius: 50%; background: rgba(50,213,131,.07); filter: blur(60px); right: -100px; top: -150px; }
-    .cta-box h3 { font-family: "Space Grotesk"; font-size: clamp(2rem, 3.3vw, 3.4rem); line-height: 1.02; letter-spacing: -.045em; max-width: 700px; }
-    .cta-box p { color: var(--muted); margin-top: 12px; max-width: 700px; }
-    .cta-actions { position: relative; z-index: 1; display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+        .comando p {
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto 40px auto;
+        }
 
-    /* FOOTER */
-    footer { border-top: 1px solid var(--line); background: #03070b; }
-    .footer-main { padding: 70px 0 42px; display: grid; grid-template-columns: 1.5fr .7fr 1fr; gap: 60px; }
-    .footer-brand p { color: var(--muted); max-width: 460px; margin-top: 18px; font-size: .88rem; }
-    .socials { display: flex; gap: 10px; margin-top: 22px; }
-    .socials a { width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 11px; color: #c7d2da; background: rgba(255,255,255,.018); transition: var(--transition); }
-    .socials a:hover { color: #03100a; background: var(--green); border-color: var(--green); transform: translateY(-2px); }
-    .footer-col h4 { font-family: "Space Grotesk"; font-size: .92rem; margin-bottom: 18px; }
-    .footer-links { display: grid; gap: 11px; }
-    .footer-links a { color: var(--muted); font-size: .82rem; }
-    .footer-links a:hover { color: white; }
-    .contact-row { display: flex; gap: 11px; align-items: flex-start; margin-bottom: 15px; color: var(--muted); font-size: .8rem; }
-    .contact-row i { color: var(--green); font-size: 1.05rem; margin-top: 2px; }
-    .contact-row strong { color: #d9e1e7; display: block; font-size: .76rem; margin-bottom: 2px; }
-    .footer-bottom { min-height: 74px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 20px; color: #70818e; font-size: .7rem; flex-wrap: wrap; }
+        .comando img {
+            width: 100%;
+            max-width: 1100px;
+            border-radius: 8px;
+            box-shadow: 0 20px 25px rgba(0,0,0,0.15);
+        }
 
-    @media (max-width: 1080px) {
-      .hero-grid, .arch-grid, .pilot-grid { grid-template-columns: 1fr; }
-      .hero { padding-top: 125px; }
-      .hero-copy { max-width: 790px; }
-      .system-visual { min-height: 520px; }
-      .problem-grid { gap: 44px; }
-      .cco-shell { grid-template-columns: 1fr; }
-      .cco-copy { border-right: 0; border-bottom: 1px solid var(--line); }
-      .flow-grid { grid-template-columns: repeat(3, 1fr); gap: 34px 0; }
-      .flow-grid::before { display: none; }
-      .footer-main { grid-template-columns: 1.2fr .8fr; }
-      .footer-col:last-child { grid-column: span 2; }
-    }
+        /* Footer */
+        footer {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            padding: 60px 5% 30px;
+            text-align: center;
+        }
 
-    @media (max-width: 820px) {
-      .nav-links { display: none; position: absolute; top: 78px; left: 0; right: 0; padding: 20px; flex-direction: column; align-items: flex-start; background: rgba(5,10,15,.98); border-bottom: 1px solid var(--line); }
-      .nav-links.open { display: flex; }
-      .nav-actions .btn-secondary { display: none; }
-      .mobile-toggle { display: block; }
-      .section { padding: 82px 0; }
-      .section-head, .problem-grid { grid-template-columns: 1fr; gap: 24px; }
-      .quote-panel { position: static; }
-      .flow-grid { grid-template-columns: 1fr 1fr; }
-      .trust-inner { grid-template-columns: 1fr; padding: 22px 0; }
-      .dashboard { min-height: auto; }
-      .dash-grid { grid-template-columns: 1fr; }
-      .dash-map { grid-row: auto; min-height: 240px; }
-      .pilot-list { grid-template-columns: 1fr; }
-      .cta-box { grid-template-columns: 1fr; padding: 34px; }
-      .cta-actions { justify-content: flex-start; }
-      .footer-main { grid-template-columns: 1fr; gap: 36px; }
-      .footer-col:last-child { grid-column: auto; }
-    }
+        .footer-content {
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
 
-    @media (max-width: 560px) {
-      .container { width: min(var(--container), calc(100% - 28px)); }
-      .brand-tag { display: none; }
-      .nav-actions .btn-primary { display: none; }
-      .hero h1 { font-size: clamp(3rem, 14vw, 4.2rem); }
-      .system-visual { min-height: 500px; }
-      .telemetry { grid-template-columns: 1fr; }
-      .scene { height: 330px; }
-      .flow-grid, .tech-list { grid-template-columns: 1fr; }
-      .flow-step { padding: 0; }
-      .cco-copy { padding: 32px 24px; }
-      .dashboard { padding: 10px; }
-      .cta-box { padding: 28px 22px; }
-      .footer-bottom { padding: 18px 0; }
-    }
-  </style>
+        .footer-content h3 {
+            margin-bottom: 15px;
+            color: var(--accent-color);
+        }
+
+        .logos-parceiros {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 40px;
+            align-items: center;
+        }
+
+        /* Corrige os nomes com espaço usando %20 para ler os arquivos que já estão no seu GitHub */
+        .logos-parceiros img {
+            height: 60px;
+            filter: grayscale(100%) brightness(200%);
+            opacity: 0.8;
+            transition: 0.3s;
+        }
+
+        .logos-parceiros img:hover {
+            filter: none;
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            header { flex-direction: column; gap: 15px; padding: 15px; }
+            .hero { margin-top: 100px; }
+        }
+    </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="container nav-wrap">
-      <a href="#inicio" class="brand" aria-label="SPPM - início">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <span class="brand-name">SPPM<span>.</span></span>
-        <span class="brand-tag">GovTech<br>Infra</span>
-      </a>
 
-      <nav class="nav-links" id="mainNav" aria-label="Navegação principal">
-        <a href="#solucao">Solução</a>
-        <a href="#como-funciona">Como funciona</a>
-        <a href="#tecnologia">Tecnologia</a>
-        <a href="#cco">Plataforma</a>
-        <a href="#validacao">Validação</a>
-        <a href="#contato">Contato</a>
-      </nav>
-
-      <div class="nav-actions">
-        <a class="btn btn-secondary btn-small" href="./app/index.html">
-          <i class="ph ph-monitor"></i> Acessar CCO
+    <header>
+        <a href="#" class="logo">
+            <img src="Logo.jpeg" alt="Logo SPPM" onerror="this.style.display='none'">
+            SPPM
         </a>
-        <a class="btn btn-primary btn-small" href="#contato">
-          Falar com a SPPM <i class="ph ph-arrow-up-right"></i>
-        </a>
-        <button class="mobile-toggle" id="mobileToggle" aria-label="Abrir menu" aria-expanded="false">
-          <i class="ph ph-list"></i>
-        </button>
-      </div>
-    </div>
-  </header>
+        <a href="#contato" class="btn-contato">Seja um Parceiro</a>
+    </header>
 
-  <main>
-    <section class="hero" id="inicio">
-      <div class="container hero-grid">
-        <div class="hero-copy-wrap">
-          <div class="hero-kicker"><span class="live-dot"></span> GovTech • Infraestrutura • Resiliência climática</div>
-          <h1>Tecnologia que age <span class="accent">antes da travessia.</span></h1>
-          <p class="hero-copy">
-            O SPPM monitora passagens molhadas e vias sujeitas a alagamentos, identifica situações de risco e integra alertas, telemetria, visão computacional e interdição automatizada em uma única infraestrutura operacional.
-          </p>
-          <div class="hero-actions">
-            <a class="btn btn-primary" href="#como-funciona">Conhecer a solução <i class="ph ph-arrow-down-right"></i></a>
-            <a class="btn btn-secondary" href="./app/index.html"><i class="ph ph-monitor"></i> Ver plataforma CCO</a>
-          </div>
-          <div class="hero-proof">
-            <span><i class="ph-fill ph-check-circle"></i> Edge IoT</span>
-            <span><i class="ph-fill ph-check-circle"></i> Visão computacional</span>
-            <span><i class="ph-fill ph-check-circle"></i> Acionamento automatizado</span>
-          </div>
-        </div>
-
-        <div class="system-visual" aria-label="Representação visual do sistema SPPM em uma passagem molhada">
-          <div class="visual-top">
-            <span class="visual-label">Unidade monitorada • SPPM Edge</span>
-            <span class="status-pill">Sistema operacional</span>
-          </div>
-          <div class="scene">
-            <div class="sky"></div>
-            <div class="hill one"></div>
-            <div class="hill two"></div>
-            <div class="road"></div>
-            <div class="water"></div>
-            <div class="barrier-post"></div>
-            <div class="barrier"></div>
-            <div class="sensor-pole"></div>
-            <div class="sensor-box"></div>
-            <div class="camera"></div>
-            <i class="ph ph-wifi-high signal"></i>
-            <span class="water-label">NÍVEL MONITORADO</span>
-          </div>
-          <div class="telemetry">
-            <div class="metric">
-              <small>Telemetria</small>
-              <strong class="good">ONLINE</strong>
-            </div>
-            <div class="metric">
-              <small>Via</small>
-              <strong>INTERDIÇÃO REMOTA</strong>
-            </div>
-            <div class="metric">
-              <small>CCO</small>
-              <strong class="blue">SINCRONIZADO</strong>
-            </div>
-          </div>
-        </div>
-      </div>
+    <section class="hero">
+        <h1>Tecnologia a Serviço da Vida em Passagens Molhadas</h1>
+        <p>Sistemas autônomos de contenção e monitoramento com Inteligência Artificial e IoT para infraestrutura pública.</p>
+        <a href="#contato" class="btn-contato" style="padding: 15px 30px; font-size: 1.1rem;">Fale com Especialistas</a>
     </section>
 
-    <div class="trust-strip">
-      <div class="container trust-inner">
-        <div class="trust-label">Infraestrutura pensada para operação pública</div>
-        <div class="trust-items">
-          <span class="trust-item"><i class="ph ph-waves"></i> Monitoramento hidrológico</span>
-          <span class="trust-item"><i class="ph ph-broadcast"></i> Comunicação IoT</span>
-          <span class="trust-item"><i class="ph ph-camera"></i> Validação visual</span>
-          <span class="trust-item"><i class="ph ph-barricade"></i> Barreira física</span>
-          <span class="trust-item"><i class="ph ph-desktop-tower"></i> Centro de controle</span>
+    <section class="como-funciona">
+        <div class="como-funciona-img">
+            <img src="rio.png" alt="Passagem molhada operando">
         </div>
-      </div>
-    </div>
-
-    <section class="section" id="solucao">
-      <div class="container problem-grid">
-        <div class="quote-panel">
-          <span class="eyebrow">O problema operacional</span>
-          <blockquote>Uma via crítica não pode depender apenas de alguém perceber que <span>a água subiu.</span></blockquote>
-          <p>O SPPM transforma uma passagem molhada em um ponto monitorado, conectado e acionável, reduzindo a dependência de resposta exclusivamente manual em situações de cheia.</p>
-        </div>
-
-        <div class="value-stack">
-          <article class="value-card">
-            <div class="icon-box"><i class="ph ph-gauge"></i></div>
-            <div><h3>Detectar</h3><p>Sensores acompanham continuamente as condições locais e alimentam a camada de decisão do sistema.</p></div>
-          </article>
-          <article class="value-card">
-            <div class="icon-box"><i class="ph ph-brain"></i></div>
-            <div><h3>Interpretar</h3><p>Dados hidrológicos, sinais de campo e visão computacional ajudam a qualificar a situação operacional da via.</p></div>
-          </article>
-          <article class="value-card">
-            <div class="icon-box"><i class="ph ph-siren"></i></div>
-            <div><h3>Alertar</h3><p>O Centro de Controle recebe o evento com contexto operacional, histórico e estado dos dispositivos instalados.</p></div>
-          </article>
-          <article class="value-card">
-            <div class="icon-box"><i class="ph ph-barricade"></i></div>
-            <div><h3>Interditar</h3><p>O sistema prevê acionamento de barreira física para restringir a passagem quando as condições exigirem intervenção.</p></div>
-          </article>
-          <article class="value-card">
-            <div class="icon-box"><i class="ph ph-database"></i></div>
-            <div><h3>Registrar</h3><p>Eventos e telemetria ficam consolidados para acompanhamento, análise técnica e documentação operacional.</p></div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section flow" id="como-funciona">
-      <div class="container">
-        <div class="section-head">
-          <div>
-            <span class="eyebrow">Como funciona</span>
-            <h2 class="section-title">Da lâmina d’água à decisão operacional.</h2>
-          </div>
-          <p class="section-copy">Uma arquitetura conectada entre campo e Centro de Controle organiza a resposta em etapas claras — monitoramento, análise, alerta, interdição e registro.</p>
-        </div>
-
-        <div class="flow-grid">
-          <article class="flow-step">
-            <div class="step-num">01</div>
-            <h3>Monitoramento</h3>
-            <p>Sensores acompanham nível da água, precipitação e estado da unidade instalada.</p>
-          </article>
-          <article class="flow-step">
-            <div class="step-num">02</div>
-            <h3>Detecção de risco</h3>
-            <p>Os dados são processados localmente e combinados com regras e critérios operacionais.</p>
-          </article>
-          <article class="flow-step">
-            <div class="step-num">03</div>
-            <h3>Alerta</h3>
-            <p>O CCO recebe a mudança de condição e concentra a informação para tomada de decisão.</p>
-          </article>
-          <article class="flow-step">
-            <div class="step-num">04</div>
-            <h3>Interdição</h3>
-            <p>A barreira física pode ser acionada para impedir o acesso à área monitorada.</p>
-          </article>
-          <article class="flow-step">
-            <div class="step-num">05</div>
-            <h3>Registro</h3>
-            <p>O evento permanece disponível em histórico, apoiando análise técnica e resposta institucional.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="tecnologia">
-      <div class="container">
-        <div class="section-head">
-          <div>
-            <span class="eyebrow">Arquitetura SPPM</span>
-            <h2 class="section-title">Campo, conectividade e comando em uma única camada operacional.</h2>
-          </div>
-          <p class="section-copy">A solução combina dispositivos de borda, sensores, comunicação móvel, visão computacional e uma plataforma web para integrar o ponto de risco ao Centro de Controle.</p>
-        </div>
-
-        <div class="arch-grid">
-          <div class="arch-diagram">
-            <div class="arch-label">Fluxo da infraestrutura</div>
-            <div class="arch-node">
-              <h4><i class="ph ph-map-pin-line"></i> Passagem molhada / via de risco</h4>
-              <div class="arch-tags">
-                <span class="arch-tag">Sensor ultrassônico IP67</span>
-                <span class="arch-tag">Pluviometria</span>
-                <span class="arch-tag">Câmera</span>
-                <span class="arch-tag">Barreira física</span>
-              </div>
+        <div class="como-funciona-text">
+            <h2>A Solução em Ação</h2>
+            <div class="bullet-point">
+                <h4>Detecção Autônoma</h4>
+                <p>Sensores industriais e IA monitoram o nível e a vazão da água 24 horas por dia, 7 dias por semana.</p>
             </div>
-            <div class="arch-arrow"><i class="ph ph-arrow-down"></i></div>
-            <div class="arch-node">
-              <h4><i class="ph ph-cpu"></i> Edge IoT</h4>
-              <div class="arch-tags">
-                <span class="arch-tag">ESP32</span>
-                <span class="arch-tag">Processamento local</span>
-                <span class="arch-tag">Visão computacional</span>
-                <span class="arch-tag">Automação</span>
-              </div>
+            <div class="bullet-point">
+                <h4>Bloqueio Físico Imediato</h4>
+                <p>Cancelas e semáforos são acionados automaticamente em níveis críticos de inundação, impedindo fisicamente a travessia de veículos.</p>
             </div>
-            <div class="arch-arrow"><i class="ph ph-arrow-down"></i></div>
-            <div class="arch-node">
-              <h4><i class="ph ph-broadcast"></i> Comunicação e sincronização</h4>
-              <div class="arch-tags">
-                <span class="arch-tag">LTE / NB-IoT</span>
-                <span class="arch-tag">SIM7000G</span>
-                <span class="arch-tag">Telemetria</span>
-              </div>
+            <div class="bullet-point">
+                <h4>Operação Independente</h4>
+                <p>Alimentação 100% solar, garantindo que o sistema continue salvando vidas mesmo durante quedas de energia causadas por tempestades.</p>
             </div>
-            <div class="arch-arrow"><i class="ph ph-arrow-down"></i></div>
-            <div class="arch-node">
-              <h4><i class="ph ph-monitor"></i> Plataforma CCO</h4>
-              <div class="arch-tags">
-                <span class="arch-tag">Alertas</span>
-                <span class="arch-tag">Mapa operacional</span>
-                <span class="arch-tag">Histórico</span>
-                <span class="arch-tag">Acionamento</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="tech-list">
-            <article class="tech-card"><i class="ph ph-sun"></i><h4>Operação off-grid</h4><p>Arquitetura prevista para alimentação autônoma com geração solar e armazenamento local de energia.</p></article>
-            <article class="tech-card"><i class="ph ph-waves"></i><h4>Telemetria hidrológica</h4><p>Leitura contínua das condições do ponto monitorado para acompanhar variações do nível da água.</p></article>
-            <article class="tech-card"><i class="ph ph-camera"></i><h4>Visão computacional</h4><p>Camada visual para apoio à identificação de veículos e validação contextual das condições da via.</p></article>
-            <article class="tech-card"><i class="ph ph-cloud"></i><h4>Dados centralizados</h4><p>Consolidação dos eventos e leituras para análise, rastreabilidade e operação institucional.</p></article>
-            <article class="tech-card"><i class="ph ph-shield-check"></i><h4>Estado dos dispositivos</h4><p>Supervisão da disponibilidade dos módulos de campo para apoiar manutenção e resposta operacional.</p></article>
-            <article class="tech-card"><i class="ph ph-arrows-counter-clockwise"></i><h4>Integração campo–CCO</h4><p>Comunicação entre a unidade instalada e a plataforma web para acompanhamento remoto da infraestrutura.</p></article>
-          </div>
         </div>
-      </div>
     </section>
 
-    <section class="section cco-section" id="cco">
-      <div class="container">
-        <div class="cco-shell">
-          <div class="cco-copy">
-            <span class="eyebrow">Centro de Controle</span>
-            <h3>Da passagem molhada ao CCO.</h3>
-            <p>A plataforma concentra telemetria, condição da via e eventos do sistema em uma interface operacional para equipes autorizadas.</p>
-            <ul class="cco-points">
-              <li><i class="ph-fill ph-check-circle"></i> Visão consolidada dos pontos monitorados</li>
-              <li><i class="ph-fill ph-check-circle"></i> Acompanhamento de sensores e conectividade</li>
-              <li><i class="ph-fill ph-check-circle"></i> Registro de eventos e histórico operacional</li>
-              <li><i class="ph-fill ph-check-circle"></i> Base para acionamento e resposta institucional</li>
-            </ul>
-            <a class="btn btn-primary" href="./app/index.html"><i class="ph ph-monitor"></i> Acessar CCO</a>
-          </div>
-
-          <div class="dashboard" aria-label="Prévia visual do Centro de Controle SPPM">
-            <div class="dash-top">
-              <div class="dash-brand">SPPM<span>.</span> CCO</div>
-              <div class="dash-status">Conectado</div>
-            </div>
-            <div class="dash-grid">
-              <div class="dash-card dash-map">
-                <h5>Mapa operacional</h5>
-                <div class="map-road"></div>
-                <div class="map-river"></div>
-                <div class="map-pin"></div>
-              </div>
-              <div class="dash-card">
-                <h5>Nível monitorado</h5>
-                <div class="dash-number green">ESTÁVEL</div>
-                <div class="mini-chart"></div>
-              </div>
-              <div class="dash-card">
-                <h5>Status da unidade</h5>
-                <div class="dash-list">
-                  <div class="dash-row"><span>Telemetria</span><span>Online</span></div>
-                  <div class="dash-row"><span>Câmera</span><span>Online</span></div>
-                  <div class="dash-row"><span>Comunicação</span><span>Online</span></div>
-                  <div class="dash-row"><span>Barreira</span><span>Pronta</span></div>
-                </div>
-              </div>
-              <div class="dash-card">
-                <h5>Último evento</h5>
-                <div class="dash-list">
-                  <div class="dash-row"><span>Tipo</span><span>Telemetria</span></div>
-                  <div class="dash-row"><span>Origem</span><span>Unidade de campo</span></div>
-                  <div class="dash-row"><span>Registro</span><span>Sincronizado</span></div>
-                </div>
-              </div>
-              <div class="dash-card">
-                <h5>Infraestrutura</h5>
-                <div class="dash-number">CCO</div>
-                <div style="color:#7f919e;font-size:.72rem;margin-top:6px;">Monitoramento centralizado e acesso restrito a operadores.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <section class="comando">
+        <h2>Visão Operacional B2G</h2>
+        <p>Mapa de operação, alertas automáticos de subida de nível, histórico de interdições e rastreabilidade total de todas as unidades instaladas, diretamente na palma da mão da Defesa Civil.</p>
+        <img src="painel.png" alt="Centro de Comando SPPM">
     </section>
 
-    <section class="section pilot" id="validacao">
-      <div class="container pilot-grid">
-        <div class="pilot-card">
-          <div class="pilot-card-top">
-            <span class="pilot-badge">Validação em ambiente real</span>
-            <div class="pilot-road"></div>
-          </div>
-          <div class="pilot-card-body">
-            <h4>Projeto-piloto municipal</h4>
-            <p>Estrutura preparada para ensaios de telemetria, comunicação, visão computacional e acionamento da barreira física em condições reais de campo.</p>
-          </div>
+    <footer id="contato">
+        <div class="footer-content">
+            <h3>Construa a Segurança Viária Conosco</h3>
+            <p>A SPPM busca parceiros industriais e governamentais para escalar a infraestrutura inteligente no Nordeste.</p>
+            <br>
+            <p><strong>Responsável Técnico:</strong> Jaderson Araújo</p>
+            <p><strong>Email:</strong> contato@sppm.com.br</p>
+            <p><strong>Base Acadêmica:</strong> Universidade Federal do Ceará (UFC) - Parque Tecnológico (Partec)</p>
         </div>
 
-        <div class="pilot-copy">
-          <span class="eyebrow">Implantação e validação</span>
-          <h3>Engenharia validada onde o problema acontece.</h3>
-          <p>A estratégia de validação do SPPM prevê testes em infraestrutura viária submersível, com acompanhamento técnico e documentação dos resultados obtidos em campo.</p>
-          <div class="pilot-list">
-            <div class="pilot-item"><strong>Telemetria</strong><span>Leituras e transmissão de dados de campo.</span></div>
-            <div class="pilot-item"><strong>Comunicação</strong><span>Disponibilidade e estabilidade operacional.</span></div>
-            <div class="pilot-item"><strong>Visão computacional</strong><span>Validação do comportamento da camada visual.</span></div>
-            <div class="pilot-item"><strong>Barreira física</strong><span>Ensaios mecânicos e de acionamento automatizado.</span></div>
-          </div>
-          <a class="btn btn-secondary" href="#contato">Conversar sobre implantação <i class="ph ph-arrow-right"></i></a>
+        <div class="logos-parceiros">
+            <img src="ufc%20logo.png" alt="UFC">
+            <img src="partec%20logo.png" alt="Partec">
         </div>
-      </div>
-    </section>
+    </footer>
 
-    <section class="section ecosystem" id="ecossistema">
-      <div class="container">
-        <span class="eyebrow">Ecossistema de inovação</span>
-        <h2 class="section-title">Tecnologia desenvolvida a partir do Ceará.</h2>
-        <p class="section-copy">A SPPM desenvolve sua solução em Fortaleza, conectada ao ambiente de inovação e pesquisa associado à Universidade Federal do Ceará.</p>
-        <div class="logos">
-          <div class="logo-card">
-            <img src="partec%20logo.png" alt="Parque Tecnológico da UFC" onerror="this.style.display='none'" />
-            <div class="logo-fallback"><strong>Partec UFC</strong><small>Parque Tecnológico da Universidade Federal do Ceará</small></div>
-          </div>
-          <div class="logo-card">
-            <img src="ufc%20logo.png" alt="Universidade Federal do Ceará" onerror="this.style.display='none'" />
-            <div class="logo-fallback"><strong>Universidade Federal do Ceará</strong><small>UFC • Fortaleza, Ceará</small></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="final-cta" id="contato">
-      <div class="container">
-        <div class="cta-box">
-          <div>
-            <h3>Transforme um ponto de risco em infraestrutura monitorada.</h3>
-            <p>Fale com a SPPM sobre implantação, validação tecnológica, cooperação técnica ou demonstração institucional da plataforma.</p>
-          </div>
-          <div class="cta-actions">
-            <a class="btn btn-primary" href="https://api.whatsapp.com/send?phone=558589286660" target="_blank" rel="noopener"><i class="ph ph-whatsapp-logo"></i> Falar no WhatsApp</a>
-            <a class="btn btn-secondary" href="mailto:sppminfra@gmail.com"><i class="ph ph-envelope-simple"></i> Enviar e-mail</a>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <div class="container footer-main">
-      <div class="footer-brand">
-        <a href="#inicio" class="brand">
-          <span class="brand-mark" aria-hidden="true"></span>
-          <span class="brand-name">SPPM<span>.</span></span>
-          <span class="brand-tag">GovTech<br>Infra</span>
-        </a>
-        <p>Sistema de Proteção em Passagens Molhadas. Infraestrutura tecnológica para monitoramento, resposta operacional e redução da exposição a riscos em vias sujeitas a alagamentos.</p>
-        <div class="socials">
-          <a href="https://instagram.com/sppm.startup/" target="_blank" rel="noopener" aria-label="Instagram da SPPM"><i class="ph ph-instagram-logo"></i></a>
-          <a href="https://api.whatsapp.com/send?phone=558589286660" target="_blank" rel="noopener" aria-label="WhatsApp da SPPM"><i class="ph ph-whatsapp-logo"></i></a>
-        </div>
-      </div>
-
-      <div class="footer-col">
-        <h4>Plataforma</h4>
-        <div class="footer-links">
-          <a href="./app/index.html">Acessar CCO</a>
-          <a href="#tecnologia">Arquitetura</a>
-          <a href="#como-funciona">Como funciona</a>
-          <a href="#validacao">Validação</a>
-        </div>
-      </div>
-
-      <div class="footer-col">
-        <h4>Contato institucional</h4>
-        <div class="contact-row"><i class="ph-fill ph-envelope-simple"></i><div><strong>E-mail corporativo</strong><a href="mailto:sppminfra@gmail.com">sppminfra@gmail.com</a></div></div>
-        <div class="contact-row"><i class="ph-fill ph-whatsapp-logo"></i><div><strong>Comercial & suporte</strong><a href="https://api.whatsapp.com/send?phone=558589286660" target="_blank" rel="noopener">+55 (85) 8928-6660</a></div></div>
-        <div class="contact-row"><i class="ph-fill ph-map-pin"></i><div><strong>Sede administrativa</strong>Rua Doutor Abdenago, 420<br>Partec-UFC, Pici<br>Fortaleza - CE, Brasil<br>CEP: 60440-614</div></div>
-      </div>
-    </div>
-
-    <div class="container footer-bottom">
-      <div>SPPM — Sistema de Proteção em Passagens Molhadas Inova Simples (I.S.) • CNPJ: 68.044.108/0001-10</div>
-      <div>© 2026 SPPM. Todos os direitos reservados.</div>
-    </div>
-  </footer>
-
-  <script>
-    const toggle = document.getElementById('mobileToggle');
-    const nav = document.getElementById('mainNav');
-
-    toggle.addEventListener('click', () => {
-      const open = nav.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', String(open));
-      toggle.innerHTML = open ? '<i class="ph ph-x"></i>' : '<i class="ph ph-list"></i>';
-    });
-
-    nav.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
-      nav.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-      toggle.innerHTML = '<i class="ph ph-list"></i>';
-    }));
-  </script>
 </body>
 </html>
